@@ -4,6 +4,8 @@
  * summary: "List Tax Providers"
  * description: "Retrieves the configured Tax Providers"
  * x-authenticated: true
+ * x-codegen:
+ *   method: listTaxProviders
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -31,11 +33,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             tax_providers:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/tax_provider"
+ *           $ref: "#/components/schemas/AdminTaxProvidersList"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

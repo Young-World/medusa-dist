@@ -6,7 +6,13 @@
  * parameters:
  *   - (path) id=* {string} The id of the Cart.
  *   - (path) provider_id=* {string} The id of the payment provider.
- *   - (body) data=* {object} The data to update the payment session with.
+ * requestBody:
+ *   content:
+ *     application/json:
+ *       schema:
+ *         $ref: "#/components/schemas/StorePostCartsCartPaymentSessionUpdateReq"
+ * x-codegen:
+ *   method: updatePaymentSession
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -37,9 +43,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             cart:
- *               $ref: "#/components/schemas/cart"
+ *           $ref: "#/components/schemas/StoreCartsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":
@@ -53,6 +57,16 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema StorePostCartsCartPaymentSessionUpdateReq
+ * type: object
+ * required:
+ *   - data
+ * properties:
+ *   data:
+ *     type: object
+ *     description: The data to update the payment session with.
+ */
 export declare class StorePostCartsCartPaymentSessionUpdateReq {
     data: Record<string, unknown>;
 }

@@ -1,4 +1,19 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -36,8 +51,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var _1 = require(".");
+exports.AdminPostOrdersOrderSwapFulfillementsCancelParams = void 0;
 var medusa_core_utils_1 = require("medusa-core-utils");
+var common_1 = require("../../../../types/common");
 /**
  * @oas [post] /orders/{id}/swaps/{swap_id}/fulfillments/{fulfillment_id}/cancel
  * operationId: "PostOrdersSwapFulfillmentsCancel"
@@ -48,6 +64,11 @@ var medusa_core_utils_1 = require("medusa-core-utils");
  *   - (path) id=* {string} The ID of the Order which the Swap relates to.
  *   - (path) swap_id=* {string} The ID of the Swap which the Fulfillment relates to.
  *   - (path) fulfillment_id=* {string} The ID of the Fulfillment.
+ *   - (query) expand {string} Comma separated list of relations to include in the result.
+ *   - (query) fields {string} Comma separated list of fields to include in the result.
+ * x-codegen:
+ *   method: cancelSwapFulfillment
+ *   params: AdminPostOrdersSwapFulfillementsCancelParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -75,9 +96,7 @@ var medusa_core_utils_1 = require("medusa-core-utils");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/order"
+ *           $ref: "#/components/schemas/AdminOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -125,9 +144,8 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                     }); })];
             case 3:
                 _b.sent();
-                return [4 /*yield*/, orderService.retrieve(id, {
-                        select: _1.defaultAdminOrdersFields,
-                        relations: _1.defaultAdminOrdersRelations,
+                return [4 /*yield*/, orderService.retrieveWithTotals(id, req.retrieveConfig, {
+                        includes: req.includes,
                     })];
             case 4:
                 order = _b.sent();
@@ -136,4 +154,13 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+// eslint-disable-next-line max-len
+var AdminPostOrdersOrderSwapFulfillementsCancelParams = /** @class */ (function (_super) {
+    __extends(AdminPostOrdersOrderSwapFulfillementsCancelParams, _super);
+    function AdminPostOrdersOrderSwapFulfillementsCancelParams() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return AdminPostOrdersOrderSwapFulfillementsCancelParams;
+}(common_1.FindParams));
+exports.AdminPostOrdersOrderSwapFulfillementsCancelParams = AdminPostOrdersOrderSwapFulfillementsCancelParams;
 //# sourceMappingURL=cancel-fulfillment-swap.js.map

@@ -3,7 +3,7 @@ import { EventBusService } from ".";
 import { DiscountCondition, DiscountConditionCustomerGroup, DiscountConditionProduct, DiscountConditionProductCollection, DiscountConditionProductTag, DiscountConditionProductType, DiscountConditionType } from "../models";
 import { DiscountConditionRepository } from "../repositories/discount-condition";
 import { FindConfig } from "../types/common";
-import { UpsertDiscountConditionInput } from "../types/discount";
+import { DiscountConditionInput } from "../types/discount";
 import { TransactionBaseService } from "../interfaces";
 declare type InjectedDependencies = {
     manager: EntityManager;
@@ -21,11 +21,16 @@ declare class DiscountConditionService extends TransactionBaseService {
     protected transactionManager_: EntityManager | undefined;
     constructor({ manager, discountConditionRepository, eventBusService, }: InjectedDependencies);
     retrieve(conditionId: string, config?: FindConfig<DiscountCondition>): Promise<DiscountCondition | never>;
-    protected static resolveConditionType_(data: UpsertDiscountConditionInput): {
+    protected static resolveConditionType_(data: DiscountConditionInput): {
         type: DiscountConditionType;
-        resource_ids: string[];
+        resource_ids: (string | {
+            id: string;
+        })[];
     } | undefined;
-    upsertCondition(data: UpsertDiscountConditionInput): Promise<(DiscountConditionProduct | DiscountConditionProductType | DiscountConditionProductCollection | DiscountConditionProductTag | DiscountConditionCustomerGroup)[]>;
+    upsertCondition(data: DiscountConditionInput, overrideExisting?: boolean): Promise<(DiscountConditionProduct | DiscountConditionProductType | DiscountConditionProductCollection | DiscountConditionProductTag | DiscountConditionCustomerGroup)[]>;
+    removeResources(data: Omit<DiscountConditionInput, "id"> & {
+        id: string;
+    }): Promise<void>;
     delete(discountConditionId: string): Promise<DiscountCondition | void>;
 }
 export default DiscountConditionService;

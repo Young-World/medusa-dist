@@ -45,41 +45,11 @@ var OrderSubscriber = /** @class */ (function () {
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.orderService_.retrieve(data.id, {
-                            select: ["subtotal"],
-                            relations: ["discounts", "discounts.rule", "items", "gift_cards"],
+                    case 0: return [4 /*yield*/, this.orderService_.retrieveWithTotals(data.id, {
+                            relations: ["discounts", "discounts.rule"],
                         })];
                     case 1:
                         order = _a.sent();
-                        return [4 /*yield*/, Promise.all(order.items.map(function (i) { return __awaiter(_this, void 0, void 0, function () {
-                                var qty;
-                                return __generator(this, function (_a) {
-                                    switch (_a.label) {
-                                        case 0:
-                                            if (!i.is_giftcard) return [3 /*break*/, 4];
-                                            qty = 0;
-                                            _a.label = 1;
-                                        case 1:
-                                            if (!(qty < i.quantity)) return [3 /*break*/, 4];
-                                            return [4 /*yield*/, this.giftCardService_.create({
-                                                    region_id: order.region_id,
-                                                    order_id: order.id,
-                                                    value: i.unit_price,
-                                                    balance: i.unit_price,
-                                                    metadata: i.metadata,
-                                                })];
-                                        case 2:
-                                            _a.sent();
-                                            _a.label = 3;
-                                        case 3:
-                                            qty++;
-                                            return [3 /*break*/, 1];
-                                        case 4: return [2 /*return*/];
-                                    }
-                                });
-                            }); }))];
-                    case 2:
-                        _a.sent();
                         return [4 /*yield*/, Promise.all(order.discounts.map(function (d) { return __awaiter(_this, void 0, void 0, function () {
                                 var usageCount;
                                 return __generator(this, function (_a) {
@@ -89,7 +59,7 @@ var OrderSubscriber = /** @class */ (function () {
                                         })];
                                 });
                             }); }))];
-                    case 3:
+                    case 2:
                         _a.sent();
                         return [2 /*return*/];
                 }

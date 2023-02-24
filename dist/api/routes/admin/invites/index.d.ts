@@ -4,7 +4,32 @@ import "reflect-metadata";
 export declare const unauthenticatedInviteRoutes: (app: any) => void;
 declare const _default: (app: any) => any;
 export default _default;
+/**
+ * @schema AdminInviteDeleteRes
+ * type: object
+ * properties:
+ *   id:
+ *     type: string
+ *     description: The ID of the deleted Invite.
+ *   object:
+ *     type: string
+ *     description: The type of the object that was deleted.
+ *     default: invite
+ *   deleted:
+ *     type: boolean
+ *     description: Whether or not the Invite was deleted.
+ *     default: true
+ */
 export declare type AdminInviteDeleteRes = DeleteResponse;
+/**
+ * @schema AdminListInvitesRes
+ * type: object
+ * properties:
+ *   invites:
+ *     type: array
+ *     items:
+ *       $ref: "#/components/schemas/Invite"
+ */
 export declare type AdminListInvitesRes = {
     invites: Invite[];
 };

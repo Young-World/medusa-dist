@@ -60,51 +60,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - order_id
- *           - return_items
- *           - additional_items
- *         properties:
- *           order_id:
- *             type: string
- *             description: The ID of the Order to create the Swap for.
- *           return_items:
- *             description: "The items to include in the Return."
- *             type: array
- *             items:
- *               required:
- *                 - item_id
- *                 - quantity
- *               properties:
- *                 item_id:
- *                   description: The ID of the Line Item from the Order.
- *                   type: string
- *                 quantity:
- *                   description: The quantity to swap.
- *                   type: integer
- *                 reason_id:
- *                   description: The ID of the reason of this return.
- *                   type: string
- *                 note:
- *                   description: The note to add to the item being swapped.
- *                   type: string
- *           return_shipping_option:
- *             type: string
- *             description: The ID of the Shipping Option to create the Shipping Method from.
- *           additional_items:
- *             description: "The items to exchange the returned items to."
- *             type: array
- *             items:
- *               required:
- *                 - variant_id
- *                 - quantity
- *               properties:
- *                 variant_id:
- *                   description: The ID of the Product Variant to send.
- *                   type: string
- *                 quantity:
- *                   description: The quantity to send of the variant.
- *                   type: integer
+ *         $ref: "#/components/schemas/StorePostSwapsReq"
+ * x-codegen:
+ *   method: create
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -157,9 +115,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             swap:
- *               $ref: "#/components/schemas/swap"
+ *           $ref: "#/components/schemas/StoreSwapsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":
@@ -221,10 +177,10 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                     case "finished": return [3 /*break*/, 11];
                 }
                 return [3 /*break*/, 12];
-            case 7: return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
-                    var _a, key, error;
-                    return __generator(this, function (_b) {
-                        switch (_b.label) {
+            case 7: return [4 /*yield*/, manager
+                    .transaction("SERIALIZABLE", function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
                             case 0: return [4 /*yield*/, idempotencyKeyService
                                     .withTransaction(transactionManager)
                                     .workStage(idempotencyKey.idempotency_key, function (manager) { return __awaiter(void 0, void 0, void 0, function () {
@@ -278,28 +234,25 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                     });
                                 }); })];
                             case 1:
-                                _a = _b.sent(), key = _a.key, error = _a.error;
-                                if (error) {
-                                    inProgress = false;
-                                    err = error;
-                                }
-                                else {
-                                    idempotencyKey = key;
-                                }
+                                idempotencyKey = _a.sent();
                                 return [2 /*return*/];
                         }
                     });
-                }); })];
+                }); })
+                    .catch(function (e) {
+                    inProgress = false;
+                    err = e;
+                })];
             case 8:
                 _b.sent();
                 return [3 /*break*/, 14];
-            case 9: return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
-                    var _a, key, error;
-                    return __generator(this, function (_b) {
-                        switch (_b.label) {
+            case 9: return [4 /*yield*/, manager
+                    .transaction("SERIALIZABLE", function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
                             case 0: return [4 /*yield*/, idempotencyKeyService
                                     .withTransaction(transactionManager)
-                                    .workStage(idempotencyKey.idempotency_key, function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
+                                    .workStage(idempotencyKey.idempotency_key, function (manager) { return __awaiter(void 0, void 0, void 0, function () {
                                     var swaps, swap;
                                     return __generator(this, function (_a) {
                                         switch (_a.label) {
@@ -329,18 +282,15 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                     });
                                 }); })];
                             case 1:
-                                _a = _b.sent(), key = _a.key, error = _a.error;
-                                if (error) {
-                                    inProgress = false;
-                                    err = error;
-                                }
-                                else {
-                                    idempotencyKey = key;
-                                }
+                                idempotencyKey = _a.sent();
                                 return [2 /*return*/];
                         }
                     });
-                }); })];
+                }); })
+                    .catch(function (e) {
+                    inProgress = false;
+                    err = e;
+                })];
             case 10:
                 _b.sent();
                 return [3 /*break*/, 14];
@@ -419,6 +369,57 @@ var AdditionalItem = /** @class */ (function () {
     ], AdditionalItem.prototype, "quantity", void 0);
     return AdditionalItem;
 }());
+/**
+ * @schema StorePostSwapsReq
+ * type: object
+ * required:
+ *   - order_id
+ *   - return_items
+ *   - additional_items
+ * properties:
+ *   order_id:
+ *     type: string
+ *     description: The ID of the Order to create the Swap for.
+ *   return_items:
+ *     description: "The items to include in the Return."
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - item_id
+ *         - quantity
+ *       properties:
+ *         item_id:
+ *           description: The ID of the Line Item from the Order.
+ *           type: string
+ *         quantity:
+ *           description: The quantity to swap.
+ *           type: integer
+ *         reason_id:
+ *           description: The ID of the reason of this return.
+ *           type: string
+ *         note:
+ *           description: The note to add to the item being swapped.
+ *           type: string
+ *   return_shipping_option:
+ *     type: string
+ *     description: The ID of the Shipping Option to create the Shipping Method from.
+ *   additional_items:
+ *     description: "The items to exchange the returned items to."
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - variant_id
+ *         - quantity
+ *       properties:
+ *         variant_id:
+ *           description: The ID of the Product Variant to send.
+ *           type: string
+ *         quantity:
+ *           description: The quantity to send of the variant.
+ *           type: integer
+ */
 var StorePostSwapsReq = /** @class */ (function () {
     function StorePostSwapsReq() {
     }

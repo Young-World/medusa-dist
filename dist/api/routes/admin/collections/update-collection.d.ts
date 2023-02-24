@@ -11,16 +11,9 @@ import { Request, Response } from "express";
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           title:
- *             type: string
- *             description:  The title to identify the Collection by.
- *           handle:
- *             type: string
- *             description:  An optional handle to be used in slugs, if none is provided we will kebab-case the title.
- *           metadata:
- *             description: An optional set of key-value pairs to hold additional information.
- *             type: object
+ *         $ref: "#/components/schemas/AdminPostCollectionsCollectionReq"
+ * x-codegen:
+ *   method: update
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -54,9 +47,7 @@ import { Request, Response } from "express";
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            collection:
- *              $ref: "#/components/schemas/product_collection"
+ *          $ref: "#/components/schemas/AdminCollectionsRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":
@@ -72,6 +63,20 @@ import { Request, Response } from "express";
  */
 declare const _default: (req: Request, res: Response) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostCollectionsCollectionReq
+ * type: object
+ * properties:
+ *   title:
+ *     type: string
+ *     description:  The title to identify the Collection by.
+ *   handle:
+ *     type: string
+ *     description:  An optional handle to be used in slugs, if none is provided we will kebab-case the title.
+ *   metadata:
+ *     description: An optional set of key-value pairs to hold additional information.
+ *     type: object
+ */
 export declare class AdminPostCollectionsCollectionReq {
     title?: string;
     handle?: string;

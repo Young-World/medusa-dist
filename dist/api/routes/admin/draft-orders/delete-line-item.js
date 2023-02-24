@@ -47,6 +47,8 @@ var medusa_core_utils_1 = require("medusa-core-utils");
  * parameters:
  *   - (path) id=* {string} The ID of the Draft Order.
  *   - (path) line_id=* {string} The ID of the Draft Order.
+ * x-codegen:
+ *   method: removeLineItem
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -74,9 +76,7 @@ var medusa_core_utils_1 = require("medusa-core-utils");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             draft_order:
- *               $ref: "#/components/schemas/draft-order"
+ *           $ref: "#/components/schemas/AdminDraftOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -119,7 +119,7 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                     _a = draftOrder;
                                     return [4 /*yield*/, cartService
                                             .withTransaction(manager)
-                                            .retrieve(draftOrder.cart_id, {
+                                            .retrieveWithTotals(draftOrder.cart_id, {
                                             relations: _1.defaultAdminDraftOrdersCartRelations,
                                             select: _1.defaultAdminDraftOrdersCartFields,
                                         })];

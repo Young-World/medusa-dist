@@ -39,17 +39,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var express_session_1 = __importDefault(require("express-session"));
+var connect_redis_1 = __importDefault(require("connect-redis"));
 var cookie_parser_1 = __importDefault(require("cookie-parser"));
+var express_session_1 = __importDefault(require("express-session"));
 var morgan_1 = __importDefault(require("morgan"));
 var redis_1 = __importDefault(require("redis"));
-var connect_redis_1 = __importDefault(require("connect-redis"));
 exports.default = (function (_a) {
     var app = _a.app, configModule = _a.configModule;
     return __awaiter(void 0, void 0, void 0, function () {
-        var sameSite, secure, cookie_secret, sessionOpts, RedisStore, redisClient;
-        var _b;
-        return __generator(this, function (_c) {
+        var sameSite, secure, _b, cookie_secret, session_options, sessionOpts, RedisStore, redisClient;
+        var _c, _d, _e, _f, _g, _h, _j;
+        return __generator(this, function (_k) {
             sameSite = false;
             secure = false;
             if (process.env.NODE_ENV === "production" ||
@@ -57,21 +57,22 @@ exports.default = (function (_a) {
                 secure = true;
                 sameSite = "none";
             }
-            cookie_secret = configModule.projectConfig.cookie_secret;
+            _b = configModule.projectConfig, cookie_secret = _b.cookie_secret, session_options = _b.session_options;
             sessionOpts = {
-                resave: true,
-                saveUninitialized: true,
-                cookieName: "session",
+                name: (_c = session_options === null || session_options === void 0 ? void 0 : session_options.name) !== null && _c !== void 0 ? _c : "connect.sid",
+                resave: (_d = session_options === null || session_options === void 0 ? void 0 : session_options.resave) !== null && _d !== void 0 ? _d : true,
+                rolling: (_e = session_options === null || session_options === void 0 ? void 0 : session_options.rolling) !== null && _e !== void 0 ? _e : false,
+                saveUninitialized: (_f = session_options === null || session_options === void 0 ? void 0 : session_options.saveUninitialized) !== null && _f !== void 0 ? _f : true,
                 proxy: true,
-                secret: cookie_secret,
+                secret: (_g = session_options === null || session_options === void 0 ? void 0 : session_options.secret) !== null && _g !== void 0 ? _g : cookie_secret,
                 cookie: {
                     sameSite: sameSite,
                     secure: secure,
-                    maxAge: 10 * 60 * 60 * 1000,
+                    maxAge: (_h = session_options === null || session_options === void 0 ? void 0 : session_options.ttl) !== null && _h !== void 0 ? _h : 10 * 60 * 60 * 1000,
                 },
                 store: null,
             };
-            if ((_b = configModule === null || configModule === void 0 ? void 0 : configModule.projectConfig) === null || _b === void 0 ? void 0 : _b.redis_url) {
+            if ((_j = configModule === null || configModule === void 0 ? void 0 : configModule.projectConfig) === null || _j === void 0 ? void 0 : _j.redis_url) {
                 RedisStore = (0, connect_redis_1.default)(express_session_1.default);
                 redisClient = redis_1.default.createClient(configModule.projectConfig.redis_url);
                 sessionOpts.store = new RedisStore({ client: redisClient });

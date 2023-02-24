@@ -26,4 +26,5 @@ __exportStar(require("./models/base-entity"), exports);
 __exportStar(require("./models/soft-deletable-entity"), exports);
 __exportStar(require("./search-service"), exports);
 __exportStar(require("./payment-service"), exports);
+__exportStar(require("./services"), exports);
 //# sourceMappingURL=index.js.map

@@ -8,25 +8,9 @@
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - region_id
- *         properties:
- *           value:
- *             type: integer
- *             description: The value (excluding VAT) that the Gift Card should represent.
- *           is_disabled:
- *             type: boolean
- *             description: Whether the Gift Card is disabled on creation. You will have to enable it later to make it available to Customers.
- *           ends_at:
- *             type: string
- *             format: date-time
- *             description: The time at which the Gift Card should no longer be available.
- *           region_id:
- *             description: The ID of the Region in which the Gift Card can be used.
- *             type: string
- *           metadata:
- *             description: An optional set of key-value pairs to hold additional information.
- *             type: object
+ *         $ref: "#/components/schemas/AdminPostGiftCardsReq"
+ * x-codegen:
+ *   method: create
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -60,9 +44,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             gift_card:
- *               $ref: "#/components/schemas/gift_card"
+ *           $ref: "#/components/schemas/AdminGiftCardsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -78,6 +60,29 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostGiftCardsReq
+ * type: object
+ * required:
+ *   - region_id
+ * properties:
+ *   value:
+ *     type: integer
+ *     description: The value (excluding VAT) that the Gift Card should represent.
+ *   is_disabled:
+ *     type: boolean
+ *     description: Whether the Gift Card is disabled on creation. You will have to enable it later to make it available to Customers.
+ *   ends_at:
+ *     type: string
+ *     format: date-time
+ *     description: The time at which the Gift Card should no longer be available.
+ *   region_id:
+ *     description: The ID of the Region in which the Gift Card can be used.
+ *     type: string
+ *   metadata:
+ *     description: An optional set of key-value pairs to hold additional information.
+ *     type: object
+ */
 export declare class AdminPostGiftCardsReq {
     value?: number;
     ends_at?: Date;

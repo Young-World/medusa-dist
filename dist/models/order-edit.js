@@ -23,17 +23,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrderEdit = exports.OrderEditStatus = void 0;
 var typeorm_1 = require("typeorm");
-var order_editing_1 = __importDefault(require("../loaders/feature-flags/order-editing"));
-var feature_flag_decorators_1 = require("../utils/feature-flag-decorators");
-var db_aware_column_1 = require("../utils/db-aware-column");
 var interfaces_1 = require("../interfaces");
 var utils_1 = require("../utils");
+var db_aware_column_1 = require("../utils/db-aware-column");
 var _1 = require(".");
 var OrderEditStatus;
 (function (OrderEditStatus) {
@@ -156,105 +151,162 @@ var OrderEdit = /** @class */ (function (_super) {
         __metadata("design:returntype", void 0)
     ], OrderEdit.prototype, "loadStatus", null);
     OrderEdit = __decorate([
-        (0, feature_flag_decorators_1.FeatureFlagEntity)(order_editing_1.default.key)
+        (0, typeorm_1.Entity)()
     ], OrderEdit);
     return OrderEdit;
 }(interfaces_1.BaseEntity));
 exports.OrderEdit = OrderEdit;
 /**
- * @schema order_edit
+ * @schema OrderEdit
  * title: "Order Edit"
  * description: "Order edit keeps track of order items changes."
- * x-resourceId: order_edit
+ * type: object
  * required:
- *   - order_id
- *   - order
- *   - changes
+ *   - canceled_at
+ *   - canceled_by
+ *   - confirmed_by
+ *   - confirmed_at
+ *   - created_at
  *   - created_by
+ *   - declined_at
+ *   - declined_by
+ *   - declined_reason
+ *   - id
+ *   - internal_note
+ *   - order_id
+ *   - payment_collection_id
+ *   - requested_at
+ *   - requested_by
+ *   - status
+ *   - updated_at
  * properties:
  *   id:
- *     type: string
  *     description: The order edit's ID
+ *     type: string
  *     example: oe_01G8TJSYT9M6AVS5N4EMNFS1EK
  *   order_id:
- *     type: string
  *     description: The ID of the order that is edited
+ *     type: string
  *     example: order_01G2SG30J8C85S4A5CHM2S1NS2
  *   order:
- *     description: Order object
- *     $ref: "#/components/schemas/order"
+ *     description: Available if the relation `order` is expanded.
+ *     nullable: true
+ *     $ref: "#/components/schemas/Order"
  *   changes:
+ *     description: Available if the relation `changes` is expanded.
  *     type: array
- *     description: Line item changes array.
  *     items:
- *       $ref: "#/components/schemas/order_item_change"
+ *       $ref: "#/components/schemas/OrderItemChange"
  *   internal_note:
- *     description: "An optional note with additional details about the order edit."
+ *     description: An optional note with additional details about the order edit.
+ *     nullable: true
  *     type: string
  *     example: Included two more items B to the order.
  *   created_by:
+ *     description: The unique identifier of the user or customer who created the order edit.
  *     type: string
- *     description: "The unique identifier of the user or customer who created the order edit."
  *   requested_by:
+ *     description: The unique identifier of the user or customer who requested the order edit.
+ *     nullable: true
  *     type: string
- *     description: "The unique identifier of the user or customer who requested the order edit."
  *   requested_at:
+ *     description: The date with timezone at which the edit was requested.
+ *     nullable: true
  *     type: string
- *     description: "The date with timezone at which the edit was requested."
  *     format: date-time
  *   confirmed_by:
+ *     description: The unique identifier of the user or customer who confirmed the order edit.
+ *     nullable: true
  *     type: string
- *     description: "The unique identifier of the user or customer who confirmed the order edit."
  *   confirmed_at:
+ *     description: The date with timezone at which the edit was confirmed.
+ *     nullable: true
  *     type: string
- *     description: "The date with timezone at which the edit was confirmed."
  *     format: date-time
  *   declined_by:
+ *     description: The unique identifier of the user or customer who declined the order edit.
+ *     nullable: true
  *     type: string
- *     description: "The unique identifier of the user or customer who declined the order edit."
  *   declined_at:
+ *     description: The date with timezone at which the edit was declined.
+ *     nullable: true
  *     type: string
- *     description: "The date with timezone at which the edit was declined."
  *     format: date-time
  *   declined_reason:
- *     description: "An optional note why  the order edit is declined."
+ *     description: An optional note why  the order edit is declined.
+ *     nullable: true
  *     type: string
+ *   canceled_by:
+ *     description: The unique identifier of the user or customer who cancelled the order edit.
+ *     nullable: true
+ *     type: string
+ *   canceled_at:
+ *     description: The date with timezone at which the edit was cancelled.
+ *     nullable: true
+ *     type: string
+ *     format: date-time
  *   subtotal:
- *     type: integer
  *     description: The total of subtotal
+ *     type: integer
  *     example: 8000
  *   discount_total:
- *     type: integer
  *     description: The total of discount
+ *     type: integer
  *     example: 800
  *   shipping_total:
- *     type: integer
  *     description: The total of the shipping amount
+ *     type: integer
  *     example: 800
  *   gift_card_total:
- *     type: integer
  *     description: The total of the gift card amount
+ *     type: integer
  *     example: 800
  *   gift_card_tax_total:
- *     type: integer
  *     description: The total of the gift card tax amount
+ *     type: integer
  *     example: 800
  *   tax_total:
- *     type: integer
  *     description: The total of tax
+ *     type: integer
  *     example: 0
  *   total:
- *     type: integer
  *     description: The total amount of the edited order.
+ *     type: integer
  *     example: 8200
  *   difference_due:
- *     type: integer
  *     description: The difference between the total amount of the order and total amount of edited order.
+ *     type: integer
  *     example: 8200
+ *   status:
+ *     description: The status of the order edit.
+ *     type: string
+ *     enum:
+ *       - confirmed
+ *       - declined
+ *       - requested
+ *       - created
+ *       - canceled
  *   items:
+ *     description: Available if the relation `items` is expanded.
  *     type: array
- *     description: Computed line items from the changes.
  *     items:
- *       $ref: "#/components/schemas/line_item"
+ *       $ref: "#/components/schemas/LineItem"
+ *   payment_collection_id:
+ *     description: The ID of the payment collection
+ *     nullable: true
+ *     type: string
+ *     example: paycol_01G8TJSYT9M6AVS5N4EMNFS1EK
+ *   payment_collection:
+ *     description: Available if the relation `payment_collection` is expanded.
+ *     nullable: true
+ *     $ref: "#/components/schemas/PaymentCollection"
+ *   created_at:
+ *     description: The date with timezone at which the resource was created.
+ *     type: string
+ *     format: date-time
+ *   updated_at:
+ *     description: The date with timezone at which the resource was updated.
+ *     type: string
+ *     format: date-time
  */
 //# sourceMappingURL=order-edit.js.map

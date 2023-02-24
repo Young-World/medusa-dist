@@ -45,6 +45,8 @@ var _1 = require(".");
  * x-authenticated: true
  * parameters:
  *   - (path) address_id=* {string} The id of the Address to remove.
+ * x-codegen:
+ *   method: deleteAddress
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -71,9 +73,7 @@ var _1 = require(".");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             customer:
- *               $ref: "#/components/schemas/customer"
+ *           $ref: "#/components/schemas/StoreCustomersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

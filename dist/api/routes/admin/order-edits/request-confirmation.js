@@ -1,4 +1,13 @@
 "use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -36,15 +45,20 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.AdminPostOrderEditsRequestConfirmationReq = void 0;
+var class_validator_1 = require("class-validator");
+var models_1 = require("../../../../models");
 var order_edit_1 = require("../../../../types/order-edit");
 /**
  * @oas [post] /order-edits/{id}/request
  * operationId: "PostOrderEditsOrderEditRequest"
- * summary: "Request order edit confirmation"
+ * summary: "Request Confirmation"
  * description: "Request customer confirmation of an Order Edit"
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {string} The ID of the Order Edit to request confirmation from.
+ * x-codegen:
+ *   method: requestConfirmation
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -52,7 +66,7 @@ var order_edit_1 = require("../../../../types/order-edit");
  *       import Medusa from "@medusajs/medusa-js"
  *       const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
  *       // must be previously logged in or use api token
- *       medusa.admin.orderEdits.requestConfirmation(edit_id)
+ *       medusa.admin.orderEdits.requestConfirmation(order_edit_id)
  *         .then({ order_edit }) => {
  *           console.log(order_edit.id)
  *         })
@@ -72,9 +86,7 @@ var order_edit_1 = require("../../../../types/order-edit");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order_edit:
- *               $ref: "#/components/schemas/order_edit"
+ *           $ref: "#/components/schemas/AdminOrderEditsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -85,24 +97,60 @@ var order_edit_1 = require("../../../../types/order-edit");
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var id, orderEditService, manager, loggedInUser, orderEdit;
+    var id, validatedBody, orderEditService, orderService, paymentCollectionService, manager, loggedInUser, orderEdit;
     var _a, _b, _c;
     return __generator(this, function (_d) {
         switch (_d.label) {
             case 0:
                 id = req.params.id;
+                validatedBody = req.validatedBody;
                 orderEditService = req.scope.resolve("orderEditService");
+                orderService = req.scope.resolve("orderService");
+                paymentCollectionService = req.scope.resolve("paymentCollectionService");
                 manager = req.scope.resolve("manager");
                 loggedInUser = ((_b = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id) !== null && _b !== void 0 ? _b : (_c = req.user) === null || _c === void 0 ? void 0 : _c.userId);
                 return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
+                        var orderEditServiceTx, orderEdit, total, order, paymentCollection;
                         return __generator(this, function (_a) {
                             switch (_a.label) {
-                                case 0: return [4 /*yield*/, orderEditService
-                                        .withTransaction(transactionManager)
-                                        .requestConfirmation(id, { loggedInUserId: loggedInUser })];
+                                case 0:
+                                    orderEditServiceTx = orderEditService.withTransaction(transactionManager);
+                                    return [4 /*yield*/, orderEditServiceTx.requestConfirmation(id, {
+                                            requestedBy: loggedInUser,
+                                        })];
                                 case 1:
+                                    orderEdit = _a.sent();
+                                    return [4 /*yield*/, orderEditServiceTx.decorateTotals(orderEdit)];
+                                case 2:
+                                    total = _a.sent();
+                                    if (!(total.difference_due > 0)) return [3 /*break*/, 6];
+                                    return [4 /*yield*/, orderService
+                                            .withTransaction(transactionManager)
+                                            .retrieve(orderEdit.order_id, {
+                                            select: ["currency_code", "region_id"],
+                                        })];
+                                case 3:
+                                    order = _a.sent();
+                                    return [4 /*yield*/, paymentCollectionService
+                                            .withTransaction(transactionManager)
+                                            .create({
+                                            type: models_1.PaymentCollectionType.ORDER_EDIT,
+                                            amount: total.difference_due,
+                                            currency_code: order.currency_code,
+                                            region_id: order.region_id,
+                                            description: validatedBody.payment_collection_description,
+                                            created_by: loggedInUser,
+                                        })];
+                                case 4:
+                                    paymentCollection = _a.sent();
+                                    orderEdit.payment_collection_id = paymentCollection.id;
+                                    return [4 /*yield*/, orderEditServiceTx.update(orderEdit.id, {
+                                            payment_collection_id: paymentCollection.id,
+                                        })];
+                                case 5:
                                     _a.sent();
-                                    return [2 /*return*/];
+                                    _a.label = 6;
+                                case 6: return [2 /*return*/];
                             }
                         });
                     }); })];
@@ -114,6 +162,9 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                     })];
             case 2:
                 orderEdit = _d.sent();
+                return [4 /*yield*/, orderEditService.decorateTotals(orderEdit)];
+            case 3:
+                orderEdit = _d.sent();
                 res.status(200).send({
                     order_edit: orderEdit,
                 });
@@ -121,4 +172,15 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+var AdminPostOrderEditsRequestConfirmationReq = /** @class */ (function () {
+    function AdminPostOrderEditsRequestConfirmationReq() {
+    }
+    __decorate([
+        (0, class_validator_1.IsString)(),
+        (0, class_validator_1.IsOptional)(),
+        __metadata("design:type", Object)
+    ], AdminPostOrderEditsRequestConfirmationReq.prototype, "payment_collection_description", void 0);
+    return AdminPostOrderEditsRequestConfirmationReq;
+}());
+exports.AdminPostOrderEditsRequestConfirmationReq = AdminPostOrderEditsRequestConfirmationReq;
 //# sourceMappingURL=request-confirmation.js.map

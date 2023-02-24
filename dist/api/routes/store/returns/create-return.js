@@ -59,42 +59,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - order_id
- *           - items
- *         properties:
- *           order_id:
- *             type: string
- *             description: The ID of the Order to create the Return from.
- *           items:
- *             description: "The items to include in the Return."
- *             type: array
- *             items:
- *               required:
- *                 - item_id
- *                 - quantity
- *               properties:
- *                 item_id:
- *                   description: The ID of the Line Item from the Order.
- *                   type: string
- *                 quantity:
- *                   description: The quantity to return.
- *                   type: integer
- *                 reason_id:
- *                   description: The ID of the return reason.
- *                   type: string
- *                 note:
- *                   description: A note to add to the item returned.
- *                   type: string
- *           return_shipping:
- *             description: If the Return is to be handled by the store operator the Customer can choose a Return Shipping Method. Alternatvely the Customer can handle the Return themselves.
- *             type: object
- *             required:
- *               - option_id
- *             properties:
- *               option_id:
- *                 type: string
- *                 description: The ID of the Shipping Option to create the Shipping Method from.
+ *         $ref: "#/components/schemas/StorePostReturnsReq"
+ * x-codegen:
+ *   method: create
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -110,8 +77,8 @@ var validator_1 = require("../../../../utils/validator");
  *           }
  *         ]
  *       })
- *       .then(({ return }) => {
- *         console.log(return.id);
+ *       .then((data) => {
+ *         console.log(data.return.id);
  *       });
  *   - lang: Shell
  *     label: cURL
@@ -135,9 +102,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             return:
- *               $ref: "#/components/schemas/return"
+ *           $ref: "#/components/schemas/StoreReturnsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":
@@ -150,7 +115,7 @@ var validator_1 = require("../../../../utils/validator");
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var returnDto, idempotencyKeyService, manager, headerKey, idempotencyKey, error_1, orderService_1, returnService_1, eventBus_1, inProgress_1, err_2, _a, err_1;
+    var returnDto, idempotencyKeyService, manager, headerKey, idempotencyKey, error_1, returnService_1, eventBus_1, inProgress_1, err_2, _a, err_1;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0: return [4 /*yield*/, (0, validator_1.validator)(StorePostReturnsReq, req.body)];
@@ -187,7 +152,6 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                 _b.label = 6;
             case 6:
                 _b.trys.push([6, 17, , 18]);
-                orderService_1 = req.scope.resolve("orderService");
                 returnService_1 = req.scope.resolve("returnService");
                 eventBus_1 = req.scope.resolve("eventBusService");
                 inProgress_1 = true;
@@ -202,24 +166,17 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                     case "finished": return [3 /*break*/, 12];
                 }
                 return [3 /*break*/, 13];
-            case 8: return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
-                    var _a, key, error;
-                    return __generator(this, function (_b) {
-                        switch (_b.label) {
+            case 8: return [4 /*yield*/, manager
+                    .transaction("SERIALIZABLE", function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
                             case 0: return [4 /*yield*/, idempotencyKeyService
                                     .withTransaction(transactionManager)
                                     .workStage(idempotencyKey.idempotency_key, function (manager) { return __awaiter(void 0, void 0, void 0, function () {
-                                    var order, returnObj, createdReturn;
+                                    var returnObj, createdReturn;
                                     return __generator(this, function (_a) {
                                         switch (_a.label) {
-                                            case 0: return [4 /*yield*/, orderService_1
-                                                    .withTransaction(manager)
-                                                    .retrieve(returnDto.order_id, {
-                                                    select: ["refunded_total", "total"],
-                                                    relations: ["items"],
-                                                })];
-                                            case 1:
-                                                order = _a.sent();
+                                            case 0:
                                                 returnObj = {
                                                     order_id: returnDto.order_id,
                                                     idempotency_key: idempotencyKey.idempotency_key,
@@ -231,22 +188,22 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                                 return [4 /*yield*/, returnService_1
                                                         .withTransaction(manager)
                                                         .create(returnObj)];
-                                            case 2:
+                                            case 1:
                                                 createdReturn = _a.sent();
-                                                if (!returnDto.return_shipping) return [3 /*break*/, 4];
+                                                if (!returnDto.return_shipping) return [3 /*break*/, 3];
                                                 return [4 /*yield*/, returnService_1
                                                         .withTransaction(manager)
                                                         .fulfill(createdReturn.id)];
-                                            case 3:
+                                            case 2:
                                                 _a.sent();
-                                                _a.label = 4;
-                                            case 4: return [4 /*yield*/, eventBus_1
+                                                _a.label = 3;
+                                            case 3: return [4 /*yield*/, eventBus_1
                                                     .withTransaction(manager)
                                                     .emit("order.return_requested", {
                                                     id: returnDto.order_id,
                                                     return_id: createdReturn.id,
                                                 })];
-                                            case 5:
+                                            case 4:
                                                 _a.sent();
                                                 return [2 /*return*/, {
                                                         recovery_point: "return_requested",
@@ -255,25 +212,22 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                     });
                                 }); })];
                             case 1:
-                                _a = _b.sent(), key = _a.key, error = _a.error;
-                                if (error) {
-                                    inProgress_1 = false;
-                                    err_2 = error;
-                                }
-                                else {
-                                    idempotencyKey = key;
-                                }
+                                idempotencyKey = _a.sent();
                                 return [2 /*return*/];
                         }
                     });
-                }); })];
+                }); })
+                    .catch(function (e) {
+                    inProgress_1 = false;
+                    err_2 = e;
+                })];
             case 9:
                 _b.sent();
                 return [3 /*break*/, 15];
-            case 10: return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
-                    var _a, key, error;
-                    return __generator(this, function (_b) {
-                        switch (_b.label) {
+            case 10: return [4 /*yield*/, manager
+                    .transaction("SERIALIZABLE", function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
                             case 0: return [4 /*yield*/, idempotencyKeyService
                                     .withTransaction(transactionManager)
                                     .workStage(idempotencyKey.idempotency_key, function (manager) { return __awaiter(void 0, void 0, void 0, function () {
@@ -301,18 +255,15 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                     });
                                 }); })];
                             case 1:
-                                _a = _b.sent(), key = _a.key, error = _a.error;
-                                if (error) {
-                                    inProgress_1 = false;
-                                    err_2 = error;
-                                }
-                                else {
-                                    idempotencyKey = key;
-                                }
+                                idempotencyKey = _a.sent();
                                 return [2 /*return*/];
                         }
                     });
-                }); })];
+                }); })
+                    .catch(function (e) {
+                    inProgress_1 = false;
+                    err_2 = e;
+                })];
             case 11:
                 _b.sent();
                 return [3 /*break*/, 15];
@@ -391,6 +342,47 @@ var Item = /** @class */ (function () {
     ], Item.prototype, "note", void 0);
     return Item;
 }());
+/**
+ * @schema StorePostReturnsReq
+ * type: object
+ * required:
+ *   - order_id
+ *   - items
+ * properties:
+ *   order_id:
+ *     type: string
+ *     description: The ID of the Order to create the Return from.
+ *   items:
+ *     description: "The items to include in the Return."
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - item_id
+ *         - quantity
+ *       properties:
+ *         item_id:
+ *           description: The ID of the Line Item from the Order.
+ *           type: string
+ *         quantity:
+ *           description: The quantity to return.
+ *           type: integer
+ *         reason_id:
+ *           description: The ID of the return reason.
+ *           type: string
+ *         note:
+ *           description: A note to add to the item returned.
+ *           type: string
+ *   return_shipping:
+ *     description: If the Return is to be handled by the store operator the Customer can choose a Return Shipping Method. Alternatvely the Customer can handle the Return themselves.
+ *     type: object
+ *     required:
+ *       - option_id
+ *     properties:
+ *       option_id:
+ *         type: string
+ *         description: The ID of the Shipping Option to create the Shipping Method from.
+ */
 var StorePostReturnsReq = /** @class */ (function () {
     function StorePostReturnsReq() {
     }

@@ -106,8 +106,8 @@ var interfaces_1 = require("../interfaces");
 var models_1 = require("../models");
 var cart_1 = require("../types/cart");
 var orders_1 = require("../types/orders");
-var utils_1 = require("../utils");
 var tax_inclusive_pricing_1 = __importDefault(require("../loaders/feature-flags/tax-inclusive-pricing"));
+var utils_1 = require("../utils");
 /**
  * A service that calculates total and subtotals for orders, carts etc..
  * @implements {BaseService}
@@ -115,17 +115,18 @@ var tax_inclusive_pricing_1 = __importDefault(require("../loaders/feature-flags/
 var TotalsService = /** @class */ (function (_super) {
     __extends(TotalsService, _super);
     function TotalsService(_a) {
-        var manager = _a.manager, taxProviderService = _a.taxProviderService, taxCalculationStrategy = _a.taxCalculationStrategy, featureFlagRouter = _a.featureFlagRouter;
+        var manager = _a.manager, taxProviderService = _a.taxProviderService, newTotalsService = _a.newTotalsService, taxCalculationStrategy = _a.taxCalculationStrategy, featureFlagRouter = _a.featureFlagRouter;
         var _this = _super.call(this, arguments[0]) || this;
         _this.manager_ = manager;
         _this.taxProviderService_ = taxProviderService;
+        _this.newTotalsService_ = newTotalsService;
         _this.taxCalculationStrategy_ = taxCalculationStrategy;
         _this.manager_ = manager;
         _this.featureFlagRouter_ = featureFlagRouter;
         return _this;
     }
     /**
-     * Calculates subtotal of a given cart or order.
+     * Calculates total of a given cart or order.
      * @param cartOrOrder - object to calculate total for
      * @param options - options to calculate by
      * @return the calculated subtotal
@@ -438,7 +439,7 @@ var TotalsService = /** @class */ (function (_super) {
                         giftCardTotal = _a.sent();
                         if (!(0, orders_1.isOrder)(cartOrOrder)) return [3 /*break*/, 8];
                         taxLinesJoined = cartOrOrder.items.every(function (i) {
-                            return (0, utils_1.isDefined)(i.tax_lines);
+                            return (0, medusa_core_utils_1.isDefined)(i.tax_lines);
                         });
                         if (!taxLinesJoined) {
                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.UNEXPECTED_STATE, "Order tax calculations must have tax lines joined on line items");
@@ -501,33 +502,37 @@ var TotalsService = /** @class */ (function (_super) {
         var _a;
         if (options === void 0) { options = {}; }
         return __awaiter(this, void 0, void 0, function () {
-            var allocationMap, lineDiscounts, discount, lineDiscounts_1, lineDiscounts_1_1, ld;
+            var allocationMap, discount, lineDiscounts, lineDiscounts_1, lineDiscounts_1_1, ld, adjustmentAmount;
             var e_4, _b;
             return __generator(this, function (_c) {
                 allocationMap = {};
                 if (!options.exclude_discounts) {
-                    lineDiscounts = [];
                     discount = (_a = orderOrCart.discounts) === null || _a === void 0 ? void 0 : _a.find(function (_a) {
                         var rule = _a.rule;
                         return rule.type !== models_1.DiscountRuleType.FREE_SHIPPING;
                     });
-                    if (discount) {
-                        lineDiscounts = this.getLineDiscounts(orderOrCart, discount);
-                    }
+                    lineDiscounts = this.getLineDiscounts(orderOrCart, discount);
                     try {
                         for (lineDiscounts_1 = __values(lineDiscounts), lineDiscounts_1_1 = lineDiscounts_1.next(); !lineDiscounts_1_1.done; lineDiscounts_1_1 = lineDiscounts_1.next()) {
                             ld = lineDiscounts_1_1.value;
+                            adjustmentAmount = ld.amount + ld.customAdjustmentsAmount;
                             if (allocationMap[ld.item.id]) {
                                 allocationMap[ld.item.id].discount = {
-                                    amount: ld.amount,
-                                    unit_amount: Math.round(ld.amount / ld.item.quantity),
+                                    amount: adjustmentAmount,
+                                    /**
+                                     * Used for the refund computation
+                                     */
+                                    unit_amount: Math.round(adjustmentAmount / ld.item.quantity),
                                 };
                             }
                             else {
                                 allocationMap[ld.item.id] = {
                                     discount: {
-                                        amount: ld.amount,
-                                        unit_amount: Math.round(ld.amount / ld.item.quantity),
+                                        amount: adjustmentAmount,
+                                        /**
+                                         * Used for the refund computation
+                                         */
+                                        unit_amount: Math.round(adjustmentAmount / ld.item.quantity),
                                     },
                                 };
                             }
@@ -788,46 +793,52 @@ var TotalsService = /** @class */ (function (_super) {
      */
     TotalsService.prototype.getLineDiscounts = function (cartOrOrder, discount) {
         var e_8, _a, e_9, _b;
-        var merged = __spreadArray([], __read(cartOrOrder.items), false);
+        var _c, _d, _e;
+        var merged = __spreadArray([], __read(((_c = cartOrOrder.items) !== null && _c !== void 0 ? _c : [])), false);
         // merge items from order with items from order swaps
-        if ("swaps" in cartOrOrder && cartOrOrder.swaps.length) {
+        if ("swaps" in cartOrOrder && ((_d = cartOrOrder.swaps) === null || _d === void 0 ? void 0 : _d.length)) {
             try {
-                for (var _c = __values(cartOrOrder.swaps), _d = _c.next(); !_d.done; _d = _c.next()) {
-                    var s = _d.value;
+                for (var _f = __values(cartOrOrder.swaps), _g = _f.next(); !_g.done; _g = _f.next()) {
+                    var s = _g.value;
                     merged = __spreadArray(__spreadArray([], __read(merged), false), __read(s.additional_items), false);
                 }
             }
             catch (e_8_1) { e_8 = { error: e_8_1 }; }
             finally {
                 try {
-                    if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+                    if (_g && !_g.done && (_a = _f.return)) _a.call(_f);
                 }
                 finally { if (e_8) throw e_8.error; }
             }
         }
-        if ("claims" in cartOrOrder && cartOrOrder.claims.length) {
+        if ("claims" in cartOrOrder && ((_e = cartOrOrder.claims) === null || _e === void 0 ? void 0 : _e.length)) {
             try {
-                for (var _e = __values(cartOrOrder.claims), _f = _e.next(); !_f.done; _f = _e.next()) {
-                    var c = _f.value;
+                for (var _h = __values(cartOrOrder.claims), _j = _h.next(); !_j.done; _j = _h.next()) {
+                    var c = _j.value;
                     merged = __spreadArray(__spreadArray([], __read(merged), false), __read(c.additional_items), false);
                 }
             }
             catch (e_9_1) { e_9 = { error: e_9_1 }; }
             finally {
                 try {
-                    if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
+                    if (_j && !_j.done && (_b = _h.return)) _b.call(_h);
                 }
                 finally { if (e_9) throw e_9.error; }
             }
         }
         return merged.map(function (item) {
             var adjustments = (item === null || item === void 0 ? void 0 : item.adjustments) || [];
-            var discountAdjustments = adjustments.filter(function (adjustment) { return adjustment.discount_id === discount.id; });
+            var discountAdjustments = discount
+                ? adjustments.filter(function (adjustment) { return adjustment.discount_id === discount.id; })
+                : [];
+            var customAdjustments = adjustments.filter(function (adjustment) { return adjustment.discount_id === null; });
+            var sumAdjustments = function (total, adjustment) { return total + adjustment.amount; };
             return {
                 item: item,
                 amount: item.allow_discounts
-                    ? discountAdjustments.reduce(function (total, adjustment) { return total + adjustment.amount; }, 0)
+                    ? discountAdjustments.reduce(sumAdjustments, 0)
                     : 0,
+                customAdjustmentsAmount: customAdjustments.reduce(sumAdjustments, 0),
             };
         });
     };
@@ -841,24 +852,24 @@ var TotalsService = /** @class */ (function (_super) {
      * @returns the breakdown of the line item totals
      */
     TotalsService.prototype.getLineItemTotals = function (lineItem, cartOrOrder, options) {
-        var _a;
+        var _a, _b;
         if (options === void 0) { options = {}; }
         return __awaiter(this, void 0, void 0, function () {
-            var calculationContext, _b, lineItemAllocation, subtotal, discount_total, lineItemTotals, taxRate, includesTax, taxIncludedInPrice, taxLines, orderLines, _c, noDiscountContext, _d;
-            return __generator(this, function (_e) {
-                switch (_e.label) {
+            var calculationContext, _c, lineItemAllocation, subtotal, discount_total, lineItemTotals, taxRate, includesTax, taxIncludedInPrice, taxLines, _d, noDiscountContext, _e;
+            return __generator(this, function (_f) {
+                switch (_f.label) {
                     case 0:
-                        _b = options.calculation_context;
-                        if (_b) return [3 /*break*/, 2];
+                        _c = options.calculation_context;
+                        if (_c) return [3 /*break*/, 2];
                         return [4 /*yield*/, this.getCalculationContext(cartOrOrder, {
                                 exclude_shipping: true,
                                 exclude_gift_cards: options.exclude_gift_cards,
                             })];
                     case 1:
-                        _b = (_e.sent());
-                        _e.label = 2;
+                        _c = (_f.sent());
+                        _f.label = 2;
                     case 2:
-                        calculationContext = _b;
+                        calculationContext = _c;
                         lineItemAllocation = calculationContext.allocation_map[lineItem.id] || {};
                         subtotal = lineItem.unit_price * lineItem.quantity;
                         if (this.featureFlagRouter_.isFeatureEnabled(tax_inclusive_pricing_1.default.key) &&
@@ -866,7 +877,7 @@ var TotalsService = /** @class */ (function (_super) {
                             options.include_tax) {
                             subtotal = 0; // in that case we need to know the tax rate to compute it later
                         }
-                        discount_total = (((_a = lineItemAllocation.discount) === null || _a === void 0 ? void 0 : _a.unit_amount) || 0) * lineItem.quantity;
+                        discount_total = (_b = (_a = lineItemAllocation.discount) === null || _a === void 0 ? void 0 : _a.amount) !== null && _b !== void 0 ? _b : 0;
                         lineItemTotals = {
                             unit_price: lineItem.unit_price,
                             quantity: lineItem.quantity,
@@ -901,45 +912,39 @@ var TotalsService = /** @class */ (function (_super) {
                     case 3:
                         taxLines = void 0;
                         if (!(options.use_tax_lines || (0, orders_1.isOrder)(cartOrOrder))) return [3 /*break*/, 4];
-                        if (typeof lineItem.tax_lines === "undefined") {
+                        if (!(0, medusa_core_utils_1.isDefined)(lineItem.tax_lines) && lineItem.variant_id) {
                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.UNEXPECTED_STATE, "Tax Lines must be joined on items to calculate taxes");
                         }
                         taxLines = lineItem.tax_lines;
                         return [3 /*break*/, 7];
                     case 4:
                         if (!lineItem.is_return) return [3 /*break*/, 5];
-                        if (typeof lineItem.tax_lines === "undefined") {
+                        if (!(0, medusa_core_utils_1.isDefined)(lineItem.tax_lines) && lineItem.variant_id) {
                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.UNEXPECTED_STATE, "Return Line Items must join tax lines");
                         }
                         taxLines = lineItem.tax_lines;
                         return [3 /*break*/, 7];
                     case 5: return [4 /*yield*/, this.taxProviderService_
                             .withTransaction(this.manager_)
-                            .getTaxLines(cartOrOrder.items, calculationContext)];
+                            .getTaxLines([lineItem], calculationContext)];
                     case 6:
-                        orderLines = _e.sent();
-                        taxLines = orderLines.filter(function (ol) {
-                            if ("item_id" in ol) {
-                                return ol.item_id === lineItem.id;
-                            }
-                            return false;
-                        });
-                        _e.label = 7;
+                        taxLines = (_f.sent());
+                        _f.label = 7;
                     case 7:
                         lineItemTotals.tax_lines = taxLines;
-                        _e.label = 8;
+                        _f.label = 8;
                     case 8:
                         if (!(lineItemTotals.tax_lines.length > 0)) return [3 /*break*/, 11];
-                        _c = lineItemTotals;
+                        _d = lineItemTotals;
                         return [4 /*yield*/, this.taxCalculationStrategy_.calculate([lineItem], lineItemTotals.tax_lines, calculationContext)];
                     case 9:
-                        _c.tax_total = _e.sent();
+                        _d.tax_total = _f.sent();
                         noDiscountContext = __assign(__assign({}, calculationContext), { allocation_map: {} });
-                        _d = lineItemTotals;
+                        _e = lineItemTotals;
                         return [4 /*yield*/, this.taxCalculationStrategy_.calculate([lineItem], lineItemTotals.tax_lines, noDiscountContext)];
                     case 10:
-                        _d.original_tax_total =
-                            _e.sent();
+                        _e.original_tax_total =
+                            _f.sent();
                         if (this.featureFlagRouter_.isFeatureEnabled(tax_inclusive_pricing_1.default.key) &&
                             lineItem.includes_tax) {
                             lineItemTotals.subtotal +=
@@ -950,7 +955,7 @@ var TotalsService = /** @class */ (function (_super) {
                         }
                         lineItemTotals.total += lineItemTotals.tax_total;
                         lineItemTotals.original_total += lineItemTotals.original_tax_total;
-                        _e.label = 11;
+                        _f.label = 11;
                     case 11: return [2 /*return*/, lineItemTotals];
                 }
             });
@@ -1022,68 +1027,29 @@ var TotalsService = /** @class */ (function (_super) {
      * @return the gift card amount applied to the cart or order
      */
     TotalsService.prototype.getGiftCardTotal = function (cartOrOrder, opts) {
-        var _a;
         if (opts === void 0) { opts = {}; }
         return __awaiter(this, void 0, void 0, function () {
-            var giftCardable, subtotal, discountTotal, toReturn, orderGiftCardAmount;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var giftCardable, subtotal, discountTotal;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
                         if (!(typeof opts.gift_cardable !== "undefined")) return [3 /*break*/, 1];
                         giftCardable = opts.gift_cardable;
                         return [3 /*break*/, 4];
                     case 1: return [4 /*yield*/, this.getSubtotal(cartOrOrder)];
                     case 2:
-                        subtotal = _b.sent();
+                        subtotal = _a.sent();
                         return [4 /*yield*/, this.getDiscountTotal(cartOrOrder)];
                     case 3:
-                        discountTotal = _b.sent();
+                        discountTotal = _a.sent();
                         giftCardable = subtotal - discountTotal;
-                        _b.label = 4;
-                    case 4:
-                        if ("gift_card_transactions" in cartOrOrder) {
-                            // gift_card_transactions only exist on orders so we can
-                            // safely calculate the total based on the gift card transactions
-                            return [2 /*return*/, cartOrOrder.gift_card_transactions.reduce(function (acc, next) {
-                                    var _a;
-                                    var taxMultiplier = (next.tax_rate || 0) / 100;
-                                    // Previously we did not record whether a gift card was taxable or not.
-                                    // All gift cards where is_taxable === null are from the old system,
-                                    // where we defaulted to taxable gift cards.
-                                    //
-                                    // This is a backwards compatability fix for orders that were created
-                                    // before we added the gift card tax rate.
-                                    if (next.is_taxable === null &&
-                                        ((_a = cartOrOrder.region) === null || _a === void 0 ? void 0 : _a.gift_cards_taxable)) {
-                                        taxMultiplier = cartOrOrder.region.tax_rate / 100;
-                                    }
-                                    return {
-                                        total: acc.total + next.amount,
-                                        tax_total: acc.tax_total + next.amount * taxMultiplier,
-                                    };
-                                }, {
-                                    total: 0,
-                                    tax_total: 0,
-                                })];
-                        }
-                        if (!cartOrOrder.gift_cards || !cartOrOrder.gift_cards.length) {
-                            return [2 /*return*/, {
-                                    total: 0,
-                                    tax_total: 0,
-                                }];
-                        }
-                        toReturn = cartOrOrder.gift_cards.reduce(function (acc, next) { return acc + next.balance; }, 0);
-                        orderGiftCardAmount = Math.min(giftCardable, toReturn);
-                        if ((_a = cartOrOrder.region) === null || _a === void 0 ? void 0 : _a.gift_cards_taxable) {
-                            return [2 /*return*/, {
-                                    total: orderGiftCardAmount,
-                                    tax_total: Math.round((orderGiftCardAmount * cartOrOrder.region.tax_rate) / 100),
-                                }];
-                        }
-                        return [2 /*return*/, {
-                                total: orderGiftCardAmount,
-                                tax_total: 0,
-                            }];
+                        _a.label = 4;
+                    case 4: return [4 /*yield*/, this.newTotalsService_.getGiftCardTotals(giftCardable, {
+                            region: cartOrOrder.region,
+                            giftCards: cartOrOrder.gift_cards || [],
+                            giftCardTransactions: cartOrOrder["gift_card_transactions"] || [],
+                        })];
+                    case 5: return [2 /*return*/, _a.sent()];
                 }
             });
         });
@@ -1095,26 +1061,15 @@ var TotalsService = /** @class */ (function (_super) {
      * @return the total discounts amount
      */
     TotalsService.prototype.getDiscountTotal = function (cartOrOrder) {
-        var _a;
         return __awaiter(this, void 0, void 0, function () {
-            var subtotal, discount, discountTotal;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var subtotal, discountTotal;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0: return [4 /*yield*/, this.getSubtotal(cartOrOrder, {
                             excludeNonDiscounts: true,
-                        })
-                        // we only support having free shipping and one other discount, so first
-                        // find the discount, which is not free shipping.
-                    ];
+                        })];
                     case 1:
-                        subtotal = _b.sent();
-                        discount = (_a = cartOrOrder.discounts) === null || _a === void 0 ? void 0 : _a.find(function (_a) {
-                            var rule = _a.rule;
-                            return rule.type !== models_1.DiscountRuleType.FREE_SHIPPING;
-                        });
-                        if (!discount) {
-                            return [2 /*return*/, 0];
-                        }
+                        subtotal = _a.sent();
                         discountTotal = this.getLineItemAdjustmentsTotal(cartOrOrder);
                         if (subtotal < 0) {
                             return [2 /*return*/, this.rounded(Math.max(subtotal, discountTotal))];
@@ -1126,18 +1081,18 @@ var TotalsService = /** @class */ (function (_super) {
     };
     /**
      * Prepares the calculation context for a tax total calculation.
-     * @param cartOrOrder - the cart or order to get the calculation context for
+     * @param calculationContextData - the calculationContextData to get the calculation context for
      * @param options - options to gather context by
      * @return the tax calculation context
      */
-    TotalsService.prototype.getCalculationContext = function (cartOrOrder, options) {
+    TotalsService.prototype.getCalculationContext = function (calculationContextData, options) {
         var _a;
         if (options === void 0) { options = {}; }
         return __awaiter(this, void 0, void 0, function () {
             var allocationMap, shippingMethods;
             return __generator(this, function (_b) {
                 switch (_b.label) {
-                    case 0: return [4 /*yield*/, this.getAllocationMap(cartOrOrder, {
+                    case 0: return [4 /*yield*/, this.getAllocationMap(calculationContextData, {
                             exclude_gift_cards: options.exclude_gift_cards,
                             exclude_discounts: options.exclude_discounts,
                         })];
@@ -1146,13 +1101,13 @@ var TotalsService = /** @class */ (function (_super) {
                         shippingMethods = [];
                         // Default to include shipping methods
                         if (!options.exclude_shipping) {
-                            shippingMethods = cartOrOrder.shipping_methods || [];
+                            shippingMethods = calculationContextData.shipping_methods || [];
                         }
                         return [2 /*return*/, {
-                                shipping_address: cartOrOrder.shipping_address,
+                                shipping_address: calculationContextData.shipping_address,
                                 shipping_methods: shippingMethods,
-                                customer: cartOrOrder.customer,
-                                region: cartOrOrder.region,
+                                customer: calculationContextData.customer,
+                                region: calculationContextData.region,
                                 is_return: (_a = options.is_return) !== null && _a !== void 0 ? _a : false,
                                 allocation_map: allocationMap,
                             }];

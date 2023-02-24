@@ -5,12 +5,13 @@ import { TransactionBaseService } from "../interfaces";
 import { Product, ProductOption, ProductTag, ProductType, ProductVariant } from "../models";
 import { ImageRepository } from "../repositories/image";
 import { FindWithoutRelationsOptions, ProductRepository } from "../repositories/product";
+import { ProductCategoryRepository } from "../repositories/product-category";
 import { ProductOptionRepository } from "../repositories/product-option";
 import { ProductTagRepository } from "../repositories/product-tag";
 import { ProductTypeRepository } from "../repositories/product-type";
 import { ProductVariantRepository } from "../repositories/product-variant";
 import { Selector } from "../types/common";
-import { CreateProductInput, FilterableProductProps, FindProductConfig, ProductOptionInput, UpdateProductInput } from "../types/product";
+import { CreateProductInput, FilterableProductProps, FindProductConfig, ProductOptionInput, ProductSelector, UpdateProductInput } from "../types/product";
 import EventBusService from "./event-bus";
 declare type InjectedDependencies = {
     manager: EntityManager;
@@ -20,6 +21,7 @@ declare type InjectedDependencies = {
     productTypeRepository: typeof ProductTypeRepository;
     productTagRepository: typeof ProductTagRepository;
     imageRepository: typeof ImageRepository;
+    productCategoryRepository: typeof ProductCategoryRepository;
     productVariantService: ProductVariantService;
     searchService: SearchService;
     eventBusService: EventBusService;
@@ -34,6 +36,7 @@ declare class ProductService extends TransactionBaseService {
     protected readonly productTypeRepository_: typeof ProductTypeRepository;
     protected readonly productTagRepository_: typeof ProductTagRepository;
     protected readonly imageRepository_: typeof ImageRepository;
+    protected readonly productCategoryRepository_: typeof ProductCategoryRepository;
     protected readonly productVariantService_: ProductVariantService;
     protected readonly searchService_: SearchService;
     protected readonly eventBus_: EventBusService;
@@ -44,7 +47,7 @@ declare class ProductService extends TransactionBaseService {
         CREATED: string;
         DELETED: string;
     };
-    constructor({ manager, productOptionRepository, productRepository, productVariantRepository, eventBusService, productVariantService, productTypeRepository, productTagRepository, imageRepository, searchService, featureFlagRouter, }: InjectedDependencies);
+    constructor({ manager, productOptionRepository, productRepository, productVariantRepository, eventBusService, productVariantService, productTypeRepository, productTagRepository, productCategoryRepository, imageRepository, searchService, featureFlagRouter, }: InjectedDependencies);
     /**
      * Lists products based on the provided parameters.
      * @param selector - an object that defines rules to filter products
@@ -53,7 +56,7 @@ declare class ProductService extends TransactionBaseService {
      *   returned
      * @return the result of the find operation
      */
-    list(selector?: FilterableProductProps | Selector<Product>, config?: FindProductConfig): Promise<Product[]>;
+    list(selector: ProductSelector, config?: FindProductConfig): Promise<Product[]>;
     /**
      * Lists products based on the provided parameters and includes the count of
      * products that match the query.
@@ -65,7 +68,7 @@ declare class ProductService extends TransactionBaseService {
      *   the first element and the total count of products that matches the query
      *   as the second element.
      */
-    listAndCount(selector: FilterableProductProps | Selector<Product>, config?: FindProductConfig): Promise<[Product[], number]>;
+    listAndCount(selector: ProductSelector, config?: FindProductConfig): Promise<[Product[], number]>;
     /**
      * Return the total number of documents in database
      * @param {object} selector - the selector to choose products by
@@ -116,6 +119,13 @@ declare class ProductService extends TransactionBaseService {
     filterProductsBySalesChannel(productIds: string[], salesChannelId: string, config?: FindProductConfig): Promise<Product[]>;
     listTypes(): Promise<ProductType[]>;
     listTagsByUsage(count?: number): Promise<ProductTag[]>;
+    /**
+     * Check if the product is assigned to at least one of the provided sales channels.
+     *
+     * @param id - product id
+     * @param salesChannelIds - an array of sales channel ids
+     */
+    isProductInSalesChannels(id: string, salesChannelIds: string[]): Promise<boolean>;
     /**
      * Creates a product.
      * @param productObject - the product to create
@@ -174,6 +184,13 @@ declare class ProductService extends TransactionBaseService {
      * @return the updated product
      */
     deleteOption(productId: string, optionId: string): Promise<Product | void>;
+    /**
+     *
+     * @param productIds ID or IDs of the products to update
+     * @param profileId Shipping profile ID to update the shipping options with
+     * @returns updated shipping options
+     */
+    updateShippingProfile(productIds: string | string[], profileId: string): Promise<Product[]>;
     /**
      * Creates a query object to be used for list queries.
      * @param selector - the selector to create the query from

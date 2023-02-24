@@ -86,21 +86,20 @@ declare class ShippingProfileService extends TransactionBaseService {
      */
     delete(profileId: string): Promise<void>;
     /**
-     * Adds a product to a profile. The method is idempotent, so multiple calls
-     * with the same product variant will have the same result.
-     * @param profileId - the profile to add the product to.
-     * @param productId - the product to add.
+     * Adds a product of an array of products to the profile.
+     * @param profileId - the profile to add the products to.
+     * @param productId - the ID of the product or multiple products to add.
      * @return the result of update
      */
-    addProduct(profileId: string, productId: string): Promise<ShippingProfile>;
+    addProduct(profileId: string, productId: string | string[]): Promise<ShippingProfile>;
     /**
      * Adds a shipping option to the profile. The shipping option can be used to
      * fulfill the products in the products field.
      * @param profileId - the profile to apply the shipping option to
-     * @param optionId - the option to add to the profile
+     * @param optionId - the ID of the option or multiple options to add to the profile
      * @return the result of the model update operation
      */
-    addShippingOption(profileId: string, optionId: string): Promise<ShippingProfile>;
+    addShippingOption(profileId: string, optionId: string | string[]): Promise<ShippingProfile>;
     /**
      * Finds all the shipping profiles that cover the products in a cart, and
      * validates all options that are available for the cart.

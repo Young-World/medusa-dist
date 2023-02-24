@@ -86,16 +86,7 @@ var fs_1 = __importDefault(require("fs"));
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             uploads:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   url:
- *                     type: string
- *                     description: The URL of the uploaded file.
- *                     format: uri
+ *           $ref: "#/components/schemas/AdminUploadsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -110,15 +101,14 @@ var fs_1 = __importDefault(require("fs"));
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var fileService_1, result, err_1;
+    var fileService, result;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
-                _a.trys.push([0, 2, , 3]);
-                fileService_1 = req.scope.resolve("fileService");
+                fileService = req.scope.resolve("fileService");
                 return [4 /*yield*/, Promise.all(req.files.map(function (f) { return __awaiter(void 0, void 0, void 0, function () {
                         return __generator(this, function (_a) {
-                            return [2 /*return*/, fileService_1.upload(f).then(function (result) {
+                            return [2 /*return*/, fileService.upload(f).then(function (result) {
                                     fs_1.default.unlinkSync(f.path);
                                     return result;
                                 })];
@@ -127,12 +117,7 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
             case 1:
                 result = _a.sent();
                 res.status(200).json({ uploads: result });
-                return [3 /*break*/, 3];
-            case 2:
-                err_1 = _a.sent();
-                console.log(err_1);
-                throw err_1;
-            case 3: return [2 /*return*/];
+                return [2 /*return*/];
         }
     });
 }); });

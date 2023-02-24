@@ -1,4 +1,27 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -40,14 +63,35 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var typeorm_1 = require("typeorm");
-var medusa_core_utils_1 = require("medusa-core-utils");
 var feature_flags_1 = __importDefault(require("../loaders/feature-flags"));
+var config_1 = __importDefault(require("../loaders/config"));
 var logger_1 = __importDefault(require("../loaders/logger"));
-var get_migrations_1 = __importDefault(require("./utils/get-migrations"));
-var t = function (_a) {
+var get_migrations_1 = __importStar(require("./utils/get-migrations"));
+var getDataSource = function (directory) { return __awaiter(void 0, void 0, void 0, function () {
+    var configModule, featureFlagRouter, coreMigrations, moduleMigrations;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                configModule = (0, config_1.default)(directory);
+                featureFlagRouter = (0, feature_flags_1.default)(configModule);
+                coreMigrations = (0, get_migrations_1.default)(directory, featureFlagRouter).coreMigrations;
+                moduleMigrations = (0, get_migrations_1.getModuleSharedResources)(configModule, featureFlagRouter).migrations;
+                return [4 /*yield*/, (0, typeorm_1.createConnection)({
+                        type: configModule.projectConfig.database_type,
+                        url: configModule.projectConfig.database_url,
+                        extra: configModule.projectConfig.database_extra || {},
+                        schema: configModule.projectConfig.database_schema,
+                        migrations: coreMigrations.concat(moduleMigrations),
+                        logging: true,
+                    })];
+            case 1: return [2 /*return*/, _a.sent()];
+        }
+    });
+}); };
+var main = function (_a) {
     var directory = _a.directory;
     return __awaiter(this, void 0, void 0, function () {
-        var args, configModule, featureFlagRouter, enabledMigrations, connection, unapplied;
+        var args, dataSource, dataSource, configModule, featureFlagRouter, coreMigrations, connection, unapplied;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
@@ -55,55 +99,60 @@ var t = function (_a) {
                     args.shift();
                     args.shift();
                     args.shift();
-                    configModule = (0, medusa_core_utils_1.getConfigFile)(directory, "medusa-config").configModule;
-                    featureFlagRouter = (0, feature_flags_1.default)(configModule);
-                    return [4 /*yield*/, (0, get_migrations_1.default)(directory, featureFlagRouter)];
+                    if (!(args[0] === "run")) return [3 /*break*/, 4];
+                    return [4 /*yield*/, getDataSource(directory)];
                 case 1:
-                    enabledMigrations = _b.sent();
-                    return [4 /*yield*/, (0, typeorm_1.createConnection)({
-                            type: configModule.projectConfig.database_type,
-                            url: configModule.projectConfig.database_url,
-                            extra: configModule.projectConfig.database_extra || {},
-                            migrations: enabledMigrations,
-                            logging: true,
-                        })];
+                    dataSource = _b.sent();
+                    return [4 /*yield*/, dataSource.runMigrations()];
                 case 2:
-                    connection = _b.sent();
-                    if (!(args[0] === "run")) return [3 /*break*/, 5];
-                    return [4 /*yield*/, connection.runMigrations()];
-                case 3:
                     _b.sent();
-                    return [4 /*yield*/, connection.close()];
-                case 4:
+                    return [4 /*yield*/, dataSource.close()];
+                case 3:
                     _b.sent();
                     logger_1.default.info("Migrations completed.");
                     process.exit();
-                    return [3 /*break*/, 11];
-                case 5:
+                    return [3 /*break*/, 12];
+                case 4:
                     if (!(args[0] === "revert")) return [3 /*break*/, 8];
-                    return [4 /*yield*/, connection.undoLastMigration({ transaction: "all" })];
+                    return [4 /*yield*/, getDataSource(directory)];
+                case 5:
+                    dataSource = _b.sent();
+                    return [4 /*yield*/, dataSource.undoLastMigration({ transaction: "all" })];
                 case 6:
                     _b.sent();
-                    return [4 /*yield*/, connection.close()];
+                    return [4 /*yield*/, dataSource.close()];
                 case 7:
                     _b.sent();
                     logger_1.default.info("Migrations reverted.");
                     process.exit();
-                    return [3 /*break*/, 11];
+                    return [3 /*break*/, 12];
                 case 8:
-                    if (!(args[0] === "show")) return [3 /*break*/, 11];
-                    return [4 /*yield*/, connection.showMigrations()];
+                    if (!(args[0] === "show")) return [3 /*break*/, 12];
+                    configModule = (0, config_1.default)(directory);
+                    featureFlagRouter = (0, feature_flags_1.default)(configModule);
+                    coreMigrations = (0, get_migrations_1.default)(directory, featureFlagRouter).coreMigrations;
+                    return [4 /*yield*/, (0, typeorm_1.createConnection)({
+                            type: configModule.projectConfig.database_type,
+                            url: configModule.projectConfig.database_url,
+                            extra: configModule.projectConfig.database_extra || {},
+                            schema: configModule.projectConfig.database_schema,
+                            migrations: coreMigrations,
+                            logging: true,
+                        })];
                 case 9:
+                    connection = _b.sent();
+                    return [4 /*yield*/, connection.showMigrations()];
+                case 10:
                     unapplied = _b.sent();
                     return [4 /*yield*/, connection.close()];
-                case 10:
+                case 11:
                     _b.sent();
                     process.exit(unapplied ? 1 : 0);
-                    _b.label = 11;
-                case 11: return [2 /*return*/];
+                    _b.label = 12;
+                case 12: return [2 /*return*/];
             }
         });
     });
 };
-exports.default = t;
+exports.default = main;
 //# sourceMappingURL=migrate.js.map

@@ -56,7 +56,13 @@ var validator_1 = require("../../../../utils/validator");
  * description: "Selects a Payment Session as the session intended to be used towards the completion of the Cart."
  * parameters:
  *   - (path) id=* {string} The ID of the Cart.
- *   - (body) provider_id=* {string} The ID of the Payment Provider.
+ * requestBody:
+ *   content:
+ *     application/json:
+ *       schema:
+ *         $ref: "#/components/schemas/StorePostCartsCartPaymentSessionReq"
+ * x-codegen:
+ *   method: setPaymentSession
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -85,9 +91,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             cart:
- *               $ref: "#/components/schemas/cart"
+ *           $ref: "#/components/schemas/StoreCartsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":
@@ -133,6 +137,16 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema StorePostCartsCartPaymentSessionReq
+ * type: object
+ * required:
+ *   - provider_id
+ * properties:
+ *   provider_id:
+ *     type: string
+ *     description: The ID of the Payment Provider.
+ */
 var StorePostCartsCartPaymentSessionReq = /** @class */ (function () {
     function StorePostCartsCartPaymentSessionReq() {
     }

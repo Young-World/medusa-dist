@@ -42,6 +42,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * summary: "Get Store details"
  * description: "Retrieves the Store details"
  * x-authenticated: true
+ * x-codegen:
+ *   method: retrieve
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -69,9 +71,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             store:
- *               $ref: "#/components/schemas/store"
+ *           $ref: "#/components/schemas/AdminStoresRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -86,12 +86,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var storeService, featureFlagRouter, paymentProviderService, fulfillmentProviderService, relations, data, paymentProviders, fulfillmentProviders;
+    var storeService, featureFlagRouter, modulesHelper, paymentProviderService, fulfillmentProviderService, relations, data, paymentProviders, fulfillmentProviders;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
                 storeService = req.scope.resolve("storeService");
                 featureFlagRouter = req.scope.resolve("featureFlagRouter");
+                modulesHelper = req.scope.resolve("modulesHelper");
                 paymentProviderService = req.scope.resolve("paymentProviderService");
                 fulfillmentProviderService = req.scope.resolve("fulfillmentProviderService");
                 relations = ["currencies", "default_currency"];
@@ -104,6 +105,7 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
             case 1:
                 data = (_a.sent());
                 data.feature_flags = featureFlagRouter.listFlags();
+                data.modules = modulesHelper.modules;
                 return [4 /*yield*/, paymentProviderService.list()];
             case 2:
                 paymentProviders = _a.sent();

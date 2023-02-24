@@ -17,9 +17,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.featureFlagRouter = void 0;
 var glob_1 = __importDefault(require("glob"));
 var path_1 = __importDefault(require("path"));
+var medusa_core_utils_1 = require("medusa-core-utils");
 var medusa_telemetry_1 = require("medusa-telemetry");
 var flag_router_1 = require("../../utils/flag-router");
-var utils_1 = require("../../utils");
 var isTruthy = function (val) {
     if (typeof val === "string") {
         return val.toLowerCase() === "true";
@@ -45,11 +45,11 @@ exports.default = (function (configModule, logger, flagDirectory) {
             }
             flagConfig[flagSettings.key] = isTruthy(flagSettings.default_val);
             var from = void 0;
-            if ((0, utils_1.isDefined)(process.env[flagSettings.env_key])) {
+            if ((0, medusa_core_utils_1.isDefined)(process.env[flagSettings.env_key])) {
                 from = "environment";
                 flagConfig[flagSettings.key] = isTruthy(process.env[flagSettings.env_key]);
             }
-            else if ((0, utils_1.isDefined)(projectConfigFlags[flagSettings.key])) {
+            else if ((0, medusa_core_utils_1.isDefined)(projectConfigFlags[flagSettings.key])) {
                 from = "project config";
                 flagConfig[flagSettings.key] = isTruthy(projectConfigFlags[flagSettings.key]);
             }

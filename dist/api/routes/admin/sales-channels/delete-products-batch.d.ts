@@ -12,20 +12,9 @@ import { ProductBatchSalesChannel } from "../../../../types/sales-channels";
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - product_ids
- *         properties:
- *           product_ids:
- *             description: The IDs of the products to delete from the Sales Channel.
- *             type: array
- *             items:
- *               type: object
- *               required:
- *                 - id
- *               properties:
- *                 id:
- *                   description: The ID of a product
- *                   type: string
+ *         $ref: "#/components/schemas/AdminDeleteSalesChannelsChannelProductsBatchReq"
+ * x-codegen:
+ *   method: removeProducts
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -67,9 +56,7 @@ import { ProductBatchSalesChannel } from "../../../../types/sales-channels";
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             sales_channel:
- *               $ref: "#/components/schemas/sales_channel"
+ *           $ref: "#/components/schemas/AdminSalesChannelsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -85,6 +72,24 @@ import { ProductBatchSalesChannel } from "../../../../types/sales-channels";
  */
 declare const _default: (req: Request, res: Response) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminDeleteSalesChannelsChannelProductsBatchReq
+ * type: object
+ * required:
+ *   - product_ids
+ * properties:
+ *   product_ids:
+ *     description: The IDs of the products to delete from the Sales Channel.
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - id
+ *       properties:
+ *         id:
+ *           description: The ID of a product
+ *           type: string
+ */
 export declare class AdminDeleteSalesChannelsChannelProductsBatchReq {
     product_ids: ProductBatchSalesChannel[];
 }

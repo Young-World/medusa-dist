@@ -1,3 +1,4 @@
+import { FindParams } from "../../../../types/common";
 /**
  * @oas [post] /orders/{id}/refund
  * operationId: "PostOrdersOrderRefunds"
@@ -6,26 +7,16 @@
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {string} The ID of the Order.
+ *   - (query) expand {string} Comma separated list of relations to include in the result.
+ *   - (query) fields {string} Comma separated list of fields to include in the result.
  * requestBody:
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - amount
- *           - reason
- *         properties:
- *           amount:
- *             description: The amount to refund.
- *             type: integer
- *           reason:
- *             description: The reason for the Refund.
- *             type: string
- *           note:
- *             description: A note with additional details about the Refund.
- *             type: string
- *           no_notification:
- *             description: If set to true no notification will be send related to this Refund.
- *             type: boolean
+ *         $ref: "#/components/schemas/AdminPostOrdersOrderRefundsReq"
+ * x-codegen:
+ *   method: refundPayment
+ *   params: AdminPostOrdersOrderRefundsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -61,9 +52,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/order"
+ *           $ref: "#/components/schemas/AdminOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -79,9 +68,31 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostOrdersOrderRefundsReq
+ * type: object
+ * required:
+ *   - amount
+ *   - reason
+ * properties:
+ *   amount:
+ *     description: The amount to refund.
+ *     type: integer
+ *   reason:
+ *     description: The reason for the Refund.
+ *     type: string
+ *   note:
+ *     description: A note with additional details about the Refund.
+ *     type: string
+ *   no_notification:
+ *     description: If set to true no notification will be send related to this Refund.
+ *     type: boolean
+ */
 export declare class AdminPostOrdersOrderRefundsReq {
     amount: number;
     reason: string;
     note?: string;
     no_notification?: boolean;
+}
+export declare class AdminPostOrdersOrderRefundsParams extends FindParams {
 }

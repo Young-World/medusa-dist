@@ -1,3 +1,4 @@
+import { FindParams } from "../../../../types/common";
 /**
  * @oas [get] /orders
  * operationId: "GetOrders"
@@ -5,6 +6,8 @@
  * description: "Look up an order using filters."
  * parameters:
  *   - (query) display_id=* {number} The display id given to the Order.
+ *   - (query) fields {string} (Comma separated) Which fields should be included in the result.
+ *   - (query) expand {string} (Comma separated) Which fields should be expanded in the result.
  *   - in: query
  *     name: email
  *     style: form
@@ -25,6 +28,9 @@
  *         postal_code:
  *           type: string
  *           description: The postal code of the shipping address
+ * x-codegen:
+ *   method: lookupOrder
+ *   queryParams: StoreGetOrdersParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -50,9 +56,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/order"
+ *           $ref: "#/components/schemas/StoreOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":
@@ -69,7 +73,7 @@ export default _default;
 export declare class ShippingAddressPayload {
     postal_code?: string;
 }
-export declare class StoreGetOrdersParams {
+export declare class StoreGetOrdersParams extends FindParams {
     display_id: number;
     email: string;
     shipping_address?: ShippingAddressPayload;

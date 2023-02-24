@@ -50,6 +50,22 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 var medusa_core_utils_1 = require("medusa-core-utils");
 var typeorm_1 = require("typeorm");
@@ -65,7 +81,7 @@ var ProductTypeService = /** @class */ (function (_super) {
         return _this;
     }
     /**
-     * Gets a product by id.
+     * Gets a product type by id.
      * Throws in case of DB Error and if product was not found.
      * @param id - id of the product to get.
      * @param config - object that defines what should be included in the
@@ -85,7 +101,7 @@ var ProductTypeService = /** @class */ (function (_super) {
                     case 1:
                         type = _a.sent();
                         if (!type) {
-                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Product with id: ".concat(id, " was not found"));
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Product type with id: ".concat(id, " was not found"));
                         }
                         return [2 /*return*/, type];
                 }
@@ -102,20 +118,19 @@ var ProductTypeService = /** @class */ (function (_super) {
         if (selector === void 0) { selector = {}; }
         if (config === void 0) { config = { skip: 0, take: 20 }; }
         return __awaiter(this, void 0, void 0, function () {
-            var typeRepo, query;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        typeRepo = this.manager_.getCustomRepository(this.typeRepository_);
-                        query = (0, utils_1.buildQuery)(selector, config);
-                        return [4 /*yield*/, typeRepo.find(query)];
-                    case 1: return [2 /*return*/, _a.sent()];
+            var _a, productTypes;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0: return [4 /*yield*/, this.listAndCount(selector, config)];
+                    case 1:
+                        _a = __read.apply(void 0, [_b.sent(), 1]), productTypes = _a[0];
+                        return [2 /*return*/, productTypes];
                 }
             });
         });
     };
     /**
-     * Lists product tags and adds count.
+     * Lists product types and adds count.
      * @param selector - the query object for find
      * @param config - the config to be used for find
      * @return the result of the find operation
@@ -124,26 +139,26 @@ var ProductTypeService = /** @class */ (function (_super) {
         if (selector === void 0) { selector = {}; }
         if (config === void 0) { config = { skip: 0, take: 20 }; }
         return __awaiter(this, void 0, void 0, function () {
-            var typeRepo, q, query, where_1;
+            var typeRepo, q, query, discountConditionId;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         typeRepo = this.manager_.getCustomRepository(this.typeRepository_);
-                        q = undefined;
-                        if ("q" in selector) {
+                        if ((0, utils_1.isString)(selector.q)) {
                             q = selector.q;
                             delete selector.q;
                         }
                         query = (0, utils_1.buildQuery)(selector, config);
                         if (q) {
-                            where_1 = query.where;
-                            delete where_1.value;
-                            query.where = function (qb) {
-                                qb.where(where_1).andWhere([{ value: (0, typeorm_1.ILike)("%".concat(q, "%")) }]);
-                            };
+                            query.where.value = (0, typeorm_1.ILike)("%".concat(q, "%"));
                         }
-                        return [4 /*yield*/, typeRepo.findAndCount(query)];
+                        if (!query.where.discount_condition_id) return [3 /*break*/, 2];
+                        discountConditionId = query.where.discount_condition_id;
+                        delete query.where.discount_condition_id;
+                        return [4 /*yield*/, typeRepo.findAndCountByDiscountConditionId(discountConditionId, query)];
                     case 1: return [2 /*return*/, _a.sent()];
+                    case 2: return [4 /*yield*/, typeRepo.findAndCount(query)];
+                    case 3: return [2 /*return*/, _a.sent()];
                 }
             });
         });

@@ -6,6 +6,8 @@
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {string} The ID of the User.
+ * x-codegen:
+ *   method: retrieve
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -33,9 +35,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             user:
- *               $ref: "#/components/schemas/user"
+ *           $ref: "#/components/schemas/AdminUserRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

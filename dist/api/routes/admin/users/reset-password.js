@@ -64,21 +64,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - token
- *           - password
- *         properties:
- *           email:
- *             description: "The Users email."
- *             type: string
- *             format: email
- *           token:
- *             description: "The token generated from the 'password-token' endpoint."
- *             type: string
- *           password:
- *             description: "The Users new password."
- *             type: string
- *             format: password
+ *         $ref: "#/components/schemas/AdminResetPasswordRequest"
+ * x-codegen:
+ *   method: resetPassword
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -114,9 +102,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             user:
- *               $ref: "#/components/schemas/user"
+ *           $ref: "#/components/schemas/AdminUserRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -185,6 +171,25 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminResetPasswordRequest
+ * type: object
+ * required:
+ *   - token
+ *   - password
+ * properties:
+ *   email:
+ *     description: "The Users email."
+ *     type: string
+ *     format: email
+ *   token:
+ *     description: "The token generated from the 'password-token' endpoint."
+ *     type: string
+ *   password:
+ *     description: "The Users new password."
+ *     type: string
+ *     format: password
+ */
 var AdminResetPasswordRequest = /** @class */ (function () {
     function AdminResetPasswordRequest() {
     }

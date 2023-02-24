@@ -1,4 +1,15 @@
 "use strict";
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -44,15 +55,27 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminPostDraftOrdersDraftOrderReq = void 0;
-var class_validator_1 = require("class-validator");
-var _1 = require(".");
-var common_1 = require("../../../../types/common");
-var models_1 = require("../../../../models");
-var medusa_core_utils_1 = require("medusa-core-utils");
 var class_transformer_1 = require("class-transformer");
+var class_validator_1 = require("class-validator");
+var medusa_core_utils_1 = require("medusa-core-utils");
+var _1 = require(".");
+var models_1 = require("../../../../models");
+var common_1 = require("../../../../types/common");
 var validator_1 = require("../../../../utils/validator");
+var is_type_1 = require("../../../../utils/validators/is-type");
 /**
  * @oas [post] /admin/draft-orders/{id}
  * operationId: PostDraftOrdersDraftOrder
@@ -65,43 +88,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           region_id:
- *             type: string
- *             description: The ID of the Region to create the Draft Order in.
- *           country_code:
- *             type: string
- *             description: "The 2 character ISO code for the Country."
- *             externalDocs:
- *                url: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements
- *                description: See a list of codes.
- *           email:
- *             type: string
- *             description: "An email to be used on the Draft Order."
- *             format: email
- *           billing_address:
- *             description: "The Address to be used for billing purposes."
- *             $ref: "#/components/schemas/address"
- *           shipping_address:
- *             description: "The Address to be used for shipping."
- *             $ref: "#/components/schemas/address"
- *           discounts:
- *             description: "An array of Discount codes to add to the Draft Order."
- *             type: array
- *             items:
- *               type: object
- *               required:
- *                 - code
- *               properties:
- *                 code:
- *                   description: "The code that a Discount is identifed by."
- *                   type: string
- *           no_notification_order:
- *             description: "An optional flag passed to the resulting order to determine use of notifications."
- *             type: boolean
- *           customer_id:
- *             description: "The ID of the Customer to associate the Draft Order with."
- *             type: string
+ *         $ref: "#/components/schemas/AdminPostDraftOrdersDraftOrderReq"
+ * x-codegen:
+ *   method: update
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -135,9 +124,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             draft_order:
- *               $ref: "#/components/schemas/draft-order"
+ *           $ref: "#/components/schemas/AdminDraftOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -170,6 +157,7 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                 }
                 manager = req.scope.resolve("manager");
                 return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
+                        var shipping_address, billing_address, rest, cartDataToUpdate;
                         return __generator(this, function (_a) {
                             switch (_a.label) {
                                 case 0:
@@ -183,9 +171,22 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                     _a.sent();
                                     delete validated.no_notification_order;
                                     _a.label = 2;
-                                case 2: return [4 /*yield*/, cartService
-                                        .withTransaction(transactionManager)
-                                        .update(draftOrder.cart_id, validated)];
+                                case 2:
+                                    shipping_address = validated.shipping_address, billing_address = validated.billing_address, rest = __rest(validated, ["shipping_address", "billing_address"]);
+                                    cartDataToUpdate = __assign({}, rest);
+                                    if (typeof shipping_address === "string") {
+                                        cartDataToUpdate.shipping_address_id = shipping_address;
+                                    }
+                                    else {
+                                        cartDataToUpdate.shipping_address = shipping_address;
+                                    }
+                                    if (typeof billing_address === "string") {
+                                        cartDataToUpdate.billing_address_id = billing_address;
+                                    }
+                                    else {
+                                        cartDataToUpdate.billing_address = billing_address;
+                                    }
+                                    return [4 /*yield*/, cartService.update(draftOrder.cart_id, cartDataToUpdate)];
                                 case 3:
                                     _a.sent();
                                     return [2 /*return*/];
@@ -195,7 +196,7 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
             case 3:
                 _b.sent();
                 _a = draftOrder;
-                return [4 /*yield*/, cartService.retrieve(draftOrder.cart_id, {
+                return [4 /*yield*/, cartService.retrieveWithTotals(draftOrder.cart_id, {
                         relations: _1.defaultAdminDraftOrdersCartRelations,
                         select: _1.defaultAdminDraftOrdersCartFields,
                     })];
@@ -206,6 +207,51 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostDraftOrdersDraftOrderReq
+ * type: object
+ * properties:
+ *   region_id:
+ *     type: string
+ *     description: The ID of the Region to create the Draft Order in.
+ *   country_code:
+ *     type: string
+ *     description: "The 2 character ISO code for the Country."
+ *     externalDocs:
+ *        url: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements
+ *        description: See a list of codes.
+ *   email:
+ *     type: string
+ *     description: "An email to be used on the Draft Order."
+ *     format: email
+ *   billing_address:
+ *     description: "The Address to be used for billing purposes."
+ *     anyOf:
+ *       - $ref: "#/components/schemas/AddressFields"
+ *       - type: string
+ *   shipping_address:
+ *     description: "The Address to be used for shipping."
+ *     anyOf:
+ *       - $ref: "#/components/schemas/AddressFields"
+ *       - type: string
+ *   discounts:
+ *     description: "An array of Discount codes to add to the Draft Order."
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - code
+ *       properties:
+ *         code:
+ *           description: "The code that a Discount is identifed by."
+ *           type: string
+ *   no_notification_order:
+ *     description: "An optional flag passed to the resulting order to determine use of notifications."
+ *     type: boolean
+ *   customer_id:
+ *     description: "The ID of the Customer to associate the Draft Order with."
+ *     type: string
+ */
 var AdminPostDraftOrdersDraftOrderReq = /** @class */ (function () {
     function AdminPostDraftOrdersDraftOrderReq() {
     }
@@ -226,13 +272,13 @@ var AdminPostDraftOrdersDraftOrderReq = /** @class */ (function () {
     ], AdminPostDraftOrdersDraftOrderReq.prototype, "email", void 0);
     __decorate([
         (0, class_validator_1.IsOptional)(),
-        (0, class_transformer_1.Type)(function () { return common_1.AddressPayload; }),
-        __metadata("design:type", common_1.AddressPayload)
+        (0, is_type_1.IsType)([common_1.AddressPayload, String]),
+        __metadata("design:type", Object)
     ], AdminPostDraftOrdersDraftOrderReq.prototype, "billing_address", void 0);
     __decorate([
         (0, class_validator_1.IsOptional)(),
-        (0, class_transformer_1.Type)(function () { return common_1.AddressPayload; }),
-        __metadata("design:type", common_1.AddressPayload)
+        (0, is_type_1.IsType)([common_1.AddressPayload, String]),
+        __metadata("design:type", Object)
     ], AdminPostDraftOrdersDraftOrderReq.prototype, "shipping_address", void 0);
     __decorate([
         (0, class_validator_1.IsArray)(),

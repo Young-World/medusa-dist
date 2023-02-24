@@ -1,12 +1,11 @@
 import { AwilixContainer } from "awilix";
 import { EntityManager } from "typeorm";
-import Redis from "ioredis";
 import { LineItemTaxLineRepository } from "../repositories/line-item-tax-line";
 import { ShippingMethodTaxLineRepository } from "../repositories/shipping-method-tax-line";
 import { TaxProviderRepository } from "../repositories/tax-provider";
 import { Cart, LineItem, LineItemTaxLine, Region, ShippingMethod, ShippingMethodTaxLine, TaxProvider } from "../models";
-import { ITaxService, TaxCalculationContext, TransactionBaseService } from "../interfaces";
-import { TaxServiceRate } from "../types/tax-service";
+import { ICacheService, ITaxService, TaxCalculationContext, TransactionBaseService } from "../interfaces";
+import { TaxLinesMaps, TaxServiceRate } from "../types/tax-service";
 import TaxRateService from "./tax-rate";
 import EventBusService from "./event-bus";
 declare type RegionDetails = {
@@ -20,11 +19,11 @@ declare class TaxProviderService extends TransactionBaseService {
     protected manager_: EntityManager;
     protected transactionManager_: EntityManager;
     protected readonly container_: AwilixContainer;
+    protected readonly cacheService_: ICacheService;
     protected readonly taxRateService_: TaxRateService;
     protected readonly taxLineRepo_: typeof LineItemTaxLineRepository;
     protected readonly smTaxLineRepo_: typeof ShippingMethodTaxLineRepository;
     protected readonly taxProviderRepo_: typeof TaxProviderRepository;
-    protected readonly redis_: Redis.Redis;
     protected readonly eventBus_: EventBusService;
     constructor(container: AwilixContainer);
     list(): Promise<TaxProvider[]>;
@@ -72,6 +71,13 @@ declare class TaxProviderService extends TransactionBaseService {
      */
     getTaxLines(lineItems: LineItem[], calculationContext: TaxCalculationContext): Promise<(ShippingMethodTaxLine | LineItemTaxLine)[]>;
     /**
+     * Return a map of tax lines for line items and shipping methods
+     * @param items
+     * @param calculationContext
+     * @protected
+     */
+    getTaxLinesMap(items: LineItem[], calculationContext: TaxCalculationContext): Promise<TaxLinesMaps>;
+    /**
      * Gets the tax rates configured for a shipping option. The rates are cached
      * between calls.
      * @param optionId - the option id of the shipping method.
@@ -89,26 +95,11 @@ declare class TaxProviderService extends TransactionBaseService {
     getRegionRatesForProduct(productId: string, region: RegionDetails): Promise<TaxServiceRate[]>;
     /**
      * The cache key to get cache hits by.
-     * @param productId - the product id to cache
+     * @param id - the entity id to cache
      * @param regionId - the region id to cache
      * @return the cache key to use for the id set
      */
     private getCacheKey;
-    /**
-     * Sets the cache results for a set of ids
-     * @param productId - the product id to cache
-     * @param regionId - the region id to cache
-     * @param value - tax rates to cache
-     * @return promise that resolves after the cache has been set
-     */
-    private setCache;
-    /**
-     * Gets the cache results for a set of ids
-     * @param productId - the product id to cache
-     * @param regionId - the region id to cache
-     * @return the cached result or null
-     */
-    private getCacheEntry;
     registerInstalledProviders(providers: string[]): Promise<void>;
 }
 export default TaxProviderService;

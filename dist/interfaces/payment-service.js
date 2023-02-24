@@ -54,6 +54,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.isPaymentService = exports.AbstractPaymentService = void 0;
 var transaction_base_service_1 = require("./transaction-base-service");
 var medusa_interfaces_1 = require("medusa-interfaces");
+/**
+ * This will be @deprecated in the near future use the AbstractPaymentProcessor instead
+ */
 var AbstractPaymentService = /** @class */ (function (_super) {
     __extends(AbstractPaymentService, _super);
     function AbstractPaymentService(container, config) {
@@ -65,17 +68,24 @@ var AbstractPaymentService = /** @class */ (function (_super) {
         }
         return this.constructor.identifier;
     };
+    /**
+     * This will be @deprecated in the near future
+     */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     AbstractPaymentService.prototype.retrieveSavedMethods = function (customer) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
-                return [2 /*return*/, Promise.resolve([])];
+                return [2 /*return*/, []];
             });
         });
     };
     return AbstractPaymentService;
 }(transaction_base_service_1.TransactionBaseService));
 exports.AbstractPaymentService = AbstractPaymentService;
+/**
+ * Return if the input object is one of AbstractPaymentService or PaymentService or AbstractPaymentPluginService
+ * @param obj
+ */
 function isPaymentService(obj) {
     return obj instanceof AbstractPaymentService || obj instanceof medusa_interfaces_1.PaymentService;
 }

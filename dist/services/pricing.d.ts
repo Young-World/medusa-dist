@@ -53,8 +53,18 @@ declare class PricingService extends TransactionBaseService {
      * @param variantId - the id of the variant to get prices for
      * @param context - the price selection context to use
      * @return The product variant prices
+     * @deprecated Use {@link getProductVariantsPricing} instead.
      */
     getProductVariantPricingById(variantId: string, context: PriceSelectionContext | PricingContext): Promise<ProductVariantPricing>;
+    /**
+     * Gets the prices for a collection of variants.
+     * @param variantIds - the id of the variants to get the prices for
+     * @param context - the price selection context to use
+     * @return The product variant prices
+     */
+    getProductVariantsPricing<T = string | string[], TOutput = T extends string ? ProductVariantPricing : {
+        [variant_id: string]: ProductVariantPricing;
+    }>(variantIds: T, context: PriceSelectionContext | PricingContext): Promise<TOutput>;
     private getProductPricing_;
     /**
      * Gets all the variant prices for a product. All the product's variants will

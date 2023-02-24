@@ -6,6 +6,8 @@
  * parameters:
  *   - (path) id=* {string} The id of the Cart.
  *   - (path) code=* {string} The unique Discount code.
+ * x-codegen:
+ *   method: deleteDiscount
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -28,9 +30,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             cart:
- *               $ref: "#/components/schemas/cart"
+ *           $ref: "#/components/schemas/StoreCartsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":

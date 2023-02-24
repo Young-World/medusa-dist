@@ -106,7 +106,9 @@ var BatchJobService = /** @class */ (function (_super) {
     __extends(BatchJobService, _super);
     function BatchJobService(_a) {
         var manager = _a.manager, batchJobRepository = _a.batchJobRepository, eventBusService = _a.eventBusService, strategyResolverService = _a.strategyResolverService;
-        var _this = _super.call(this, arguments[0]) || this;
+        var _this = 
+        // eslint-disable-next-line prefer-rest-params
+        _super.call(this, arguments[0]) || this;
         _this.batchJobStatusMapToProps = new Map([
             [
                 batch_job_1.BatchJobStatus.PRE_PROCESSED,
@@ -164,6 +166,9 @@ var BatchJobService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(batchJobId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"batchJobId\" must be defined");
+                        }
                         manager = this.manager_;
                         batchJobRepo = manager.getCustomRepository(this.batchJobRepository_);
                         query = (0, utils_1.buildQuery)({ id: batchJobId }, config);

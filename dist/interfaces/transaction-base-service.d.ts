@@ -3,9 +3,10 @@ import { IsolationLevel } from "typeorm/driver/types/IsolationLevel";
 export declare abstract class TransactionBaseService {
     protected readonly __container__: any;
     protected readonly __configModule__?: Record<string, unknown> | undefined;
+    protected readonly __moduleDeclaration__?: Record<string, unknown> | undefined;
     protected abstract manager_: EntityManager;
     protected abstract transactionManager_: EntityManager | undefined;
-    protected constructor(__container__: any, __configModule__?: Record<string, unknown> | undefined);
+    protected constructor(__container__: any, __configModule__?: Record<string, unknown> | undefined, __moduleDeclaration__?: Record<string, unknown> | undefined);
     withTransaction(transactionManager?: EntityManager): this;
     protected shouldRetryTransaction_(err: {
         code: string;

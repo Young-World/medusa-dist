@@ -56,6 +56,18 @@ function setMetadata(obj, metadata) {
             if (typeof key !== "string") {
                 throw new dist_1.MedusaError(dist_1.MedusaError.Types.INVALID_ARGUMENT, "Key type is invalid. Metadata keys must be strings");
             }
+            /**
+             * We reserve the empty string as a way to delete a key.
+             * If the value is an empty string, we don't
+             * set it, and if it exists in the existing metadata, we
+             * unset the field.
+             */
+            if (value === "") {
+                if (key in existing) {
+                    delete existing[key];
+                }
+                continue;
+            }
             newData[key] = value;
         }
     }

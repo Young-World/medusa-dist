@@ -40,8 +40,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.allowedStoreCustomersFields = exports.allowedStoreCustomersRelations = exports.defaultStoreCustomersFields = exports.defaultStoreCustomersRelations = void 0;
 var express_1 = require("express");
 var middlewares_1 = __importStar(require("../../../middlewares"));
-var list_orders_1 = require("./list-orders");
 var orders_1 = require("../orders");
+var list_orders_1 = require("./list-orders");
 var route = (0, express_1.Router)();
 exports.default = (function (app, container) {
     var e_1, _a;
@@ -66,7 +66,7 @@ exports.default = (function (app, container) {
     route.post("/password-reset", middlewares_1.default.wrap(require("./reset-password").default));
     route.post("/password-token", middlewares_1.default.wrap(require("./reset-password-token").default));
     // Authenticated endpoints
-    route.use(middlewares_1.default.authenticate());
+    route.use(middlewares_1.default.requireCustomerAuthentication());
     route.get("/me", middlewares_1.default.wrap(require("./get-customer").default));
     route.post("/me", middlewares_1.default.wrap(require("./update-customer").default));
     route.get("/me/orders", (0, middlewares_1.transformQuery)(list_orders_1.StoreGetCustomersCustomerOrdersParams, {

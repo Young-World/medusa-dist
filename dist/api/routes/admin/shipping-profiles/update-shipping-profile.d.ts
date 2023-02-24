@@ -1,3 +1,4 @@
+import { ShippingProfileType } from "../../../../models";
 /**
  * @oas [post] /shipping-profiles/{id}
  * operationId: "PostShippingProfilesProfile"
@@ -9,10 +10,9 @@
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           name:
- *             description: "The name of the Shipping Profile"
- *             type: string
+ *         $ref: "#/components/schemas/AdminPostShippingProfilesProfileReq"
+ * x-codegen:
+ *   method: update
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -46,9 +46,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             shipping_profile:
- *               $ref: "#/components/schemas/shipping_profile"
+ *           $ref: "#/components/schemas/AdminShippingProfilesRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -64,6 +62,31 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostShippingProfilesProfileReq
+ * type: object
+ * properties:
+ *   name:
+ *     description: The name of the Shipping Profile
+ *     type: string
+ *   metadata:
+ *     description: An optional set of key-value pairs with additional information.
+ *     type: object
+ *   type:
+ *     description: The type of the Shipping Profile
+ *     type: string
+ *     enum: [default, gift_card, custom]
+ *   products:
+ *     description: An optional array of product ids to associate with the Shipping Profile
+ *     type: array
+ *   shipping_options:
+ *     description: An optional array of shipping option ids to associate with the Shipping Profile
+ *     type: array
+ */
 export declare class AdminPostShippingProfilesProfileReq {
     name?: string;
+    metadata?: Record<string, unknown>;
+    type?: ShippingProfileType;
+    products?: string[];
+    shipping_options?: string[];
 }

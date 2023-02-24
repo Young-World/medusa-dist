@@ -9,28 +9,9 @@ import { UserRoles } from "../../../../models/user";
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - email
- *           - password
- *         properties:
- *           email:
- *             description: "The Users email."
- *             type: string
- *             format: email
- *           first_name:
- *             description: "The name of the User."
- *             type: string
- *           last_name:
- *             description: "The name of the User."
- *             type: string
- *           role:
- *             description: "Userrole assigned to the user."
- *             type: string
- *             enum: [admin, member, developer]
- *           password:
- *             description: "The Users password."
- *             type: string
- *             format: password
+ *         $ref: "#/components/schemas/AdminCreateUserRequest"
+ * x-codegen:
+ *   method: create
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -66,9 +47,7 @@ import { UserRoles } from "../../../../models/user";
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             user:
- *               $ref: "#/components/schemas/user"
+ *           $ref: "#/components/schemas/AdminUserRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -84,6 +63,32 @@ import { UserRoles } from "../../../../models/user";
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminCreateUserRequest
+ * type: object
+ * required:
+ *   - email
+ *   - password
+ * properties:
+ *   email:
+ *     description: "The Users email."
+ *     type: string
+ *     format: email
+ *   first_name:
+ *     description: "The name of the User."
+ *     type: string
+ *   last_name:
+ *     description: "The name of the User."
+ *     type: string
+ *   role:
+ *     description: "Userrole assigned to the user."
+ *     type: string
+ *     enum: [admin, member, developer]
+ *   password:
+ *     description: "The Users password."
+ *     type: string
+ *     format: password
+ */
 export declare class AdminCreateUserRequest {
     email: string;
     first_name?: string;

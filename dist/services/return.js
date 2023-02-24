@@ -109,7 +109,6 @@ var __values = (this && this.__values) || function(o) {
     throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var class_validator_1 = require("class-validator");
 var medusa_core_utils_1 = require("medusa-core-utils");
 var interfaces_1 = require("../interfaces");
 var models_1 = require("../models");
@@ -117,8 +116,10 @@ var utils_1 = require("../utils");
 var ReturnService = /** @class */ (function (_super) {
     __extends(ReturnService, _super);
     function ReturnService(_a) {
-        var manager = _a.manager, totalsService = _a.totalsService, lineItemService = _a.lineItemService, returnRepository = _a.returnRepository, returnItemRepository = _a.returnItemRepository, shippingOptionService = _a.shippingOptionService, returnReasonService = _a.returnReasonService, taxProviderService = _a.taxProviderService, fulfillmentProviderService = _a.fulfillmentProviderService, inventoryService = _a.inventoryService, orderService = _a.orderService;
-        var _this = _super.call(this, arguments[0]) || this;
+        var manager = _a.manager, totalsService = _a.totalsService, lineItemService = _a.lineItemService, returnRepository = _a.returnRepository, returnItemRepository = _a.returnItemRepository, shippingOptionService = _a.shippingOptionService, returnReasonService = _a.returnReasonService, taxProviderService = _a.taxProviderService, fulfillmentProviderService = _a.fulfillmentProviderService, orderService = _a.orderService, productVariantInventoryService = _a.productVariantInventoryService;
+        var _this = 
+        // eslint-disable-next-line prefer-rest-params
+        _super.call(this, arguments[0]) || this;
         _this.manager_ = manager;
         _this.totalsService_ = totalsService;
         _this.returnRepository_ = returnRepository;
@@ -128,8 +129,8 @@ var ReturnService = /** @class */ (function (_super) {
         _this.shippingOptionService_ = shippingOptionService;
         _this.fulfillmentProviderService_ = fulfillmentProviderService;
         _this.returnReasonService_ = returnReasonService;
-        _this.inventoryService_ = inventoryService;
         _this.orderService_ = orderService;
+        _this.productVariantInventoryService_ = productVariantInventoryService;
         return _this;
     }
     /**
@@ -296,24 +297,27 @@ var ReturnService = /** @class */ (function (_super) {
     };
     /**
      * Retrieves a return by its id.
-     * @param id - the id of the return to retrieve
+     * @param returnId - the id of the return to retrieve
      * @param config - the config object
      * @return the return
      */
-    ReturnService.prototype.retrieve = function (id, config) {
+    ReturnService.prototype.retrieve = function (returnId, config) {
         if (config === void 0) { config = {}; }
         return __awaiter(this, void 0, void 0, function () {
             var returnRepository, query, returnObj;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(returnId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"returnId\" must be defined");
+                        }
                         returnRepository = this.manager_.getCustomRepository(this.returnRepository_);
-                        query = (0, utils_1.buildQuery)({ id: id }, config);
+                        query = (0, utils_1.buildQuery)({ id: returnId }, config);
                         return [4 /*yield*/, returnRepository.findOne(query)];
                     case 1:
                         returnObj = _a.sent();
                         if (!returnObj) {
-                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Return with id: ".concat(id, " was not found"));
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Return with id: ".concat(returnId, " was not found"));
                         }
                         return [2 /*return*/, returnObj];
                 }
@@ -471,7 +475,7 @@ var ReturnService = /** @class */ (function (_super) {
                                     case 10:
                                         returnLines = _j.sent();
                                         toRefund = data.refund_amount;
-                                        if (!(0, class_validator_1.isDefined)(toRefund)) return [3 /*break*/, 11];
+                                        if (!(0, medusa_core_utils_1.isDefined)(toRefund)) return [3 /*break*/, 11];
                                         refundable = order.refundable_amount;
                                         if (toRefund > refundable) {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Cannot refund more than the original payment");
@@ -617,14 +621,15 @@ var ReturnService = /** @class */ (function (_super) {
      * product mismatch
      * @return the result of the update operation
      */
-    ReturnService.prototype.receive = function (returnId, receivedItems, refundAmount, allowMismatch) {
+    ReturnService.prototype.receive = function (returnId, receivedItems, refundAmount, allowMismatch, context) {
         if (allowMismatch === void 0) { allowMismatch = false; }
+        if (context === void 0) { context = {}; }
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var returnRepository, returnObj, orderId, order, returnLines, newLines, returnStatus, isMatching, totalRefundableAmount, now, updateObj, result, lineItemServiceTx, _a, _b, i, lineItem, returnedQuantity, e_5_1, inventoryServiceTx, _loop_1, newLines_1, newLines_1_1, line, e_6_1;
+                            var returnRepository, returnObj, orderId, order, returnLines, newLines, returnStatus, isMatching, totalRefundableAmount, now, updateObj, result, lineItemServiceTx, _a, _b, i, lineItem, returnedQuantity, e_5_1, productVarInventoryTx, _loop_1, newLines_1, newLines_1_1, line, e_6_1;
                             var e_5, _c, e_6, _d;
                             return __generator(this, function (_e) {
                                 switch (_e.label) {
@@ -690,9 +695,9 @@ var ReturnService = /** @class */ (function (_super) {
                                         if (!isMatching && !allowMismatch) {
                                             returnStatus = models_1.ReturnStatus.REQUIRES_ACTION;
                                         }
-                                        totalRefundableAmount = refundAmount || returnObj.refund_amount;
+                                        totalRefundableAmount = refundAmount !== null && refundAmount !== void 0 ? refundAmount : returnObj.refund_amount;
                                         now = new Date();
-                                        updateObj = __assign(__assign({}, returnObj), { status: returnStatus, items: newLines, refund_amount: totalRefundableAmount, received_at: now.toISOString() });
+                                        updateObj = __assign(__assign({}, returnObj), { location_id: context.locationId || returnObj.location_id, status: returnStatus, items: newLines, refund_amount: totalRefundableAmount, received_at: now.toISOString() });
                                         return [4 /*yield*/, returnRepository.save(updateObj)];
                                     case 4:
                                         result = _e.sent();
@@ -730,15 +735,15 @@ var ReturnService = /** @class */ (function (_super) {
                                         finally { if (e_5) throw e_5.error; }
                                         return [7 /*endfinally*/];
                                     case 13:
-                                        inventoryServiceTx = this.inventoryService_.withTransaction(manager);
+                                        productVarInventoryTx = this.productVariantInventoryService_.withTransaction(manager);
                                         _loop_1 = function (line) {
                                             var orderItem;
                                             return __generator(this, function (_f) {
                                                 switch (_f.label) {
                                                     case 0:
                                                         orderItem = order.items.find(function (i) { return i.id === line.item_id; });
-                                                        if (!orderItem) return [3 /*break*/, 2];
-                                                        return [4 /*yield*/, inventoryServiceTx.adjustInventory(orderItem.variant_id, line.received_quantity)];
+                                                        if (!(orderItem && orderItem.variant_id)) return [3 /*break*/, 2];
+                                                        return [4 /*yield*/, productVarInventoryTx.adjustInventory(orderItem.variant_id, result.location_id, line.received_quantity)];
                                                     case 1:
                                                         _f.sent();
                                                         _f.label = 2;

@@ -82,7 +82,7 @@ var utils_1 = require("../utils");
 var FulfillmentService = /** @class */ (function (_super) {
     __extends(FulfillmentService, _super);
     function FulfillmentService(_a) {
-        var manager = _a.manager, totalsService = _a.totalsService, fulfillmentRepository = _a.fulfillmentRepository, trackingLinkRepository = _a.trackingLinkRepository, shippingProfileService = _a.shippingProfileService, lineItemService = _a.lineItemService, fulfillmentProviderService = _a.fulfillmentProviderService, lineItemRepository = _a.lineItemRepository;
+        var manager = _a.manager, totalsService = _a.totalsService, fulfillmentRepository = _a.fulfillmentRepository, trackingLinkRepository = _a.trackingLinkRepository, shippingProfileService = _a.shippingProfileService, lineItemService = _a.lineItemService, fulfillmentProviderService = _a.fulfillmentProviderService, lineItemRepository = _a.lineItemRepository, productVariantInventoryService = _a.productVariantInventoryService;
         var _this = 
         // eslint-disable-next-line prefer-rest-params
         _super.call(this, arguments[0]) || this;
@@ -94,11 +94,15 @@ var FulfillmentService = /** @class */ (function (_super) {
         _this.shippingProfileService_ = shippingProfileService;
         _this.lineItemService_ = lineItemService;
         _this.fulfillmentProviderService_ = fulfillmentProviderService;
+        _this.productVariantInventoryService_ = productVariantInventoryService;
         return _this;
     }
     FulfillmentService.prototype.partitionItems_ = function (shippingMethods, items) {
         var e_1, _a;
         var partitioned = [];
+        if (shippingMethods.length === 1) {
+            return [{ items: items, shipping_method: shippingMethods[0] }];
+        }
         var _loop_1 = function (method) {
             var temp = {
                 shipping_method: method,
@@ -106,16 +110,11 @@ var FulfillmentService = /** @class */ (function (_super) {
             };
             // for each method find the items in the order, that are associated
             // with the profile on the current shipping method
-            if (shippingMethods.length === 1) {
-                temp.items = items;
-            }
-            else {
-                var methodProfile_1 = method.shipping_option.profile_id;
-                temp.items = items.filter(function (_a) {
-                    var variant = _a.variant;
-                    variant.product.profile_id === methodProfile_1;
-                });
-            }
+            var methodProfile = method.shipping_option.profile_id;
+            temp.items = items.filter(function (_a) {
+                var variant = _a.variant;
+                variant.product.profile_id === methodProfile;
+            });
             partitioned.push(temp);
         };
         try {
@@ -195,25 +194,28 @@ var FulfillmentService = /** @class */ (function (_super) {
     };
     /**
      * Retrieves a fulfillment by its id.
-     * @param id - the id of the fulfillment to retrieve
+     * @param fulfillmentId - the id of the fulfillment to retrieve
      * @param config - optional values to include with fulfillmentRepository query
      * @return the fulfillment
      */
-    FulfillmentService.prototype.retrieve = function (id, config) {
+    FulfillmentService.prototype.retrieve = function (fulfillmentId, config) {
         if (config === void 0) { config = {}; }
         return __awaiter(this, void 0, void 0, function () {
             var manager, fulfillmentRepository, query, fulfillment;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(fulfillmentId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"fulfillmentId\" must be defined");
+                        }
                         manager = this.manager_;
                         fulfillmentRepository = manager.getCustomRepository(this.fulfillmentRepository_);
-                        query = (0, utils_1.buildQuery)({ id: id }, config);
+                        query = (0, utils_1.buildQuery)({ id: fulfillmentId }, config);
                         return [4 /*yield*/, fulfillmentRepository.findOne(query)];
                     case 1:
                         fulfillment = _a.sent();
                         if (!fulfillment) {
-                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Fulfillment with id: ".concat(id, " was not found"));
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Fulfillment with id: ".concat(fulfillmentId, " was not found"));
                         }
                         return [2 /*return*/, fulfillment];
                 }
@@ -230,51 +232,55 @@ var FulfillmentService = /** @class */ (function (_super) {
      * @param custom - potential custom values to add
      * @return the created fulfillments
      */
-    FulfillmentService.prototype.createFulfillment = function (order, itemsToFulfill, custom) {
+    FulfillmentService.prototype.createFulfillment = function (order, itemsToFulfill, custom, context) {
         if (custom === void 0) { custom = {}; }
+        if (context === void 0) { context = {}; }
         return __awaiter(this, void 0, void 0, function () {
+            var locationId;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var fulfillmentRepository, lineItems, shipping_methods, fulfillments, created;
-                            var _this = this;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0:
-                                        fulfillmentRepository = manager.getCustomRepository(this.fulfillmentRepository_);
-                                        return [4 /*yield*/, this.getFulfillmentItems_(order, itemsToFulfill)];
-                                    case 1:
-                                        lineItems = _a.sent();
-                                        shipping_methods = order.shipping_methods;
-                                        fulfillments = this.partitionItems_(shipping_methods, lineItems);
-                                        return [4 /*yield*/, Promise.all(fulfillments.map(function (_a) {
-                                                var shipping_method = _a.shipping_method, items = _a.items;
-                                                return __awaiter(_this, void 0, void 0, function () {
-                                                    var ful, result, _b;
-                                                    return __generator(this, function (_c) {
-                                                        switch (_c.label) {
-                                                            case 0:
-                                                                ful = fulfillmentRepository.create(__assign(__assign({}, custom), { provider_id: shipping_method.shipping_option.provider_id, items: items.map(function (i) { return ({ item_id: i.id, quantity: i.quantity }); }), data: {} }));
-                                                                return [4 /*yield*/, fulfillmentRepository.save(ful)];
-                                                            case 1:
-                                                                result = _c.sent();
-                                                                _b = result;
-                                                                return [4 /*yield*/, this.fulfillmentProviderService_.createFulfillment(shipping_method, items, __assign({}, order), __assign({}, result))];
-                                                            case 2:
-                                                                _b.data =
-                                                                    _c.sent();
-                                                                return [2 /*return*/, fulfillmentRepository.save(result)];
-                                                        }
+                    case 0:
+                        locationId = context.locationId;
+                        return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
+                                var fulfillmentRepository, lineItems, shipping_methods, fulfillments, created;
+                                var _this = this;
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
+                                        case 0:
+                                            fulfillmentRepository = manager.getCustomRepository(this.fulfillmentRepository_);
+                                            return [4 /*yield*/, this.getFulfillmentItems_(order, itemsToFulfill)];
+                                        case 1:
+                                            lineItems = _a.sent();
+                                            shipping_methods = order.shipping_methods;
+                                            fulfillments = this.partitionItems_(shipping_methods, lineItems);
+                                            return [4 /*yield*/, Promise.all(fulfillments.map(function (_a) {
+                                                    var shipping_method = _a.shipping_method, items = _a.items;
+                                                    return __awaiter(_this, void 0, void 0, function () {
+                                                        var ful, result, _b;
+                                                        return __generator(this, function (_c) {
+                                                            switch (_c.label) {
+                                                                case 0:
+                                                                    ful = fulfillmentRepository.create(__assign(__assign({}, custom), { provider_id: shipping_method.shipping_option.provider_id, items: items.map(function (i) { return ({ item_id: i.id, quantity: i.quantity }); }), data: {}, location_id: locationId }));
+                                                                    return [4 /*yield*/, fulfillmentRepository.save(ful)];
+                                                                case 1:
+                                                                    result = _c.sent();
+                                                                    _b = result;
+                                                                    return [4 /*yield*/, this.fulfillmentProviderService_.createFulfillment(shipping_method, items, __assign({}, order), __assign({}, result))];
+                                                                case 2:
+                                                                    _b.data =
+                                                                        _c.sent();
+                                                                    return [2 /*return*/, fulfillmentRepository.save(result)];
+                                                            }
+                                                        });
                                                     });
-                                                });
-                                            }))];
-                                    case 2:
-                                        created = _a.sent();
-                                        return [2 /*return*/, created];
-                                }
-                            });
-                        }); })];
+                                                }))];
+                                        case 2:
+                                            created = _a.sent();
+                                            return [2 /*return*/, created];
+                                    }
+                                });
+                            }); })];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
@@ -294,10 +300,10 @@ var FulfillmentService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var id, fulfillment, lineItemServiceTx, _a, _b, fItem, item, fulfilledQuantity, e_2_1, fulfillmentRepo, canceled;
-                            var e_2, _c;
-                            return __generator(this, function (_d) {
-                                switch (_d.label) {
+                            var id, fulfillment, lineItemServiceTx, fulfillmentRepo, canceled;
+                            var _this = this;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
                                     case 0:
                                         id = typeof fulfillmentOrId === "string"
                                             ? fulfillmentOrId
@@ -306,52 +312,38 @@ var FulfillmentService = /** @class */ (function (_super) {
                                                 relations: ["items", "claim_order", "swap"],
                                             })];
                                     case 1:
-                                        fulfillment = _d.sent();
+                                        fulfillment = _a.sent();
                                         if (fulfillment.shipped_at) {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "The fulfillment has already been shipped. Shipped fulfillments cannot be canceled");
                                         }
                                         return [4 /*yield*/, this.fulfillmentProviderService_.cancelFulfillment(fulfillment)];
                                     case 2:
-                                        _d.sent();
+                                        _a.sent();
                                         fulfillment.canceled_at = new Date();
                                         lineItemServiceTx = this.lineItemService_.withTransaction(manager);
-                                        _d.label = 3;
+                                        return [4 /*yield*/, Promise.all(fulfillment.items.map(function (fItem) { return __awaiter(_this, void 0, void 0, function () {
+                                                var item, fulfilledQuantity;
+                                                return __generator(this, function (_a) {
+                                                    switch (_a.label) {
+                                                        case 0: return [4 /*yield*/, lineItemServiceTx.retrieve(fItem.item_id)];
+                                                        case 1:
+                                                            item = _a.sent();
+                                                            fulfilledQuantity = item.fulfilled_quantity - fItem.quantity;
+                                                            return [4 /*yield*/, lineItemServiceTx.update(item.id, {
+                                                                    fulfilled_quantity: fulfilledQuantity,
+                                                                })];
+                                                        case 2:
+                                                            _a.sent();
+                                                            return [2 /*return*/];
+                                                    }
+                                                });
+                                            }); }))];
                                     case 3:
-                                        _d.trys.push([3, 9, 10, 11]);
-                                        _a = __values(fulfillment.items), _b = _a.next();
-                                        _d.label = 4;
-                                    case 4:
-                                        if (!!_b.done) return [3 /*break*/, 8];
-                                        fItem = _b.value;
-                                        return [4 /*yield*/, lineItemServiceTx.retrieve(fItem.item_id)];
-                                    case 5:
-                                        item = _d.sent();
-                                        fulfilledQuantity = item.fulfilled_quantity - fItem.quantity;
-                                        return [4 /*yield*/, lineItemServiceTx.update(item.id, {
-                                                fulfilled_quantity: fulfilledQuantity,
-                                            })];
-                                    case 6:
-                                        _d.sent();
-                                        _d.label = 7;
-                                    case 7:
-                                        _b = _a.next();
-                                        return [3 /*break*/, 4];
-                                    case 8: return [3 /*break*/, 11];
-                                    case 9:
-                                        e_2_1 = _d.sent();
-                                        e_2 = { error: e_2_1 };
-                                        return [3 /*break*/, 11];
-                                    case 10:
-                                        try {
-                                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
-                                        }
-                                        finally { if (e_2) throw e_2.error; }
-                                        return [7 /*endfinally*/];
-                                    case 11:
+                                        _a.sent();
                                         fulfillmentRepo = manager.getCustomRepository(this.fulfillmentRepository_);
                                         return [4 /*yield*/, fulfillmentRepo.save(fulfillment)];
-                                    case 12:
-                                        canceled = _d.sent();
+                                    case 4:
+                                        canceled = _a.sent();
                                         return [2 /*return*/, canceled];
                                 }
                             });
@@ -401,7 +393,7 @@ var FulfillmentService = /** @class */ (function (_super) {
                                             fulfillment.tracking_links = (trackingLinks || []).map(function (tl) {
                                                 return trackingLinkRepo.create(tl);
                                             });
-                                            if ((0, utils_1.isDefined)(no_notification)) {
+                                            if ((0, medusa_core_utils_1.isDefined)(no_notification)) {
                                                 fulfillment.no_notification = no_notification;
                                             }
                                             fulfillment.metadata = __assign(__assign({}, fulfillment.metadata), metadata);

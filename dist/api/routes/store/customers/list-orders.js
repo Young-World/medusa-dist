@@ -88,11 +88,10 @@ var __read = (this && this.__read) || function (o, n) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StoreGetCustomersCustomerOrdersParams = exports.StoreGetCustomersCustomerOrdersPaginationParams = void 0;
-var order_1 = require("../../../../models/order");
 var class_validator_1 = require("class-validator");
-var common_1 = require("../../../../types/common");
-var medusa_core_utils_1 = require("medusa-core-utils");
+var order_1 = require("../../../../models/order");
 var class_transformer_1 = require("class-transformer");
+var common_1 = require("../../../../types/common");
 /**
  * @oas [get] /customers/me/orders
  * operationId: GetCustomersCustomerOrders
@@ -214,6 +213,9 @@ var class_transformer_1 = require("class-transformer");
  *   - (query) offset=0 {integer} The offset in the resulting orders.
  *   - (query) fields {string} (Comma separated string) Which fields should be included in the resulting orders.
  *   - (query) expand {string} (Comma separated string) Which relations should be expanded in the resulting orders.
+ * x-codegen:
+ *   method: listOrders
+ *   queryParams: StoreGetCustomersCustomerOrdersParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -240,20 +242,7 @@ var class_transformer_1 = require("class-transformer");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             orders:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/order"
- *             count:
- *               type: integer
- *               description: The total number of items available
- *             offset:
- *               type: integer
- *               description: The number of items skipped before these items
- *             limit:
- *               type: integer
- *               description: The number of items per page
+ *           $ref: "#/components/schemas/StoreCustomersListOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -274,9 +263,6 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         switch (_d.label) {
             case 0:
                 id = (_c = req.user) === null || _c === void 0 ? void 0 : _c.customer_id;
-                if (!id) {
-                    throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.UNEXPECTED_STATE, "Not authorized to list orders");
-                }
                 orderService = req.scope.resolve("orderService");
                 req.filterableFields = __assign(__assign({}, req.filterableFields), { customer_id: id });
                 return [4 /*yield*/, orderService.listAndCount(req.filterableFields, req.listConfig)];

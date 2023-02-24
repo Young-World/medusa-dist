@@ -132,21 +132,24 @@ var TaxRateService = /** @class */ (function (_super) {
             });
         });
     };
-    TaxRateService.prototype.retrieve = function (id, config) {
+    TaxRateService.prototype.retrieve = function (taxRateId, config) {
         if (config === void 0) { config = {}; }
         return __awaiter(this, void 0, void 0, function () {
             var manager, taxRateRepo, query, taxRate;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(taxRateId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"taxRateId\" must be defined");
+                        }
                         manager = this.manager_;
                         taxRateRepo = manager.getCustomRepository(this.taxRateRepository_);
-                        query = (0, utils_1.buildQuery)({ id: id }, config);
+                        query = (0, utils_1.buildQuery)({ id: taxRateId }, config);
                         return [4 /*yield*/, taxRateRepo.findOneWithResolution(query)];
                     case 1:
                         taxRate = _a.sent();
                         if (!taxRate) {
-                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "TaxRate with ".concat(id, " was not found"));
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "TaxRate with ".concat(taxRateId, " was not found"));
                         }
                         return [2 /*return*/, taxRate];
                 }
@@ -196,7 +199,7 @@ var TaxRateService = /** @class */ (function (_super) {
                                         try {
                                             for (_a = __values(Object.entries(data)), _b = _a.next(); !_b.done; _b = _a.next()) {
                                                 _c = __read(_b.value, 2), k = _c[0], v = _c[1];
-                                                if ((0, utils_1.isDefined)(v)) {
+                                                if ((0, medusa_core_utils_1.isDefined)(v)) {
                                                     taxRate[k] = v;
                                                 }
                                             }

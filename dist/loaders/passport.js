@@ -77,8 +77,16 @@ exports.default = (function (_a) {
                 });
             }); }));
             jwt_secret = configModule.projectConfig.jwt_secret;
-            passport_1.default.use(new passport_jwt_1.Strategy({
+            passport_1.default.use("admin-jwt", new passport_jwt_1.Strategy({
                 jwtFromRequest: function (req) { return req.session.jwt; },
+                secretOrKey: jwt_secret,
+            }, function (jwtPayload, done) { return __awaiter(void 0, void 0, void 0, function () {
+                return __generator(this, function (_a) {
+                    return [2 /*return*/, done(null, jwtPayload)];
+                });
+            }); }));
+            passport_1.default.use("store-jwt", new passport_jwt_1.Strategy({
+                jwtFromRequest: function (req) { return req.session.jwt_store; },
                 secretOrKey: jwt_secret,
             }, function (jwtPayload, done) { return __awaiter(void 0, void 0, void 0, function () {
                 return __generator(this, function (_a) {

@@ -61,6 +61,13 @@ exports.defaultAdminRegionRelations = [
     "payment_providers",
     "fulfillment_providers",
 ];
+/**
+ * @schema AdminRegionsRes
+ * type: object
+ * properties:
+ *   region:
+ *     $ref: "#/components/schemas/Region"
+ */
 var AdminRegionsRes = /** @class */ (function () {
     function AdminRegionsRes() {
     }
@@ -73,6 +80,26 @@ var FulfillmentOption = /** @class */ (function () {
     return FulfillmentOption;
 }());
 exports.FulfillmentOption = FulfillmentOption;
+/**
+ * @schema AdminGetRegionsRegionFulfillmentOptionsRes
+ * type: object
+ * properties:
+ *   fulfillment_options:
+ *     type: array
+ *     items:
+ *       type: object
+ *       properties:
+ *         provider_id:
+ *           type: string
+ *           description: ID of the fulfillment provider
+ *         options:
+ *           type: array
+ *           description: fulfillment provider options
+ *           example:
+ *             - id: "manual-fulfillment"
+ *             - id: "manual-fulfillment-return"
+ *               is_return: true
+ */
 var AdminGetRegionsRegionFulfillmentOptionsRes = /** @class */ (function () {
     function AdminGetRegionsRegionFulfillmentOptionsRes() {
     }

@@ -1,4 +1,4 @@
-import { DateComparisonOperator, StringComparisonOperator } from "../../../../types/common";
+import { DateComparisonOperator, FindPaginationParams, StringComparisonOperator } from "../../../../types/common";
 /**
  * @oas [get] /product-types
  * operationId: "GetProductTypes"
@@ -6,9 +6,10 @@ import { DateComparisonOperator, StringComparisonOperator } from "../../../../ty
  * description: "Retrieve a list of Product Types."
  * x-authenticated: true
  * parameters:
- *   - (query) limit=10 {integer} The number of types to return.
+ *   - (query) limit=20 {integer} The number of types to return.
  *   - (query) offset=0 {integer} The number of items to skip before the results.
  *   - (query) order {string} The field to sort items by.
+ *   - (query) discount_condition_id {string} The discount condition id on which to filter the product types.
  *   - in: query
  *     name: value
  *     style: form
@@ -72,6 +73,9 @@ import { DateComparisonOperator, StringComparisonOperator } from "../../../../ty
  *            type: string
  *            description: filter by dates greater than or equal to this date
  *            format: date
+ * x-codegen:
+ *   method: list
+ *   queryParams: AdminGetProductTypesParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -99,18 +103,7 @@ import { DateComparisonOperator, StringComparisonOperator } from "../../../../ty
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            product_types:
- *              $ref: "#/components/schemas/product_type"
- *            count:
- *              type: integer
- *              description: The total number of items available
- *            offset:
- *              type: integer
- *              description: The number of items skipped before these items
- *            limit:
- *              type: integer
- *              description: The number of items per page
+ *          $ref: "#/components/schemas/AdminProductTypesListRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":
@@ -126,15 +119,12 @@ import { DateComparisonOperator, StringComparisonOperator } from "../../../../ty
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
-export declare class AdminGetProductTypesPaginationParams {
-    limit?: number | undefined;
-    offset?: number | undefined;
-}
-export declare class AdminGetProductTypesParams extends AdminGetProductTypesPaginationParams {
+export declare class AdminGetProductTypesParams extends FindPaginationParams {
     id?: string | string[] | StringComparisonOperator;
     q?: string;
     value?: string | string[] | StringComparisonOperator;
     created_at?: DateComparisonOperator;
     updated_at?: DateComparisonOperator;
     order?: string;
+    discount_condition_id?: string;
 }

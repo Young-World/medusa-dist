@@ -14,6 +14,7 @@ declare type PluginDetails = {
     options: Record<string, unknown>;
     version: string;
 };
+export declare const isSearchEngineInstalledResolutionKey = "isSearchEngineInstalled";
 /**
  * Registers all services in the services directory
  */

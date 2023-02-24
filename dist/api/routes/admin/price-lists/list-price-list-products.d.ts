@@ -115,6 +115,9 @@ import { Request } from "express";
  *   - (query) limit=50 {integer} Limit the number of products returned.
  *   - (query) expand {string} (Comma separated) Which fields should be expanded in each product of the result.
  *   - (query) fields {string} (Comma separated) Which fields should be included in each product of the result.
+ * x-codegen:
+ *   method: listProducts
+ *   queryParams: AdminGetPriceListsPriceListProductsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -135,27 +138,14 @@ import { Request } from "express";
  *   - api_token: []
  *   - cookie_auth: []
  * tags:
- *   - Product
+ *   - Price List
  * responses:
  *   200:
  *     description: OK
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             products:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/product"
- *             count:
- *               type: integer
- *               description: The total number of items available
- *             offset:
- *               type: integer
- *               description: The number of items skipped before these items
- *             limit:
- *               type: integer
- *               description: The number of items per page
+ *           $ref: "#/components/schemas/AdminPriceListsProductsListRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -171,7 +161,7 @@ import { Request } from "express";
  */
 declare const _default: (req: Request, res: any) => Promise<void>;
 export default _default;
-declare const AdminGetPriceListsPriceListProductsParams_base: import("../../../../types/global").ClassConstructor<import("../../../../types/common").FindParams & import("../../../../types/common").FindPaginationParams>;
+declare const AdminGetPriceListsPriceListProductsParams_base: import("../../../..").ClassConstructor<import("../../../../types/common").FindParams & import("../../../../types/common").FindPaginationParams>;
 export declare class AdminGetPriceListsPriceListProductsParams extends AdminGetPriceListsPriceListProductsParams_base {
     id?: string;
     q?: string;

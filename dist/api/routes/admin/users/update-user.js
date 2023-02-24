@@ -61,23 +61,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           first_name:
- *             description: "The name of the User."
- *             type: string
- *           last_name:
- *             description: "The name of the User."
- *             type: string
- *           role:
- *             description: "Userrole assigned to the user."
- *             type: string
- *             enum: [admin, member, developer]
- *           api_token:
- *             description: "The api token of the User."
- *             type: string
- *           metadata:
- *             description: An optional set of key-value pairs with additional information.
- *             type: object
+ *         $ref: "#/components/schemas/AdminUpdateUserRequest"
+ * x-codegen:
+ *   method: update
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -111,9 +97,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             user:
- *               $ref: "#/components/schemas/user"
+ *           $ref: "#/components/schemas/AdminUserRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -155,6 +139,27 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminUpdateUserRequest
+ * type: object
+ * properties:
+ *   first_name:
+ *     description: "The name of the User."
+ *     type: string
+ *   last_name:
+ *     description: "The name of the User."
+ *     type: string
+ *   role:
+ *     description: "Userrole assigned to the user."
+ *     type: string
+ *     enum: [admin, member, developer]
+ *   api_token:
+ *     description: "The api token of the User."
+ *     type: string
+ *   metadata:
+ *     description: An optional set of key-value pairs with additional information.
+ *     type: object
+ */
 var AdminUpdateUserRequest = /** @class */ (function () {
     function AdminUpdateUserRequest() {
     }

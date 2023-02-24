@@ -12,20 +12,9 @@ import { ProductBatchSalesChannel } from "../../../../types/sales-channels";
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - product_ids
- *         properties:
- *           product_ids:
- *             description: The IDs of the products to add to the Sales Channel
- *             type: array
- *             items:
- *               type: object
- *               required:
- *                 - id
- *               properties:
- *                 id:
- *                   type: string
- *                   description: The ID of the product
+ *         $ref: "#/components/schemas/AdminPostSalesChannelsChannelProductsBatchReq"
+ * x-codegen:
+ *   method: addProducts
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -67,9 +56,7 @@ import { ProductBatchSalesChannel } from "../../../../types/sales-channels";
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             sales_channel:
- *               $ref: "#/components/schemas/sales_channel"
+ *           $ref: "#/components/schemas/AdminSalesChannelsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -85,6 +72,24 @@ import { ProductBatchSalesChannel } from "../../../../types/sales-channels";
  */
 declare const _default: (req: Request, res: Response) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostSalesChannelsChannelProductsBatchReq
+ * type: object
+ * required:
+ *   - product_ids
+ * properties:
+ *   product_ids:
+ *     description: The IDs of the products to add to the Sales Channel
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - id
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: The ID of the product
+ */
 export declare class AdminPostSalesChannelsChannelProductsBatchReq {
     product_ids: ProductBatchSalesChannel[];
 }

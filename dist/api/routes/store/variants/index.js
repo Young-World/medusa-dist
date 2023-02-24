@@ -20,9 +20,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.defaultStoreVariantRelations = void 0;
 var express_1 = require("express");
 var middlewares_1 = __importDefault(require("../../../middlewares"));
+var feature_flags_1 = require("../../../../loaders/feature-flags");
+var publishable_api_keys_1 = __importDefault(require("../../../../loaders/feature-flags/publishable-api-keys"));
+var extend_request_params_1 = require("../../../middlewares/publishable-api-key/extend-request-params");
+var validate_sales_channel_param_1 = require("../../../middlewares/publishable-api-key/validate-sales-channel-param");
+var validate_variant_sales_channel_association_1 = require("../../../middlewares/publishable-api-key/validate-variant-sales-channel-association");
 var route = (0, express_1.Router)();
 exports.default = (function (app) {
     app.use("/variants", route);
+    if (feature_flags_1.featureFlagRouter.isFeatureEnabled(publishable_api_keys_1.default.key)) {
+        route.use("/", extend_request_params_1.extendRequestParams, validate_sales_channel_param_1.validateSalesChannelParam);
+        route.use("/:id", validate_variant_sales_channel_association_1.validateProductVariantSalesChannelAssociation);
+    }
     route.get("/", middlewares_1.default.wrap(require("./list-variants").default));
     route.get("/:id", middlewares_1.default.wrap(require("./get-variant").default));
     return app;

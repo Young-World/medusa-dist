@@ -202,6 +202,9 @@ import { Request } from "express";
  *            type: string
  *            description: filter by dates greater than or equal to this date
  *            format: date
+ * x-codegen:
+ *   method: list
+ *   queryParams: AdminGetBatchParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -229,20 +232,7 @@ import { Request } from "express";
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            batch_jobs:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/batch_job"
- *            count:
- *               type: integer
- *               description: The total number of items available
- *            offset:
- *               type: integer
- *               description: The number of items skipped before these items
- *            limit:
- *               type: integer
- *               description: The number of items per page
+ *          $ref: "#/components/schemas/AdminBatchJobListRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":

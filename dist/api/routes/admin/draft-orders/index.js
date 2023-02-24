@@ -17,7 +17,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.allowedAdminDraftOrdersRelations = exports.allowedAdminDraftOrdersFields = exports.defaultAdminDraftOrdersFields = exports.defaultAdminDraftOrdersCartFields = exports.defaultAdminDraftOrdersCartRelations = exports.defaultAdminDraftOrdersRelations = void 0;
+exports.defaultAdminDraftOrdersFields = exports.defaultAdminDraftOrdersCartFields = exports.defaultAdminDraftOrdersCartRelations = exports.defaultAdminDraftOrdersRelations = void 0;
 var express_1 = require("express");
 var middlewares_1 = __importDefault(require("../../../middlewares"));
 var route = (0, express_1.Router)();
@@ -76,18 +76,6 @@ exports.defaultAdminDraftOrdersFields = [
     "metadata",
     "no_notification_order",
 ];
-exports.allowedAdminDraftOrdersFields = [
-    "id",
-    "status",
-    "display_id",
-    "cart_id",
-    "canceled_at",
-    "created_at",
-    "updated_at",
-    "metadata",
-    "no_notification_order",
-];
-exports.allowedAdminDraftOrdersRelations = ["cart"];
 __exportStar(require("./create-draft-order"), exports);
 __exportStar(require("./create-line-item"), exports);
 __exportStar(require("./delete-draft-order"), exports);

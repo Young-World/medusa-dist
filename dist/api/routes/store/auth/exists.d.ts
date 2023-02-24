@@ -11,6 +11,8 @@
  *       format: email
  *     required: true
  *     description: The email to check if exists.
+ * x-codegen:
+ *   method: exists
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -31,10 +33,7 @@
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            exists:
- *              type: boolean
- *              description: Whether email exists or not.
+ *          $ref: "#/components/schemas/StoreGetAuthEmailRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "404":

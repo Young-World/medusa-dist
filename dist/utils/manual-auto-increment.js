@@ -60,24 +60,19 @@ var medusa_core_utils_1 = require("medusa-core-utils");
 var path_1 = __importDefault(require("path"));
 var typeorm_1 = require("typeorm");
 function manualAutoIncrement(tableName) {
+    var _a;
     return __awaiter(this, void 0, void 0, function () {
-        var dbType, configModule, connection, _a, rec, mr;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
+        var configModule, dbType, connection, _b, rec, mr;
+        return __generator(this, function (_c) {
+            switch (_c.label) {
                 case 0:
-                    try {
-                        configModule = (0, medusa_core_utils_1.getConfigFile)(path_1.default.resolve("."), "medusa-config").configModule;
-                        dbType = configModule.projectConfig.database_type;
-                    }
-                    catch (error) {
-                        // Default to Postgres to allow for e.g. migrations to run
-                        dbType = "postgres";
-                    }
+                    configModule = (0, medusa_core_utils_1.getConfigFile)(path_1.default.resolve("."), "medusa-config").configModule;
+                    dbType = ((_a = configModule === null || configModule === void 0 ? void 0 : configModule.projectConfig) === null || _a === void 0 ? void 0 : _a.database_type) || "postgres";
                     if (!(dbType === "sqlite")) return [3 /*break*/, 2];
                     connection = (0, typeorm_1.getConnection)();
                     return [4 /*yield*/, connection.query("SELECT MAX(rowid) as mr FROM \"".concat(tableName, "\""))];
                 case 1:
-                    _a = __read.apply(void 0, [_b.sent(), 1]), rec = _a[0];
+                    _b = __read.apply(void 0, [_c.sent(), 1]), rec = _b[0];
                     mr = 0;
                     if (rec && rec.mr) {
                         mr = rec.mr;

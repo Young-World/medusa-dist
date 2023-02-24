@@ -5,6 +5,7 @@ export declare class FilterableCustomerGroupProps {
     name?: string[];
     updated_at?: DateComparisonOperator;
     created_at?: DateComparisonOperator;
+    discount_condition_id?: string;
 }
 export declare class CustomerGroupsBatchCustomer {
     id: string;

@@ -11,23 +11,9 @@ import { UserRoles } from "../../../../models/user";
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           first_name:
- *             description: "The name of the User."
- *             type: string
- *           last_name:
- *             description: "The name of the User."
- *             type: string
- *           role:
- *             description: "Userrole assigned to the user."
- *             type: string
- *             enum: [admin, member, developer]
- *           api_token:
- *             description: "The api token of the User."
- *             type: string
- *           metadata:
- *             description: An optional set of key-value pairs with additional information.
- *             type: object
+ *         $ref: "#/components/schemas/AdminUpdateUserRequest"
+ * x-codegen:
+ *   method: update
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -61,9 +47,7 @@ import { UserRoles } from "../../../../models/user";
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             user:
- *               $ref: "#/components/schemas/user"
+ *           $ref: "#/components/schemas/AdminUserRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -79,6 +63,27 @@ import { UserRoles } from "../../../../models/user";
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminUpdateUserRequest
+ * type: object
+ * properties:
+ *   first_name:
+ *     description: "The name of the User."
+ *     type: string
+ *   last_name:
+ *     description: "The name of the User."
+ *     type: string
+ *   role:
+ *     description: "Userrole assigned to the user."
+ *     type: string
+ *     enum: [admin, member, developer]
+ *   api_token:
+ *     description: "The api token of the User."
+ *     type: string
+ *   metadata:
+ *     description: An optional set of key-value pairs with additional information.
+ *     type: object
+ */
 export declare class AdminUpdateUserRequest {
     first_name?: string;
     last_name?: string;

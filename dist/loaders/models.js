@@ -45,9 +45,9 @@ exports.default = (function (_a, config) {
                 var _c = __read(_a, 2), val = _c[1];
                 if (typeof val === "function" || val instanceof typeorm_1.EntitySchema) {
                     if (config.register) {
-                        var name = (0, format_registration_name_1.default)(fn);
+                        var name_1 = (0, format_registration_name_1.default)(fn);
                         container.register((_b = {},
-                            _b[name] = (0, awilix_1.asClass)(val),
+                            _b[name_1] = (0, awilix_1.asClass)(val),
                             _b));
                         container.registerAdd("db_entities", (0, awilix_1.asValue)(val));
                     }

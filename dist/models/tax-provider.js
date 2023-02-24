@@ -29,17 +29,20 @@ var TaxProvider = /** @class */ (function () {
 }());
 exports.TaxProvider = TaxProvider;
 /**
- * @schema tax_provider
+ * @schema TaxProvider
  * title: "Tax Provider"
  * description: "The tax service used to calculate taxes"
- * x-resourceId: tax_provider
+ * type: object
+ * required:
+ *   - id
+ *   - is_installed
  * properties:
  *   id:
- *     description: "The id of the tax provider as given by the plugin."
+ *     description: The id of the tax provider as given by the plugin.
  *     type: string
  *     example: manual
  *   is_installed:
- *     description: "Whether the plugin is installed in the current version. Plugins that are no longer installed are not deleted by will have this field set to `false`."
+ *     description: Whether the plugin is installed in the current version. Plugins that are no longer installed are not deleted by will have this field set to `false`.
  *     type: boolean
  *     default: true
  */

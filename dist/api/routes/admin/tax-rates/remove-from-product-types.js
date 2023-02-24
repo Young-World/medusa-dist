@@ -79,14 +79,10 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - product_types
- *         properties:
- *           product_types:
- *             type: array
- *             description: "The IDs of the types of products to remove association with this tax rate"
- *             items:
- *               type: string
+ *         $ref: "#/components/schemas/AdminDeleteTaxRatesTaxRateProductTypesReq"
+ * x-codegen:
+ *   method: removeProductTypes
+ *   queryParams: AdminDeleteTaxRatesTaxRateProductTypesParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -124,9 +120,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             tax_rate:
- *               $ref: "#/components/schemas/tax_rate"
+ *           $ref: "#/components/schemas/AdminTaxRatesRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -174,6 +168,18 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminDeleteTaxRatesTaxRateProductTypesReq
+ * type: object
+ * required:
+ *   - product_types
+ * properties:
+ *   product_types:
+ *     type: array
+ *     description: "The IDs of the types of products to remove association with this tax rate"
+ *     items:
+ *       type: string
+ */
 var AdminDeleteTaxRatesTaxRateProductTypesReq = /** @class */ (function () {
     function AdminDeleteTaxRatesTaxRateProductTypesReq() {
     }

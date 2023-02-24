@@ -101,12 +101,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+/* eslint-disable valid-jsdoc */
 var medusa_core_utils_1 = require("medusa-core-utils");
 var interfaces_1 = require("../../../interfaces");
+var sales_channels_1 = __importDefault(require("../../../loaders/feature-flags/sales-channels"));
 var csv_parser_1 = __importDefault(require("../../../services/csv-parser"));
 var types_1 = require("./types");
+var columns_definition_1 = require("./types/columns-definition");
 var utils_1 = require("./utils");
-var sales_channels_1 = __importDefault(require("../../../loaders/feature-flags/sales-channels"));
 /**
  * Process this many variant rows before reporting progress.
  */
@@ -117,13 +119,17 @@ var BATCH_SIZE = 100;
 var ProductImportStrategy = /** @class */ (function (_super) {
     __extends(ProductImportStrategy, _super);
     function ProductImportStrategy(_a) {
-        var batchJobService = _a.batchJobService, productService = _a.productService, salesChannelService = _a.salesChannelService, productVariantService = _a.productVariantService, shippingProfileService = _a.shippingProfileService, regionService = _a.regionService, fileService = _a.fileService, manager = _a.manager, featureFlagRouter = _a.featureFlagRouter;
+        var batchJobService = _a.batchJobService, productService = _a.productService, salesChannelService = _a.salesChannelService, productVariantService = _a.productVariantService, shippingProfileService = _a.shippingProfileService, regionService = _a.regionService, fileService = _a.fileService, productCollectionService = _a.productCollectionService, manager = _a.manager, featureFlagRouter = _a.featureFlagRouter;
         var _this = 
         // eslint-disable-next-line prefer-rest-params
         _super.call(this, arguments[0]) || this;
         _this.processedCounter = {};
         var isSalesChannelsFeatureOn = featureFlagRouter.isFeatureEnabled(sales_channels_1.default.key);
-        _this.csvParser_ = new csv_parser_1.default(__assign(__assign({}, CSVSchema), { columns: __spreadArray(__spreadArray([], __read(CSVSchema.columns), false), __read((isSalesChannelsFeatureOn ? SalesChannelsSchema.columns : [])), false) }));
+        _this.csvParser_ = new csv_parser_1.default({
+            columns: __spreadArray(__spreadArray([], __read(columns_definition_1.productImportColumnsDefinition.columns), false), __read((isSalesChannelsFeatureOn
+                ? columns_definition_1.productImportSalesChannelsColumnsDefinition.columns
+                : [])), false),
+        });
         _this.featureFlagRouter_ = featureFlagRouter;
         _this.manager_ = manager;
         _this.fileService_ = fileService;
@@ -133,6 +139,7 @@ var ProductImportStrategy = /** @class */ (function (_super) {
         _this.productVariantService_ = productVariantService;
         _this.shippingProfileService_ = shippingProfileService;
         _this.regionService_ = regionService;
+        _this.productCollectionService_ = productCollectionService;
         return _this;
     }
     ProductImportStrategy.prototype.buildTemplate = function () {
@@ -278,7 +285,7 @@ var ProductImportStrategy = /** @class */ (function (_super) {
                         record.currency_code = price.currency_code;
                         _e.label = 8;
                     case 8:
-                        record.amount = (0, medusa_core_utils_1.computerizeAmount)(record.amount, record.currency_code);
+                        record.amount = (0, medusa_core_utils_1.computerizeAmount)(Number(record.amount), record.currency_code);
                         prices.push(record);
                         _e.label = 9;
                     case 9:
@@ -510,10 +517,10 @@ var ProductImportStrategy = /** @class */ (function (_super) {
     ProductImportStrategy.prototype.createProducts = function (batchJob) {
         var _a;
         return __awaiter(this, void 0, void 0, function () {
-            var transactionManager, productOps, productServiceTx, isSalesChannelsFeatureOn, productOps_1, productOps_1_1, productOp, productData, _b, _c, e_8, e_9_1;
-            var e_9, _d;
-            return __generator(this, function (_e) {
-                switch (_e.label) {
+            var transactionManager, productOps, productServiceTx, productCollectionServiceTx, isSalesChannelsFeatureOn, productOps_1, productOps_1_1, productOp, productData, _b, _c, _d, e_8, e_9_1;
+            var e_9, _e;
+            return __generator(this, function (_f) {
+                switch (_f.label) {
                     case 0:
                         if (!batchJob.result.operations[types_1.OperationType.ProductCreate]) {
                             return [2 /*return*/];
@@ -521,55 +528,68 @@ var ProductImportStrategy = /** @class */ (function (_super) {
                         transactionManager = (_a = this.transactionManager_) !== null && _a !== void 0 ? _a : this.manager_;
                         return [4 /*yield*/, this.downloadImportOpsFile(batchJob.id, types_1.OperationType.ProductCreate)];
                     case 1:
-                        productOps = _e.sent();
+                        productOps = _f.sent();
                         productServiceTx = this.productService_.withTransaction(transactionManager);
+                        productCollectionServiceTx = this.productCollectionService_.withTransaction(transactionManager);
                         isSalesChannelsFeatureOn = this.featureFlagRouter_.isFeatureEnabled(sales_channels_1.default.key);
-                        _e.label = 2;
+                        _f.label = 2;
                     case 2:
-                        _e.trys.push([2, 13, 14, 15]);
+                        _f.trys.push([2, 15, 16, 17]);
                         productOps_1 = __values(productOps), productOps_1_1 = productOps_1.next();
-                        _e.label = 3;
+                        _f.label = 3;
                     case 3:
-                        if (!!productOps_1_1.done) return [3 /*break*/, 12];
+                        if (!!productOps_1_1.done) return [3 /*break*/, 14];
                         productOp = productOps_1_1.value;
                         productData = (0, utils_1.transformProductData)(productOp);
-                        _e.label = 4;
+                        _f.label = 4;
                     case 4:
-                        _e.trys.push([4, 8, , 9]);
+                        _f.trys.push([4, 10, , 11]);
                         if (!(isSalesChannelsFeatureOn && productOp["product.sales_channels"])) return [3 /*break*/, 6];
                         _b = productData;
                         _c = "sales_channels";
                         return [4 /*yield*/, this.processSalesChannels(productOp["product.sales_channels"])];
                     case 5:
-                        _b[_c] = _e.sent();
-                        _e.label = 6;
-                    case 6: return [4 /*yield*/, productServiceTx.create(productData)];
+                        _b[_c] = _f.sent();
+                        _f.label = 6;
+                    case 6:
+                        if (!(productOp["product.collection.handle"] != null &&
+                            productOp["product.collection.handle"] !== "")) return [3 /*break*/, 8];
+                        _d = productData;
+                        return [4 /*yield*/, productCollectionServiceTx.retrieveByHandle(productOp["product.collection.handle"], { select: ["id"] })];
                     case 7:
-                        _e.sent();
-                        return [3 /*break*/, 9];
-                    case 8:
-                        e_8 = _e.sent();
-                        ProductImportStrategy.throwDescriptiveError(productOp, e_8.message);
-                        return [3 /*break*/, 9];
-                    case 9: return [4 /*yield*/, this.updateProgress(batchJob.id)];
+                        _d.collection_id = (_f.sent()).id;
+                        delete productData.collection;
+                        _f.label = 8;
+                    case 8: 
+                    // TODO: we should only pass the expected data and should not have to cast the entire object. Here we are passing everything contained in productData
+                    return [4 /*yield*/, productServiceTx.create(productData)];
+                    case 9:
+                        // TODO: we should only pass the expected data and should not have to cast the entire object. Here we are passing everything contained in productData
+                        _f.sent();
+                        return [3 /*break*/, 11];
                     case 10:
-                        _e.sent();
-                        _e.label = 11;
-                    case 11:
+                        e_8 = _f.sent();
+                        ProductImportStrategy.throwDescriptiveError(productOp, e_8.message);
+                        return [3 /*break*/, 11];
+                    case 11: return [4 /*yield*/, this.updateProgress(batchJob.id)];
+                    case 12:
+                        _f.sent();
+                        _f.label = 13;
+                    case 13:
                         productOps_1_1 = productOps_1.next();
                         return [3 /*break*/, 3];
-                    case 12: return [3 /*break*/, 15];
-                    case 13:
-                        e_9_1 = _e.sent();
+                    case 14: return [3 /*break*/, 17];
+                    case 15:
+                        e_9_1 = _f.sent();
                         e_9 = { error: e_9_1 };
-                        return [3 /*break*/, 15];
-                    case 14:
+                        return [3 /*break*/, 17];
+                    case 16:
                         try {
-                            if (productOps_1_1 && !productOps_1_1.done && (_d = productOps_1.return)) _d.call(productOps_1);
+                            if (productOps_1_1 && !productOps_1_1.done && (_e = productOps_1.return)) _e.call(productOps_1);
                         }
                         finally { if (e_9) throw e_9.error; }
                         return [7 /*endfinally*/];
-                    case 15: return [2 /*return*/];
+                    case 17: return [2 /*return*/];
                 }
             });
         });
@@ -582,10 +602,10 @@ var ProductImportStrategy = /** @class */ (function (_super) {
     ProductImportStrategy.prototype.updateProducts = function (batchJob) {
         var _a;
         return __awaiter(this, void 0, void 0, function () {
-            var transactionManager, productOps, productServiceTx, isSalesChannelsFeatureOn, productOps_2, productOps_2_1, productOp, productData, _b, _c, e_10, e_11_1;
-            var e_11, _d;
-            return __generator(this, function (_e) {
-                switch (_e.label) {
+            var transactionManager, productOps, productServiceTx, productCollectionServiceTx, isSalesChannelsFeatureOn, productOps_2, productOps_2_1, productOp, productData, _b, _c, _d, e_10, e_11_1;
+            var e_11, _e;
+            return __generator(this, function (_f) {
+                switch (_f.label) {
                     case 0:
                         if (!batchJob.result.operations[types_1.OperationType.ProductUpdate]) {
                             return [2 /*return*/];
@@ -593,57 +613,69 @@ var ProductImportStrategy = /** @class */ (function (_super) {
                         transactionManager = (_a = this.transactionManager_) !== null && _a !== void 0 ? _a : this.manager_;
                         return [4 /*yield*/, this.downloadImportOpsFile(batchJob.id, types_1.OperationType.ProductUpdate)];
                     case 1:
-                        productOps = _e.sent();
+                        productOps = _f.sent();
                         productServiceTx = this.productService_.withTransaction(transactionManager);
+                        productCollectionServiceTx = this.productCollectionService_.withTransaction(transactionManager);
                         isSalesChannelsFeatureOn = this.featureFlagRouter_.isFeatureEnabled(sales_channels_1.default.key);
-                        _e.label = 2;
+                        _f.label = 2;
                     case 2:
-                        _e.trys.push([2, 13, 14, 15]);
+                        _f.trys.push([2, 15, 16, 17]);
                         productOps_2 = __values(productOps), productOps_2_1 = productOps_2.next();
-                        _e.label = 3;
+                        _f.label = 3;
                     case 3:
-                        if (!!productOps_2_1.done) return [3 /*break*/, 12];
+                        if (!!productOps_2_1.done) return [3 /*break*/, 14];
                         productOp = productOps_2_1.value;
                         productData = (0, utils_1.transformProductData)(productOp);
-                        _e.label = 4;
+                        _f.label = 4;
                     case 4:
-                        _e.trys.push([4, 8, , 9]);
-                        if (!isSalesChannelsFeatureOn) return [3 /*break*/, 6];
+                        _f.trys.push([4, 10, , 11]);
+                        if (!(isSalesChannelsFeatureOn && productOp["product.sales_channels"])) return [3 /*break*/, 6];
                         _b = productData;
                         _c = "sales_channels";
                         return [4 /*yield*/, this.processSalesChannels(productOp["product.sales_channels"])];
                     case 5:
-                        _b[_c] = _e.sent();
-                        _e.label = 6;
+                        _b[_c] = _f.sent();
+                        _f.label = 6;
                     case 6:
                         delete productData.options; // for now not supported in the update method
-                        return [4 /*yield*/, productServiceTx.update(productOp["product.id"], productData)];
+                        if (!(productOp["product.collection.handle"] != null &&
+                            productOp["product.collection.handle"] !== "")) return [3 /*break*/, 8];
+                        _d = productData;
+                        return [4 /*yield*/, productCollectionServiceTx.retrieveByHandle(productOp["product.collection.handle"], { select: ["id"] })];
                     case 7:
-                        _e.sent();
-                        return [3 /*break*/, 9];
-                    case 8:
-                        e_10 = _e.sent();
-                        ProductImportStrategy.throwDescriptiveError(productOp, e_10.message);
-                        return [3 /*break*/, 9];
-                    case 9: return [4 /*yield*/, this.updateProgress(batchJob.id)];
+                        _d.collection_id = (_f.sent()).id;
+                        delete productData.collection;
+                        _f.label = 8;
+                    case 8: 
+                    // TODO: we should only pass the expected data. Here we are passing everything contained in productData
+                    return [4 /*yield*/, productServiceTx.update(productOp["product.id"], productData)];
+                    case 9:
+                        // TODO: we should only pass the expected data. Here we are passing everything contained in productData
+                        _f.sent();
+                        return [3 /*break*/, 11];
                     case 10:
-                        _e.sent();
-                        _e.label = 11;
-                    case 11:
+                        e_10 = _f.sent();
+                        ProductImportStrategy.throwDescriptiveError(productOp, e_10.message);
+                        return [3 /*break*/, 11];
+                    case 11: return [4 /*yield*/, this.updateProgress(batchJob.id)];
+                    case 12:
+                        _f.sent();
+                        _f.label = 13;
+                    case 13:
                         productOps_2_1 = productOps_2.next();
                         return [3 /*break*/, 3];
-                    case 12: return [3 /*break*/, 15];
-                    case 13:
-                        e_11_1 = _e.sent();
+                    case 14: return [3 /*break*/, 17];
+                    case 15:
+                        e_11_1 = _f.sent();
                         e_11 = { error: e_11_1 };
-                        return [3 /*break*/, 15];
-                    case 14:
+                        return [3 /*break*/, 17];
+                    case 16:
                         try {
-                            if (productOps_2_1 && !productOps_2_1.done && (_d = productOps_2.return)) _d.call(productOps_2);
+                            if (productOps_2_1 && !productOps_2_1.done && (_e = productOps_2.return)) _e.call(productOps_2);
                         }
                         finally { if (e_11) throw e_11.error; }
                         return [7 /*endfinally*/];
-                    case 15: return [2 /*return*/];
+                    case 17: return [2 /*return*/];
                 }
             });
         });
@@ -1085,182 +1117,4 @@ var ProductImportStrategy = /** @class */ (function (_super) {
     return ProductImportStrategy;
 }(interfaces_1.AbstractBatchJobStrategy));
 exports.default = ProductImportStrategy;
-/**
- * Schema definition for the CSV parser.
- */
-var CSVSchema = {
-    columns: [
-        // PRODUCT
-        {
-            name: "Product id",
-            mapTo: "product.id",
-        },
-        {
-            name: "Product Handle",
-            mapTo: "product.handle",
-            required: true,
-        },
-        { name: "Product Title", mapTo: "product.title" },
-        { name: "Product Subtitle", mapTo: "product.subtitle" },
-        { name: "Product Description", mapTo: "product.description" },
-        { name: "Product Status", mapTo: "product.status" },
-        { name: "Product Thumbnail", mapTo: "product.thumbnail" },
-        { name: "Product Weight", mapTo: "product.weight" },
-        { name: "Product Length", mapTo: "product.length" },
-        { name: "Product Width", mapTo: "product.width" },
-        { name: "Product Height", mapTo: "product.height" },
-        { name: "Product HS Code", mapTo: "product.hs_code" },
-        { name: "Product Origin Country", mapTo: "product.origin_country" },
-        { name: "Product MID Code", mapTo: "product.mid_code" },
-        { name: "Product Material", mapTo: "product.material" },
-        // PRODUCT-COLLECTION
-        { name: "Product Collection Title", mapTo: "product.collection.title" },
-        { name: "Product Collection Handle", mapTo: "product.collection.handle" },
-        // PRODUCT-TYPE
-        { name: "Product Type", mapTo: "product.type.value" },
-        // PRODUCT-TAGS
-        {
-            name: "Product Tags",
-            mapTo: "product.tags",
-            transform: function (value) {
-                return "".concat(value).split(",").map(function (v) { return ({ value: v }); });
-            },
-        },
-        //
-        { name: "Product Discountable", mapTo: "product.discountable" },
-        { name: "Product External ID", mapTo: "product.external_id" },
-        // VARIANTS
-        {
-            name: "Variant id",
-            mapTo: "variant.id",
-        },
-        { name: "Variant Title", mapTo: "variant.title" },
-        { name: "Variant SKU", mapTo: "variant.sku" },
-        { name: "Variant Barcode", mapTo: "variant.barcode" },
-        { name: "Variant Inventory Quantity", mapTo: "variant.inventory_quantity" },
-        { name: "Variant Allow backorder", mapTo: "variant.allow_backorder" },
-        { name: "Variant Manage inventory", mapTo: "variant.manage_inventory" },
-        { name: "Variant Weight", mapTo: "variant.weight" },
-        { name: "Variant Length", mapTo: "variant.length" },
-        { name: "Variant Width", mapTo: "variant.width" },
-        { name: "Variant Height", mapTo: "variant.height" },
-        { name: "Variant HS Code", mapTo: "variant.hs_code" },
-        { name: "Variant Origin Country", mapTo: "variant.origin_country" },
-        { name: "Variant MID Code", mapTo: "variant.mid_code" },
-        { name: "Variant Material", mapTo: "variant.material" },
-        // ==== DYNAMIC FIELDS ====
-        // PRODUCT_OPTIONS
-        {
-            name: "Option Name",
-            match: /Option \d+ Name/,
-            reducer: function (builtLine, key, value) {
-                builtLine["product.options"] = builtLine["product.options"] || [];
-                if (typeof value === "undefined" || value === null) {
-                    return builtLine;
-                }
-                var options = builtLine["product.options"];
-                options.push({ title: value });
-                return builtLine;
-            },
-        },
-        {
-            name: "Option Value",
-            match: /Option \d+ Value/,
-            reducer: function (builtLine, key, value, context) {
-                builtLine["variant.options"] = builtLine["variant.options"] || [];
-                if (typeof value === "undefined" || value === null) {
-                    return builtLine;
-                }
-                var options = builtLine["variant.options"];
-                options.push({
-                    value: value,
-                    _title: context.line[key.slice(0, -6) + " Name"],
-                });
-                return builtLine;
-            },
-        },
-        // PRICES
-        {
-            name: "Price Region",
-            match: /Price (.*) \[([A-Z]{3})\]/,
-            reducer: function (builtLine, key, value) {
-                builtLine["variant.prices"] = builtLine["variant.prices"] || [];
-                if (typeof value === "undefined" || value === null) {
-                    return builtLine;
-                }
-                var _a = __read(key.trim().match(/Price (.*) \[([A-Z]{3})\]/) || [], 2), regionName = _a[1];
-                builtLine["variant.prices"].push({
-                    amount: parseFloat(value),
-                    regionName: regionName,
-                });
-                return builtLine;
-            },
-        },
-        {
-            name: "Price Currency",
-            match: /Price [A-Z]{3}/,
-            reducer: function (builtLine, key, value) {
-                builtLine["variant.prices"] = builtLine["variant.prices"] || [];
-                if (typeof value === "undefined" || value === null) {
-                    return builtLine;
-                }
-                var currency = key.trim().split(" ")[1];
-                builtLine["variant.prices"].push({
-                    amount: parseFloat(value),
-                    currency_code: currency,
-                });
-                return builtLine;
-            },
-        },
-        // IMAGES
-        {
-            name: "Image Url",
-            match: /Image \d+ Url/,
-            reducer: function (builtLine, key, value) {
-                builtLine["product.images"] = builtLine["product.images"] || [];
-                if (typeof value === "undefined" || value === null) {
-                    return builtLine;
-                }
-                builtLine["product.images"].push(value);
-                return builtLine;
-            },
-        },
-    ],
-};
-var SalesChannelsSchema = {
-    columns: [
-        {
-            name: "Sales Channel Name",
-            match: /Sales Channel \d+ Name/,
-            reducer: function (builtLine, key, value) {
-                builtLine["product.sales_channels"] =
-                    builtLine["product.sales_channels"] || [];
-                if (typeof value === "undefined" || value === null) {
-                    return builtLine;
-                }
-                var channels = builtLine["product.sales_channels"];
-                channels.push({
-                    name: value,
-                });
-                return builtLine;
-            },
-        },
-        {
-            name: "Sales Channel Id",
-            match: /Sales Channel \d+ Id/,
-            reducer: function (builtLine, key, value) {
-                builtLine["product.sales_channels"] =
-                    builtLine["product.sales_channels"] || [];
-                if (typeof value === "undefined" || value === null) {
-                    return builtLine;
-                }
-                var channels = builtLine["product.sales_channels"];
-                channels.push({
-                    id: value,
-                });
-                return builtLine;
-            },
-        },
-    ],
-};
 //# sourceMappingURL=import.js.map

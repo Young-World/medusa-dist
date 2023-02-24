@@ -45,6 +45,8 @@ var _1 = require(".");
  * parameters:
  *   - (path) id=* {string} The id of the Cart.
  *   - (path) line_id=* {string} The id of the Line Item.
+ * x-codegen:
+ *   method: deleteLineItem
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -67,9 +69,7 @@ var _1 = require(".");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             cart:
- *               $ref: "#/components/schemas/cart"
+ *           $ref: "#/components/schemas/StoreCartsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":
@@ -90,25 +90,26 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                 manager = req.scope.resolve("manager");
                 cartService = req.scope.resolve("cartService");
                 return [4 /*yield*/, manager.transaction(function (m) { return __awaiter(void 0, void 0, void 0, function () {
-                        var updated;
+                        var cartServiceTx, updated;
                         var _a;
                         return __generator(this, function (_b) {
                             switch (_b.label) {
-                                case 0: 
-                                // Remove the line item
-                                return [4 /*yield*/, cartService.withTransaction(m).removeLineItem(id, line_id)
-                                    // If the cart has payment sessions update these
-                                ];
+                                case 0:
+                                    cartServiceTx = cartService.withTransaction(m);
+                                    // Remove the line item
+                                    return [4 /*yield*/, cartServiceTx.removeLineItem(id, line_id)
+                                        // If the cart has payment sessions update these
+                                    ];
                                 case 1:
                                     // Remove the line item
                                     _b.sent();
-                                    return [4 /*yield*/, cartService.withTransaction(m).retrieve(id, {
+                                    return [4 /*yield*/, cartServiceTx.retrieve(id, {
                                             relations: ["payment_sessions"],
                                         })];
                                 case 2:
                                     updated = _b.sent();
                                     if (!((_a = updated.payment_sessions) === null || _a === void 0 ? void 0 : _a.length)) return [3 /*break*/, 4];
-                                    return [4 /*yield*/, cartService.withTransaction(m).setPaymentSessions(id)];
+                                    return [4 /*yield*/, cartServiceTx.setPaymentSessions(id)];
                                 case 3:
                                     _b.sent();
                                     _b.label = 4;

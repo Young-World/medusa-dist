@@ -4,6 +4,8 @@
  * summary: "Get Current Customer"
  * description: "Gets the currently logged in Customer."
  * x-authenticated: true
+ * x-codegen:
+ *   method: getSession
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -30,9 +32,7 @@
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            customer:
- *              $ref: "#/components/schemas/customer"
+ *          $ref: "#/components/schemas/StoreAuthRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":

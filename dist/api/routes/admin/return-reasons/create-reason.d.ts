@@ -8,25 +8,9 @@
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *          - label
- *          - value
- *         properties:
- *           label:
- *             description: "The label to display to the Customer."
- *             type: string
- *           value:
- *             description: "The value that the Return Reason will be identified by. Must be unique."
- *             type: string
- *           parent_return_reason_id:
- *             description: "The ID of the parent return reason."
- *             type: string
- *           description:
- *             description: "An optional description to for the Reason."
- *             type: string
- *           metadata:
- *             description: An optional set of key-value pairs with additional information.
- *             type: object
+ *         $ref: "#/components/schemas/AdminPostReturnReasonsReq"
+ * x-codegen:
+ *   method: create
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -62,9 +46,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             return_reason:
- *               $ref: "#/components/schemas/return_reason"
+ *           $ref: "#/components/schemas/AdminReturnReasonsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -80,6 +62,29 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostReturnReasonsReq
+ * type: object
+ * required:
+ *  - label
+ *  - value
+ * properties:
+ *   label:
+ *     description: "The label to display to the Customer."
+ *     type: string
+ *   value:
+ *     description: "The value that the Return Reason will be identified by. Must be unique."
+ *     type: string
+ *   parent_return_reason_id:
+ *     description: "The ID of the parent return reason."
+ *     type: string
+ *   description:
+ *     description: "An optional description to for the Reason."
+ *     type: string
+ *   metadata:
+ *     description: An optional set of key-value pairs with additional information.
+ *     type: object
+ */
 export declare class AdminPostReturnReasonsReq {
     value: string;
     label: string;

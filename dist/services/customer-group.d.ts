@@ -2,8 +2,8 @@ import { DeepPartial, EntityManager } from "typeorm";
 import { CustomerService } from ".";
 import { CustomerGroup } from "..";
 import { CustomerGroupRepository } from "../repositories/customer-group";
-import { FindConfig } from "../types/common";
-import { CustomerGroupUpdate, FilterableCustomerGroupProps } from "../types/customer-groups";
+import { FindConfig, Selector } from "../types/common";
+import { CustomerGroupUpdate } from "../types/customer-groups";
 import { TransactionBaseService } from "../interfaces";
 declare type CustomerGroupConstructorProps = {
     manager: EntityManager;
@@ -16,7 +16,7 @@ declare class CustomerGroupService extends TransactionBaseService {
     protected readonly customerGroupRepository_: typeof CustomerGroupRepository;
     protected readonly customerService_: CustomerService;
     constructor({ manager, customerGroupRepository, customerService, }: CustomerGroupConstructorProps);
-    retrieve(id: string, config?: {}): Promise<CustomerGroup>;
+    retrieve(customerGroupId: string, config?: {}): Promise<CustomerGroup>;
     /**
      * Creates a customer group with the provided data.
      * @param group - the customer group to create
@@ -52,7 +52,10 @@ declare class CustomerGroupService extends TransactionBaseService {
      * @param config - the config to be used for find
      * @return  the result of the find operation
      */
-    list(selector: FilterableCustomerGroupProps | undefined, config: FindConfig<CustomerGroup>): Promise<CustomerGroup[]>;
+    list(selector: (Selector<CustomerGroup> & {
+        q?: string | undefined;
+        discount_condition_id?: string | undefined;
+    }) | undefined, config: FindConfig<CustomerGroup>): Promise<CustomerGroup[]>;
     /**
      * Retrieve a list of customer groups and total count of records that match the query.
      *
@@ -60,7 +63,10 @@ declare class CustomerGroupService extends TransactionBaseService {
      * @param config - the config to be used for find
      * @return the result of the find operation
      */
-    listAndCount(selector: FilterableCustomerGroupProps | undefined, config: FindConfig<CustomerGroup>): Promise<[CustomerGroup[], number]>;
+    listAndCount(selector: (Selector<CustomerGroup> & {
+        q?: string | undefined;
+        discount_condition_id?: string | undefined;
+    }) | undefined, config: FindConfig<CustomerGroup>): Promise<[CustomerGroup[], number]>;
     /**
      * Remove list of customers from a customergroup
      *
@@ -69,5 +75,6 @@ declare class CustomerGroupService extends TransactionBaseService {
      * @return the customergroup with the provided id
      */
     removeCustomer(id: string, customerIds: string[] | string): Promise<CustomerGroup>;
+    private handleCreationFail;
 }
 export default CustomerGroupService;

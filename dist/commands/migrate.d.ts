@@ -1,4 +1,4 @@
-export default t;
-declare function t({ directory }: {
+export default main;
+declare function main({ directory }: {
     directory: any;
 }): Promise<void>;

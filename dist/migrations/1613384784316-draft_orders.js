@@ -66,7 +66,7 @@ var draftOrders1613384784316 = /** @class */ (function () {
                         return [4 /*yield*/, queryRunner.query("ALTER TABLE \"order\" ADD CONSTRAINT \"UQ_727b872f86c7378474a8fa46147\" UNIQUE (\"draft_order_id\")")];
                     case 7:
                         _a.sent();
-                        return [4 /*yield*/, queryRunner.query("ALTER TYPE \"public\".\"cart_type_enum\" RENAME TO \"cart_type_enum_old\"")];
+                        return [4 /*yield*/, queryRunner.query("ALTER TYPE \"cart_type_enum\" RENAME TO \"cart_type_enum_old\"")];
                     case 8:
                         _a.sent();
                         return [4 /*yield*/, queryRunner.query("CREATE TYPE \"cart_type_enum\" AS ENUM('default', 'swap', 'draft_order', 'payment_link')")];

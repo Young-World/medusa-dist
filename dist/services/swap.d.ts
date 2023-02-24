@@ -1,12 +1,12 @@
 import { EntityManager } from "typeorm";
 import { TransactionBaseService } from "../interfaces";
-import LineItemAdjustmentService from "./line-item-adjustment";
-import { FindConfig, Selector } from "../types/common";
-import { SwapRepository } from "../repositories/swap";
-import CartService from "./cart";
-import { CustomShippingOptionService, EventBusService, FulfillmentService, InventoryService, LineItemService, OrderService, PaymentProviderService, ReturnService, ShippingOptionService, TotalsService } from "./index";
 import { Cart, LineItem, Order, ReturnItem, Swap } from "../models";
+import { SwapRepository } from "../repositories/swap";
+import { FindConfig, Selector, WithRequiredProperty } from "../types/common";
 import { CreateShipmentConfig } from "../types/fulfillment";
+import CartService from "./cart";
+import { CustomShippingOptionService, EventBusService, FulfillmentService, LineItemService, OrderService, PaymentProviderService, ProductVariantInventoryService, ReturnService, ShippingOptionService, TotalsService } from "./index";
+import LineItemAdjustmentService from "./line-item-adjustment";
 declare type InjectedProps = {
     manager: EntityManager;
     swapRepository: typeof SwapRepository;
@@ -17,7 +17,7 @@ declare type InjectedProps = {
     totalsService: TotalsService;
     eventBusService: EventBusService;
     lineItemService: LineItemService;
-    inventoryService: InventoryService;
+    productVariantInventoryService: ProductVariantInventoryService;
     fulfillmentService: FulfillmentService;
     shippingOptionService: ShippingOptionService;
     paymentProviderService: PaymentProviderService;
@@ -48,13 +48,13 @@ declare class SwapService extends TransactionBaseService {
     protected readonly returnService_: ReturnService;
     protected readonly totalsService_: TotalsService;
     protected readonly lineItemService_: LineItemService;
-    protected readonly inventoryService_: InventoryService;
     protected readonly fulfillmentService_: FulfillmentService;
     protected readonly shippingOptionService_: ShippingOptionService;
     protected readonly paymentProviderService_: PaymentProviderService;
     protected readonly lineItemAdjustmentService_: LineItemAdjustmentService;
     protected readonly customShippingOptionService_: CustomShippingOptionService;
-    constructor({ manager, swapRepository, eventBusService, cartService, totalsService, returnService, lineItemService, paymentProviderService, shippingOptionService, fulfillmentService, orderService, inventoryService, customShippingOptionService, lineItemAdjustmentService, }: InjectedProps);
+    protected readonly productVariantInventoryService_: ProductVariantInventoryService;
+    constructor({ manager, swapRepository, eventBusService, cartService, totalsService, returnService, lineItemService, paymentProviderService, shippingOptionService, fulfillmentService, orderService, productVariantInventoryService, customShippingOptionService, lineItemAdjustmentService, }: InjectedProps);
     /**
      * Transform find config object for retrieval.
      *
@@ -72,11 +72,11 @@ declare class SwapService extends TransactionBaseService {
     /**
      * Retrieves a swap with the given id.
      *
-     * @param id - the id of the swap to retrieve
+     * @param swapId - the id of the swap to retrieve
      * @param config - the configuration to retrieve the swap
      * @return the swap
      */
-    retrieve(id: string, config?: Omit<FindConfig<Swap>, "select"> & {
+    retrieve(swapId: string, config?: Omit<FindConfig<Swap>, "select"> & {
         select?: string[];
     }): Promise<Swap | never>;
     /**
@@ -108,7 +108,7 @@ declare class SwapService extends TransactionBaseService {
      *  swap. If set, it overrules the attribute inherited from the order
      * @return the newly created swap
      */
-    create(order: Order, returnItems: Partial<ReturnItem>[], additionalItems?: Pick<LineItem, "variant_id" | "quantity">[], returnShipping?: {
+    create(order: Order, returnItems: WithRequiredProperty<Partial<ReturnItem>, "item_id">[], additionalItems?: Pick<LineItem, "variant_id" | "quantity">[], returnShipping?: {
         option_id: string;
         price?: number;
     }, custom?: {
@@ -205,5 +205,6 @@ declare class SwapService extends TransactionBaseService {
      * @return the resulting order
      */
     registerReceived(id: any): Promise<Swap | never>;
+    protected areReturnItemsValid(returnItems: WithRequiredProperty<Partial<ReturnItem>, "item_id">[]): Promise<boolean>;
 }
 export default SwapService;

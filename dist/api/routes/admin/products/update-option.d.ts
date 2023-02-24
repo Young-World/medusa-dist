@@ -11,12 +11,9 @@
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - title
- *         properties:
- *           title:
- *             description: "The title of the Product Option"
- *             type: string
+ *         $ref: "#/components/schemas/AdminPostProductsProductOptionsOption"
+ * x-codegen:
+ *   method: updateOption
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -50,9 +47,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             product:
- *               $ref: "#/components/schemas/product"
+ *           $ref: "#/components/schemas/AdminProductsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -68,6 +63,16 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostProductsProductOptionsOption
+ * type: object
+ * required:
+ *   - title
+ * properties:
+ *   title:
+ *     description: "The title of the Product Option"
+ *     type: string
+ */
 export declare class AdminPostProductsProductOptionsOption {
     title: string;
 }

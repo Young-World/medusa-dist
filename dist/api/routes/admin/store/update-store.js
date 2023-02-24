@@ -58,33 +58,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           name:
- *             description: "The name of the Store"
- *             type: string
- *           swap_link_template:
- *             description: "A template for Swap links - use `{{cart_id}}` to insert the Swap Cart id"
- *             type: string
- *           payment_link_template:
- *             description: "A template for payment links links - use `{{cart_id}}` to insert the Cart id"
- *             type: string
- *           invite_link_template:
- *             description: "A template for invite links - use `{{invite_token}}` to insert the invite token"
- *             type: string
- *           default_currency_code:
- *             description: "The default currency code for the Store."
- *             type: string
- *             externalDocs:
- *               url: https://en.wikipedia.org/wiki/ISO_4217#Active_codes
- *               description: See a list of codes.
- *           currencies:
- *             description: "Array of currencies in 2 character ISO code format."
- *             type: array
- *             items:
- *               type: string
- *           metadata:
- *             description: "An optional set of key-value pairs with additional information."
- *             type: object
+ *         $ref: "#/components/schemas/AdminPostStoreReq"
+ * x-codegen:
+ *   method: update
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -118,9 +94,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             store:
- *               $ref: "#/components/schemas/store"
+ *           $ref: "#/components/schemas/AdminStoresRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -160,6 +134,37 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostStoreReq
+ * type: object
+ * properties:
+ *   name:
+ *     description: "The name of the Store"
+ *     type: string
+ *   swap_link_template:
+ *     description: "A template for Swap links - use `{{cart_id}}` to insert the Swap Cart id"
+ *     type: string
+ *   payment_link_template:
+ *     description: "A template for payment links links - use `{{cart_id}}` to insert the Cart id"
+ *     type: string
+ *   invite_link_template:
+ *     description: "A template for invite links - use `{{invite_token}}` to insert the invite token"
+ *     type: string
+ *   default_currency_code:
+ *     description: "The default currency code for the Store."
+ *     type: string
+ *     externalDocs:
+ *       url: https://en.wikipedia.org/wiki/ISO_4217#Active_codes
+ *       description: See a list of codes.
+ *   currencies:
+ *     description: "Array of currencies in 2 character ISO code format."
+ *     type: array
+ *     items:
+ *       type: string
+ *   metadata:
+ *     description: "An optional set of key-value pairs with additional information."
+ *     type: object
+ */
 var AdminPostStoreReq = /** @class */ (function () {
     function AdminPostStoreReq() {
     }

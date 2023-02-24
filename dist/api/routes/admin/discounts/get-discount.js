@@ -1,13 +1,19 @@
 "use strict";
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -46,10 +52,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminGetDiscountParams = void 0;
-var class_validator_1 = require("class-validator");
-var _1 = require(".");
-var get_query_config_1 = require("../../../../utils/get-query-config");
-var validator_1 = require("../../../../utils/validator");
+var common_1 = require("../../../../types/common");
 /**
  * @oas [get] /discounts/{id}
  * operationId: "GetDiscountsDiscount"
@@ -60,6 +63,9 @@ var validator_1 = require("../../../../utils/validator");
  *   - (path) id=* {string} The ID of the Discount
  *   - (query) expand {string} Comma separated list of relations to include in the results.
  *   - (query) fields {string} Comma separated list of fields to include in the results.
+ * x-codegen:
+ *   method: retrieve
+ *   queryParams: AdminGetDiscountParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -87,9 +93,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             discount:
- *               $ref: "#/components/schemas/discount"
+ *           $ref: "#/components/schemas/AdminDiscountsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -104,39 +108,26 @@ var validator_1 = require("../../../../utils/validator");
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var discount_id, validated, config, discountService, data;
-    var _a, _b;
-    return __generator(this, function (_c) {
-        switch (_c.label) {
+    var discount_id, discountService, data;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
             case 0:
                 discount_id = req.params.discount_id;
-                return [4 /*yield*/, (0, validator_1.validator)(AdminGetDiscountParams, req.query)];
-            case 1:
-                validated = _c.sent();
-                config = (0, get_query_config_1.getRetrieveConfig)(_1.defaultAdminDiscountsFields, _1.defaultAdminDiscountsRelations, (_a = validated === null || validated === void 0 ? void 0 : validated.fields) === null || _a === void 0 ? void 0 : _a.split(","), (_b = validated === null || validated === void 0 ? void 0 : validated.expand) === null || _b === void 0 ? void 0 : _b.split(","));
                 discountService = req.scope.resolve("discountService");
-                return [4 /*yield*/, discountService.retrieve(discount_id, config)];
-            case 2:
-                data = _c.sent();
+                return [4 /*yield*/, discountService.retrieve(discount_id, req.retrieveConfig)];
+            case 1:
+                data = _a.sent();
                 res.status(200).json({ discount: data });
                 return [2 /*return*/];
         }
     });
 }); });
-var AdminGetDiscountParams = /** @class */ (function () {
+var AdminGetDiscountParams = /** @class */ (function (_super) {
+    __extends(AdminGetDiscountParams, _super);
     function AdminGetDiscountParams() {
+        return _super !== null && _super.apply(this, arguments) || this;
     }
-    __decorate([
-        (0, class_validator_1.IsOptional)(),
-        (0, class_validator_1.IsString)(),
-        __metadata("design:type", String)
-    ], AdminGetDiscountParams.prototype, "expand", void 0);
-    __decorate([
-        (0, class_validator_1.IsOptional)(),
-        (0, class_validator_1.IsString)(),
-        __metadata("design:type", String)
-    ], AdminGetDiscountParams.prototype, "fields", void 0);
     return AdminGetDiscountParams;
-}());
+}(common_1.FindParams));
 exports.AdminGetDiscountParams = AdminGetDiscountParams;
 //# sourceMappingURL=get-discount.js.map

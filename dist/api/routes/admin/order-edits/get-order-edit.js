@@ -1,4 +1,19 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -36,14 +51,21 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.GetOrderEditsOrderEditParams = void 0;
+var common_1 = require("../../../../types/common");
 /**
  * @oas [get] /order-edits/{id}
  * operationId: "GetOrderEditsOrderEdit"
- * summary: "Retrieve an OrderEdit"
+ * summary: "Get an OrderEdit"
  * description: "Retrieves a OrderEdit."
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {string} The ID of the OrderEdit.
+ *   - (query) expand {string} Comma separated list of relations to include in the results.
+ *   - (query) fields {string} Comma separated list of fields to include in the results.
+ * x-codegen:
+ *   method: retrieve
+ *   queryParams: GetOrderEditsOrderEditParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -51,7 +73,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *       import Medusa from "@medusajs/medusa-js"
  *       const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
  *       // must be previously logged in or use api token
- *       medusa.admin.orderEdit.retrieve(orderEditId)
+ *       medusa.admin.orderEdits.retrieve(orderEditId)
  *         .then(({ order_edit }) => {
  *           console.log(order_edit.id)
  *         })
@@ -71,9 +93,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order_edit:
- *               $ref: "#/components/schemas/order_edit"
+ *           $ref: "#/components/schemas/AdminOrderEditsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -105,4 +125,12 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+var GetOrderEditsOrderEditParams = /** @class */ (function (_super) {
+    __extends(GetOrderEditsOrderEditParams, _super);
+    function GetOrderEditsOrderEditParams() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return GetOrderEditsOrderEditParams;
+}(common_1.FindParams));
+exports.GetOrderEditsOrderEditParams = GetOrderEditsOrderEditParams;
 //# sourceMappingURL=get-order-edit.js.map

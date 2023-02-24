@@ -1,14 +1,16 @@
 import { EntityManager } from "typeorm";
 import { DeepPartial } from "typeorm/common/DeepPartial";
+import { TransactionBaseService } from "../interfaces";
+import { LineItem, LineItemTaxLine } from "../models";
 import { CartRepository } from "../repositories/cart";
 import { LineItemRepository } from "../repositories/line-item";
 import { LineItemTaxLineRepository } from "../repositories/line-item-tax-line";
-import { Cart, LineItem, LineItemTaxLine } from "../models";
 import { FindConfig, Selector } from "../types/common";
+import { GenerateInputData, GenerateLineItemContext } from "../types/line-item";
+import { ProductVariantPricing } from "../types/pricing";
 import { FlagRouter } from "../utils/flag-router";
-import LineItemAdjustmentService from "./line-item-adjustment";
 import { PricingService, ProductService, ProductVariantService, RegionService, TaxProviderService } from "./index";
-import { TransactionBaseService } from "../interfaces";
+import LineItemAdjustmentService from "./line-item-adjustment";
 declare type InjectedDependencies = {
     manager: EntityManager;
     lineItemRepository: typeof LineItemRepository;
@@ -52,20 +54,33 @@ declare class LineItemService extends TransactionBaseService {
      * @return the created line items
      */
     createReturnLines(returnId: string, cartId: string): Promise<LineItem[]>;
-    generate(variantId: string, regionId: string, quantity: number, context?: {
-        unit_price?: number;
-        includes_tax?: boolean;
-        metadata?: Record<string, unknown>;
-        customer_id?: string;
-        order_edit_id?: string;
-        cart?: Cart;
+    /**
+     * Generate a single or multiple line item without persisting the data into the db
+     * @param variantIdOrData
+     * @param regionIdOrContext
+     * @param quantity
+     * @param context
+     */
+    generate<T = string | GenerateInputData | GenerateInputData[], TResult = T extends string ? LineItem : T extends LineItem ? LineItem : LineItem[]>(variantIdOrData: T, regionIdOrContext: T extends string ? string : GenerateLineItemContext, quantity?: number, context?: GenerateLineItemContext): Promise<TResult>;
+    protected generateLineItem(variant: {
+        id: string;
+        title: string;
+        product_id: string;
+        product: {
+            title: string;
+            thumbnail: string | null;
+            discountable: boolean;
+            is_giftcard: boolean;
+        };
+    }, quantity: number, context: GenerateLineItemContext & {
+        variantPricing: ProductVariantPricing;
     }): Promise<LineItem>;
     /**
      * Create a line item
      * @param data - the line item object to create
      * @return the created line item
      */
-    create(data: Partial<LineItem>): Promise<LineItem>;
+    create<T = LineItem | LineItem[], TResult = T extends LineItem[] ? LineItem[] : LineItem>(data: T): Promise<TResult>;
     /**
      * Updates a line item
      * @param idOrSelector - the id or selector of the line item(s) to update
@@ -94,5 +109,6 @@ declare class LineItemService extends TransactionBaseService {
     cloneTo(ids: string | string[], data?: DeepPartial<LineItem>, options?: {
         setOriginalLineItemId?: boolean;
     }): Promise<LineItem[]>;
+    protected validateGenerateArguments<T = string | GenerateInputData | GenerateInputData[], TResult = T extends string ? LineItem : T extends LineItem ? LineItem : LineItem[]>(variantIdOrData: string | T, regionIdOrContext: T extends string ? string : GenerateLineItemContext, quantity?: number): void | never;
 }
 export default LineItemService;

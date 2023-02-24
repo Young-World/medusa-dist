@@ -11,43 +11,9 @@ import { AddressPayload } from "../../../../types/common";
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           region_id:
- *             type: string
- *             description: The ID of the Region to create the Draft Order in.
- *           country_code:
- *             type: string
- *             description: "The 2 character ISO code for the Country."
- *             externalDocs:
- *                url: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements
- *                description: See a list of codes.
- *           email:
- *             type: string
- *             description: "An email to be used on the Draft Order."
- *             format: email
- *           billing_address:
- *             description: "The Address to be used for billing purposes."
- *             $ref: "#/components/schemas/address"
- *           shipping_address:
- *             description: "The Address to be used for shipping."
- *             $ref: "#/components/schemas/address"
- *           discounts:
- *             description: "An array of Discount codes to add to the Draft Order."
- *             type: array
- *             items:
- *               type: object
- *               required:
- *                 - code
- *               properties:
- *                 code:
- *                   description: "The code that a Discount is identifed by."
- *                   type: string
- *           no_notification_order:
- *             description: "An optional flag passed to the resulting order to determine use of notifications."
- *             type: boolean
- *           customer_id:
- *             description: "The ID of the Customer to associate the Draft Order with."
- *             type: string
+ *         $ref: "#/components/schemas/AdminPostDraftOrdersDraftOrderReq"
+ * x-codegen:
+ *   method: update
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -81,9 +47,7 @@ import { AddressPayload } from "../../../../types/common";
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             draft_order:
- *               $ref: "#/components/schemas/draft-order"
+ *           $ref: "#/components/schemas/AdminDraftOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -99,12 +63,57 @@ import { AddressPayload } from "../../../../types/common";
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostDraftOrdersDraftOrderReq
+ * type: object
+ * properties:
+ *   region_id:
+ *     type: string
+ *     description: The ID of the Region to create the Draft Order in.
+ *   country_code:
+ *     type: string
+ *     description: "The 2 character ISO code for the Country."
+ *     externalDocs:
+ *        url: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements
+ *        description: See a list of codes.
+ *   email:
+ *     type: string
+ *     description: "An email to be used on the Draft Order."
+ *     format: email
+ *   billing_address:
+ *     description: "The Address to be used for billing purposes."
+ *     anyOf:
+ *       - $ref: "#/components/schemas/AddressFields"
+ *       - type: string
+ *   shipping_address:
+ *     description: "The Address to be used for shipping."
+ *     anyOf:
+ *       - $ref: "#/components/schemas/AddressFields"
+ *       - type: string
+ *   discounts:
+ *     description: "An array of Discount codes to add to the Draft Order."
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - code
+ *       properties:
+ *         code:
+ *           description: "The code that a Discount is identifed by."
+ *           type: string
+ *   no_notification_order:
+ *     description: "An optional flag passed to the resulting order to determine use of notifications."
+ *     type: boolean
+ *   customer_id:
+ *     description: "The ID of the Customer to associate the Draft Order with."
+ *     type: string
+ */
 export declare class AdminPostDraftOrdersDraftOrderReq {
     region_id?: string;
     country_code?: string;
     email?: string;
-    billing_address?: AddressPayload;
-    shipping_address?: AddressPayload;
+    billing_address?: AddressPayload | string;
+    shipping_address?: AddressPayload | string;
     discounts?: Discount[];
     customer_id?: string;
     no_notification_order?: boolean;

@@ -10,49 +10,9 @@
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           name:
- *             description: "The name of the Region"
- *             type: string
- *           currency_code:
- *             description: "The 3 character ISO currency code to use for the Region."
- *             type: string
- *             externalDocs:
- *               url: https://en.wikipedia.org/wiki/ISO_4217#Active_codes
- *               description: See a list of codes.
- *           automatic_taxes:
- *             description: "If true Medusa will automatically calculate taxes for carts in this region. If false you have to manually call POST /carts/:id/taxes."
- *             type: boolean
- *           gift_cards_taxable:
- *             description: "Whether gift cards in this region should be applied sales tax when purchasing a gift card"
- *             type: boolean
- *           tax_provider_id:
- *             description: "The ID of the tax provider to use; if null the system tax provider is used"
- *             type: string
- *           tax_code:
- *             description: "An optional tax code the Region."
- *             type: string
- *           tax_rate:
- *             description: "The tax rate to use on Orders in the Region."
- *             type: number
- *           includes_tax:
- *             description: "[EXPERIMENTAL] Tax included in prices of region"
- *             type: boolean
- *           payment_providers:
- *             description: "A list of Payment Provider IDs that should be enabled for the Region"
- *             type: array
- *             items:
- *               type: string
- *           fulfillment_providers:
- *             description: "A list of Fulfillment Provider IDs that should be enabled for the Region"
- *             type: array
- *             items:
- *               type: string
- *           countries:
- *             description: "A list of countries' 2 ISO Characters that should be included in the Region."
- *             type: array
- *             items:
- *               type: string
+ *         $ref: "#/components/schemas/AdminPostRegionsRegionReq"
+ * x-codegen:
+ *   method: update
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -86,9 +46,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             region:
- *               $ref: "#/components/schemas/region"
+ *           $ref: "#/components/schemas/AdminRegionsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -104,6 +62,53 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostRegionsRegionReq
+ * type: object
+ * properties:
+ *   name:
+ *     description: "The name of the Region"
+ *     type: string
+ *   currency_code:
+ *     description: "The 3 character ISO currency code to use for the Region."
+ *     type: string
+ *     externalDocs:
+ *       url: https://en.wikipedia.org/wiki/ISO_4217#Active_codes
+ *       description: See a list of codes.
+ *   automatic_taxes:
+ *     description: "If true Medusa will automatically calculate taxes for carts in this region. If false you have to manually call POST /carts/:id/taxes."
+ *     type: boolean
+ *   gift_cards_taxable:
+ *     description: "Whether gift cards in this region should be applied sales tax when purchasing a gift card"
+ *     type: boolean
+ *   tax_provider_id:
+ *     description: "The ID of the tax provider to use; if null the system tax provider is used"
+ *     type: string
+ *   tax_code:
+ *     description: "An optional tax code the Region."
+ *     type: string
+ *   tax_rate:
+ *     description: "The tax rate to use on Orders in the Region."
+ *     type: number
+ *   includes_tax:
+ *     description: "[EXPERIMENTAL] Tax included in prices of region"
+ *     type: boolean
+ *   payment_providers:
+ *     description: "A list of Payment Provider IDs that should be enabled for the Region"
+ *     type: array
+ *     items:
+ *       type: string
+ *   fulfillment_providers:
+ *     description: "A list of Fulfillment Provider IDs that should be enabled for the Region"
+ *     type: array
+ *     items:
+ *       type: string
+ *   countries:
+ *     description: "A list of countries' 2 ISO Characters that should be included in the Region."
+ *     type: array
+ *     items:
+ *       type: string
+ */
 export declare class AdminPostRegionsRegionReq {
     name?: string;
     currency_code?: string;

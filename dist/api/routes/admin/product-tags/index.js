@@ -10,29 +10,37 @@ var __createBinding = (this && this.__createBinding) || (Object.create ? (functi
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
 }));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.defaultAdminProductTagsRelations = exports.defaultAdminProductTagsFields = exports.allowedAdminProductTagsFields = void 0;
+exports.defaultAdminProductTagsRelations = exports.defaultAdminProductTagsFields = void 0;
 var express_1 = require("express");
-var middlewares_1 = __importDefault(require("../../../middlewares"));
+var middlewares_1 = __importStar(require("../../../middlewares"));
 require("reflect-metadata");
+var list_product_tags_1 = require("./list-product-tags");
 var route = (0, express_1.Router)();
 exports.default = (function (app) {
     app.use("/product-tags", route);
-    route.get("/", middlewares_1.default.wrap(require("./list-product-tags").default));
+    route.get("/", (0, middlewares_1.transformQuery)(list_product_tags_1.AdminGetProductTagsParams, {
+        defaultFields: exports.defaultAdminProductTagsFields,
+        defaultRelations: exports.defaultAdminProductTagsRelations,
+        isList: true,
+    }), middlewares_1.default.wrap(require("./list-product-tags").default));
     return app;
 });
-exports.allowedAdminProductTagsFields = [
-    "id",
-    "value",
-    "created_at",
-    "updated_at",
-];
 exports.defaultAdminProductTagsFields = [
     "id",
     "value",

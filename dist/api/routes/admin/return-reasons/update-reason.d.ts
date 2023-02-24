@@ -10,19 +10,9 @@
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           label:
- *             description: "The label to display to the Customer."
- *             type: string
- *           value:
- *             description: "The value that the Return Reason will be identified by. Must be unique."
- *             type: string
- *           description:
- *             description: "An optional description to for the Reason."
- *             type: string
- *           metadata:
- *             description: An optional set of key-value pairs with additional information.
- *             type: object
+ *         $ref: "#/components/schemas/AdminPostReturnReasonsReasonReq"
+ * x-codegen:
+ *   method: update
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -56,9 +46,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             return_reason:
- *               $ref: "#/components/schemas/return_reason"
+ *           $ref: "#/components/schemas/AdminReturnReasonsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -74,6 +62,23 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostReturnReasonsReasonReq
+ * type: object
+ * properties:
+ *   label:
+ *     description: "The label to display to the Customer."
+ *     type: string
+ *   value:
+ *     description: "The value that the Return Reason will be identified by. Must be unique."
+ *     type: string
+ *   description:
+ *     description: "An optional description to for the Reason."
+ *     type: string
+ *   metadata:
+ *     description: An optional set of key-value pairs with additional information.
+ *     type: object
+ */
 export declare class AdminPostReturnReasonsReasonReq {
     label?: string;
     value?: string;

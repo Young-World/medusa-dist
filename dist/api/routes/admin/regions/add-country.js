@@ -61,15 +61,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - country_code
- *         properties:
- *           country_code:
- *             description: "The 2 character ISO code for the Country."
- *             type: string
- *             externalDocs:
- *               url: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements
- *               description: See a list of codes.
+ *         $ref: "#/components/schemas/AdminPostRegionsRegionCountriesReq"
+ * x-codegen:
+ *   method: addCountry
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -103,9 +97,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             region:
- *               $ref: "#/components/schemas/region"
+ *           $ref: "#/components/schemas/AdminRegionsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -153,6 +145,19 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostRegionsRegionCountriesReq
+ * type: object
+ * required:
+ *   - country_code
+ * properties:
+ *   country_code:
+ *     description: "The 2 character ISO code for the Country."
+ *     type: string
+ *     externalDocs:
+ *       url: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements
+ *       description: See a list of codes.
+ */
 var AdminPostRegionsRegionCountriesReq = /** @class */ (function () {
     function AdminPostRegionsRegionCountriesReq() {
     }

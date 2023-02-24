@@ -59,18 +59,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - user
- *           - role
- *         properties:
- *           user:
- *             description: "The email for the user to be created."
- *             type: string
- *             format: email
- *           role:
- *             description: "The role of the user to be created."
- *             type: string
- *             enum: [admin, member, developer]
+ *         $ref: "#/components/schemas/AdminPostInvitesReq"
+ * x-codegen:
+ *   method: create
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -145,6 +136,22 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostInvitesReq
+ * type: object
+ * required:
+ *   - user
+ *   - role
+ * properties:
+ *   user:
+ *     description: "The email for the user to be created."
+ *     type: string
+ *     format: email
+ *   role:
+ *     description: "The role of the user to be created."
+ *     type: string
+ *     enum: [admin, member, developer]
+ */
 var AdminPostInvitesReq = /** @class */ (function () {
     function AdminPostInvitesReq() {
     }

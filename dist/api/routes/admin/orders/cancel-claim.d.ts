@@ -1,3 +1,4 @@
+import { FindParams } from "../../../../types/common";
 /**
  * @oas [post] /orders/{id}/claims/{claim_id}/cancel
  * operationId: "PostOrdersClaimCancel"
@@ -7,6 +8,11 @@
  * parameters:
  *   - (path) id=* {string} The ID of the Order.
  *   - (path) claim_id=* {string} The ID of the Claim.
+ *   - (query) expand {string} Comma separated list of relations to include in the result.
+ *   - (query) fields {string} Comma separated list of fields to include in the result.
+ * x-codegen:
+ *   method: cancelClaim
+ *   params: AdminPostOrdersClaimCancel
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -34,9 +40,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/order"
+ *           $ref: "#/components/schemas/AdminOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -52,3 +56,5 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+export declare class AdminPostOrdersClaimCancel extends FindParams {
+}

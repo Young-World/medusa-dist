@@ -25,20 +25,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
 var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 var express_1 = require("express");
-var middlewares_1 = __importStar(require("../../../middlewares"));
 var common_1 = require("../../../../types/common");
-var feature_flag_enabled_1 = require("../../../middlewares/feature-flag-enabled");
-var order_editing_1 = __importDefault(require("../../../../loaders/feature-flags/order-editing"));
 var order_edit_1 = require("../../../../types/order-edit");
+var middlewares_1 = __importStar(require("../../../middlewares"));
 var decline_order_edit_1 = require("./decline-order-edit");
 var route = (0, express_1.Router)();
 exports.default = (function (app) {
-    app.use("/order-edits", (0, feature_flag_enabled_1.isFeatureFlagEnabled)(order_editing_1.default.key), route);
+    app.use("/order-edits", route);
     route.get("/:id", (0, middlewares_1.transformQuery)(common_1.FindParams, {
         defaultRelations: order_edit_1.defaultStoreOrderEditRelations,
         defaultFields: order_edit_1.defaultStoreOrderEditFields,

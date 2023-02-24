@@ -8,6 +8,14 @@ export declare type CreatePaymentCollectionInput = {
     metadata?: any;
     description?: string;
 };
+export declare type PaymentCollectionsSessionsBatchInput = {
+    provider_id: string;
+    amount: number;
+    session_id?: string;
+};
+export declare type PaymentCollectionsSessionsInput = {
+    provider_id: string;
+};
 export declare const defaultPaymentCollectionRelations: string[];
 export declare const defaultPaymentCollectionFields: (keyof PaymentCollection)[];
 export declare const storePaymentCollectionNotAllowedFieldsAndRelations: string[];

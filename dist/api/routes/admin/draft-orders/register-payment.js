@@ -36,7 +36,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.reserveQuantityForDraftOrder = void 0;
 var index_1 = require("../orders/index");
+var medusa_core_utils_1 = require("medusa-core-utils");
 /**
  * @oas [post] /draft-orders/{id}/pay
  * summary: "Registers a Payment"
@@ -45,6 +47,8 @@ var index_1 = require("../orders/index");
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {String} The Draft Order id.
+ * x-codegen:
+ *   method: markPaid
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -72,9 +76,7 @@ var index_1 = require("../orders/index");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/draft-order"
+ *           $ref: "#/components/schemas/AdminPostDraftOrdersDraftOrderRegisterPaymentRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -89,7 +91,7 @@ var index_1 = require("../orders/index");
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var id, draftOrderService, paymentProviderService, orderService, cartService, entityManager, result, order;
+    var id, draftOrderService, paymentProviderService, orderService, cartService, productVariantInventoryService, entityManager, order;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
@@ -98,28 +100,21 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                 paymentProviderService = req.scope.resolve("paymentProviderService");
                 orderService = req.scope.resolve("orderService");
                 cartService = req.scope.resolve("cartService");
+                productVariantInventoryService = req.scope.resolve("productVariantInventoryService");
                 entityManager = req.scope.resolve("manager");
                 return [4 /*yield*/, entityManager.transaction(function (manager) { return __awaiter(void 0, void 0, void 0, function () {
-                        var draftOrder, cart;
+                        var draftOrderServiceTx, orderServiceTx, cartServiceTx, productVariantInventoryServiceTx, draftOrder, cart, order;
                         return __generator(this, function (_a) {
                             switch (_a.label) {
-                                case 0: return [4 /*yield*/, draftOrderService
-                                        .withTransaction(manager)
-                                        .retrieve(id)];
+                                case 0:
+                                    draftOrderServiceTx = draftOrderService.withTransaction(manager);
+                                    orderServiceTx = orderService.withTransaction(manager);
+                                    cartServiceTx = cartService.withTransaction(manager);
+                                    productVariantInventoryServiceTx = productVariantInventoryService.withTransaction(manager);
+                                    return [4 /*yield*/, draftOrderServiceTx.retrieve(id)];
                                 case 1:
                                     draftOrder = _a.sent();
-                                    return [4 /*yield*/, cartService
-                                            .withTransaction(manager)
-                                            .retrieve(draftOrder.cart_id, {
-                                            select: ["total"],
-                                            relations: [
-                                                "discounts",
-                                                "discounts.rule",
-                                                "shipping_methods",
-                                                "region",
-                                                "items",
-                                            ],
-                                        })];
+                                    return [4 /*yield*/, cartServiceTx.retrieveWithTotals(draftOrder.cart_id)];
                                 case 2:
                                     cart = _a.sent();
                                     return [4 /*yield*/, paymentProviderService
@@ -127,40 +122,82 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                             .createSession("system", cart)];
                                 case 3:
                                     _a.sent();
-                                    return [4 /*yield*/, cartService
-                                            .withTransaction(manager)
-                                            .setPaymentSession(cart.id, "system")];
+                                    return [4 /*yield*/, cartServiceTx.setPaymentSession(cart.id, "system")];
                                 case 4:
                                     _a.sent();
-                                    return [4 /*yield*/, cartService.withTransaction(manager).createTaxLines(cart.id)];
+                                    return [4 /*yield*/, cartServiceTx.createTaxLines(cart.id)];
                                 case 5:
                                     _a.sent();
-                                    return [4 /*yield*/, cartService.withTransaction(manager).authorizePayment(cart.id)];
+                                    return [4 /*yield*/, cartServiceTx.authorizePayment(cart.id)];
                                 case 6:
                                     _a.sent();
-                                    return [4 /*yield*/, orderService.withTransaction(manager).createFromCart(cart.id)];
+                                    return [4 /*yield*/, orderServiceTx.createFromCart(cart.id)];
                                 case 7:
-                                    result = _a.sent();
-                                    return [4 /*yield*/, draftOrderService
-                                            .withTransaction(manager)
-                                            .registerCartCompletion(draftOrder.id, result.id)];
+                                    order = _a.sent();
+                                    return [4 /*yield*/, draftOrderServiceTx.registerCartCompletion(draftOrder.id, order.id)];
                                 case 8:
                                     _a.sent();
-                                    return [2 /*return*/];
+                                    return [4 /*yield*/, orderServiceTx.capturePayment(order.id)];
+                                case 9:
+                                    _a.sent();
+                                    return [4 /*yield*/, orderService
+                                            .withTransaction(manager)
+                                            .retrieveWithTotals(order.id, {
+                                            relations: index_1.defaultAdminOrdersRelations,
+                                            select: index_1.defaultAdminOrdersFields,
+                                        })];
+                                case 10:
+                                    order = _a.sent();
+                                    return [4 /*yield*/, (0, exports.reserveQuantityForDraftOrder)(order, {
+                                            productVariantInventoryService: productVariantInventoryServiceTx,
+                                        })];
+                                case 11:
+                                    _a.sent();
+                                    return [2 /*return*/, order];
                             }
                         });
                     }); })];
             case 1:
-                _a.sent();
-                return [4 /*yield*/, orderService.retrieve(result.id, {
-                        relations: index_1.defaultAdminOrdersRelations,
-                        select: index_1.defaultAdminOrdersFields,
-                    })];
-            case 2:
                 order = _a.sent();
                 res.status(200).json({ order: order });
                 return [2 /*return*/];
         }
     });
 }); });
+var reserveQuantityForDraftOrder = function (order, context) { return __awaiter(void 0, void 0, void 0, function () {
+    var productVariantInventoryService, locationId;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                productVariantInventoryService = context.productVariantInventoryService, locationId = context.locationId;
+                return [4 /*yield*/, Promise.all(order.items.map(function (item) { return __awaiter(void 0, void 0, void 0, function () {
+                        var inventoryConfirmed;
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0:
+                                    if (!item.variant_id) return [3 /*break*/, 3];
+                                    return [4 /*yield*/, productVariantInventoryService.confirmInventory(item.variant_id, item.quantity, { salesChannelId: order.sales_channel_id })];
+                                case 1:
+                                    inventoryConfirmed = _a.sent();
+                                    if (!inventoryConfirmed) {
+                                        throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Variant with id: ".concat(item.variant_id, " does not have the required inventory"), medusa_core_utils_1.MedusaError.Codes.INSUFFICIENT_INVENTORY);
+                                    }
+                                    return [4 /*yield*/, productVariantInventoryService.reserveQuantity(item.variant_id, item.quantity, {
+                                            lineItemId: item.id,
+                                            salesChannelId: order.sales_channel_id,
+                                        })];
+                                case 2:
+                                    _a.sent();
+                                    _a.label = 3;
+                                case 3: return [2 /*return*/];
+                            }
+                        });
+                    }); }))];
+            case 1:
+                _a.sent();
+                return [2 /*return*/];
+        }
+    });
+}); };
+exports.reserveQuantityForDraftOrder = reserveQuantityForDraftOrder;
 //# sourceMappingURL=register-payment.js.map

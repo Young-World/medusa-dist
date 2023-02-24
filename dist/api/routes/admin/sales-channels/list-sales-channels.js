@@ -162,6 +162,9 @@ var class_transformer_1 = require("class-transformer");
  *   - (query) limit=20 {integer} Limit the number of sales channels returned.
  *   - (query) expand {string} (Comma separated) Which fields should be expanded in each sales channel of the result.
  *   - (query) fields {string} (Comma separated) Which fields should be included in each sales channel of the result.
+ * x-codegen:
+ *   method: list
+ *   queryParams: AdminGetSalesChannelsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -189,20 +192,7 @@ var class_transformer_1 = require("class-transformer");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             sales_channels:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/sales_channel"
- *             count:
- *               type: integer
- *               description: The total number of items available
- *             offset:
- *               type: integer
- *               description: The number of items skipped before these items
- *             limit:
- *               type: integer
- *               description: The number of items per page
+ *           $ref: "#/components/schemas/AdminSalesChannelsListRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

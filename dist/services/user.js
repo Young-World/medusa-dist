@@ -107,6 +107,7 @@ var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 var medusa_core_utils_1 = require("medusa-core-utils");
 var scrypt_kdf_1 = __importDefault(require("scrypt-kdf"));
 var interfaces_1 = require("../interfaces");
+var analytics_1 = __importDefault(require("../loaders/feature-flags/analytics"));
 var utils_1 = require("../utils");
 var is_email_1 = require("../utils/is-email");
 /**
@@ -115,9 +116,13 @@ var is_email_1 = require("../utils/is-email");
 var UserService = /** @class */ (function (_super) {
     __extends(UserService, _super);
     function UserService(_a) {
-        var userRepository = _a.userRepository, eventBusService = _a.eventBusService, manager = _a.manager;
-        var _this = _super.call(this, { userRepository: userRepository, eventBusService: eventBusService, manager: manager }) || this;
+        var userRepository = _a.userRepository, eventBusService = _a.eventBusService, analyticsConfigService = _a.analyticsConfigService, featureFlagRouter = _a.featureFlagRouter, manager = _a.manager;
+        var _this = 
+        // eslint-disable-next-line prefer-rest-params
+        _super.call(this, arguments[0]) || this;
         _this.userRepository_ = userRepository;
+        _this.analyticsConfigService_ = analyticsConfigService;
+        _this.featureFlagRouter_ = featureFlagRouter;
         _this.eventBus_ = eventBusService;
         _this.manager_ = manager;
         return _this;
@@ -156,6 +161,9 @@ var UserService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(userId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"userId\" must be defined");
+                        }
                         manager = this.manager_;
                         userRepo = manager.getCustomRepository(this.userRepository_);
                         query = (0, utils_1.buildQuery)({ id: userId }, config);
@@ -174,7 +182,7 @@ var UserService = /** @class */ (function (_super) {
      * Gets a user by api token.
      * Throws in case of DB Error and if user was not found.
      * @param {string} apiToken - the token of the user to get.
-     * @param {string[]} relations - relations to include with the user
+     * @param {string[]} relations - relations to include with the user.
      * @return {Promise<User>} the user document.
      */
     UserService.prototype.retrieveByApiToken = function (apiToken, relations) {
@@ -365,22 +373,28 @@ var UserService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var userRepo, user;
+                            var userRepo, analyticsServiceTx, user;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
                                         userRepo = manager.getCustomRepository(this.userRepository_);
+                                        analyticsServiceTx = this.analyticsConfigService_.withTransaction(manager);
                                         return [4 /*yield*/, userRepo.findOne({ where: { id: userId } })];
                                     case 1:
                                         user = _a.sent();
                                         if (!user) {
                                             return [2 /*return*/, Promise.resolve()];
                                         }
-                                        return [4 /*yield*/, userRepo.softRemove(user)];
+                                        if (!this.featureFlagRouter_.isFeatureEnabled(analytics_1.default.key)) return [3 /*break*/, 3];
+                                        return [4 /*yield*/, analyticsServiceTx.delete(userId)];
                                     case 2:
                                         _a.sent();
+                                        _a.label = 3;
+                                    case 3: return [4 /*yield*/, userRepo.softRemove(user)];
+                                    case 4:
+                                        _a.sent();
                                         return [4 /*yield*/, this.eventBus_.emit(UserService.Events.DELETED, { id: user.id })];
-                                    case 3:
+                                    case 5:
                                         _a.sent();
                                         return [2 /*return*/, Promise.resolve()];
                                 }

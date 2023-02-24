@@ -93,7 +93,6 @@ var medusa_core_utils_1 = require("medusa-core-utils");
 var typeorm_1 = require("typeorm");
 var interfaces_1 = require("../interfaces");
 var utils_1 = require("../utils");
-var exception_formatter_1 = require("../utils/exception-formatter");
 /**
  * Provides layer to manipulate product collections.
  */
@@ -121,6 +120,9 @@ var ProductCollectionService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(collectionId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"collectionId\" must be defined");
+                        }
                         collectionRepo = this.manager_.getCustomRepository(this.productCollectionRepository_);
                         query = (0, utils_1.buildQuery)({ id: collectionId }, config);
                         return [4 /*yield*/, collectionRepo.findOne(query)];
@@ -171,21 +173,14 @@ var ProductCollectionService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var collectionRepo, productCollection, error_1;
+                            var collectionRepo, productCollection;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
                                         collectionRepo = manager.getCustomRepository(this.productCollectionRepository_);
-                                        _a.label = 1;
-                                    case 1:
-                                        _a.trys.push([1, 3, , 4]);
                                         productCollection = collectionRepo.create(collection);
                                         return [4 /*yield*/, collectionRepo.save(productCollection)];
-                                    case 2: return [2 /*return*/, _a.sent()];
-                                    case 3:
-                                        error_1 = _a.sent();
-                                        throw (0, exception_formatter_1.formatException)(error_1);
-                                    case 4: return [2 /*return*/];
+                                    case 1: return [2 /*return*/, _a.sent()];
                                 }
                             });
                         }); })];
@@ -281,28 +276,21 @@ var ProductCollectionService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var productRepo, id, error_2;
+                            var productRepo, id;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
                                         productRepo = manager.getCustomRepository(this.productRepository_);
-                                        _a.label = 1;
-                                    case 1:
-                                        _a.trys.push([1, 5, , 6]);
                                         return [4 /*yield*/, this.retrieve(collectionId, { select: ["id"] })];
-                                    case 2:
+                                    case 1:
                                         id = (_a.sent()).id;
                                         return [4 /*yield*/, productRepo.bulkAddToCollection(productIds, id)];
-                                    case 3:
+                                    case 2:
                                         _a.sent();
                                         return [4 /*yield*/, this.retrieve(id, {
                                                 relations: ["products"],
                                             })];
-                                    case 4: return [2 /*return*/, _a.sent()];
-                                    case 5:
-                                        error_2 = _a.sent();
-                                        throw (0, exception_formatter_1.formatException)(error_2);
-                                    case 6: return [2 /*return*/];
+                                    case 3: return [2 /*return*/, _a.sent()];
                                 }
                             });
                         }); })];
@@ -347,14 +335,13 @@ var ProductCollectionService = /** @class */ (function (_super) {
         if (selector === void 0) { selector = {}; }
         if (config === void 0) { config = { skip: 0, take: 20 }; }
         return __awaiter(this, void 0, void 0, function () {
-            var productCollectionRepo, query;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        productCollectionRepo = this.manager_.getCustomRepository(this.productCollectionRepository_);
-                        query = (0, utils_1.buildQuery)(selector, config);
-                        return [4 /*yield*/, productCollectionRepo.find(query)];
-                    case 1: return [2 /*return*/, _a.sent()];
+            var _a, collections;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0: return [4 /*yield*/, this.listAndCount(selector, config)];
+                    case 1:
+                        _a = __read.apply(void 0, [_b.sent(), 1]), collections = _a[0];
+                        return [2 /*return*/, collections];
                 }
             });
         });
@@ -369,12 +356,12 @@ var ProductCollectionService = /** @class */ (function (_super) {
         if (selector === void 0) { selector = {}; }
         if (config === void 0) { config = { skip: 0, take: 20 }; }
         return __awaiter(this, void 0, void 0, function () {
-            var productCollectionRepo, q, query, where_1;
+            var productCollectionRepo, q, query, where_1, discountConditionId;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         productCollectionRepo = this.manager_.getCustomRepository(this.productCollectionRepository_);
-                        if ("q" in selector) {
+                        if ((0, utils_1.isString)(selector.q)) {
                             q = selector.q;
                             delete selector.q;
                         }
@@ -394,8 +381,13 @@ var ProductCollectionService = /** @class */ (function (_super) {
                                 }));
                             };
                         }
-                        return [4 /*yield*/, productCollectionRepo.findAndCount(query)];
+                        if (!query.where.discount_condition_id) return [3 /*break*/, 2];
+                        discountConditionId = query.where.discount_condition_id;
+                        delete query.where.discount_condition_id;
+                        return [4 /*yield*/, productCollectionRepo.findAndCountByDiscountConditionId(discountConditionId, query)];
                     case 1: return [2 /*return*/, _a.sent()];
+                    case 2: return [4 /*yield*/, productCollectionRepo.findAndCount(query)];
+                    case 3: return [2 /*return*/, _a.sent()];
                 }
             });
         });

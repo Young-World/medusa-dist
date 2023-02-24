@@ -1,3 +1,4 @@
+import { Request, Response } from "express";
 /**
  * @oas [post] /discounts/{id}/dynamic-codes
  * operationId: "PostDiscountsDiscountDynamicCodes"
@@ -6,9 +7,13 @@
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {string} The ID of the Discount to create the dynamic code from."
- *   - (body) code=* {string} The unique code that will be used to redeem the Discount.
- *   - (body) usage_limit=1 {number} amount of times the discount can be applied.
- *   - (body) metadata {object} An optional set of key-value paris to hold additional information.
+ * requestBody:
+ *  content:
+ *    application/json:
+ *      schema:
+ *        $ref: "#/components/schemas/AdminPostDiscountsDiscountDynamicCodesReq"
+ * x-codegen:
+ *   method: createDynamicCode
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -43,9 +48,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             discount:
- *               $ref: "#/components/schemas/discount"
+ *           $ref: "#/components/schemas/AdminDiscountsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -59,8 +62,25 @@
  *   "500":
  *     $ref: "#/components/responses/500_error"
  */
-declare const _default: (req: any, res: any) => Promise<void>;
+declare const _default: (req: Request, res: Response) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostDiscountsDiscountDynamicCodesReq
+ * type: object
+ * required:
+ *   - code
+ * properties:
+ *   code:
+ *     type: string
+ *     description: A unique code that will be used to redeem the Discount
+ *   usage_limit:
+ *     type: number
+ *     description: Maximum times the discount can be used
+ *     default: 1
+ *   metadata:
+ *     type: object
+ *     description: An optional set of key-value pairs to hold additional information.
+ */
 export declare class AdminPostDiscountsDiscountDynamicCodesReq {
     code: string;
     usage_limit: number;

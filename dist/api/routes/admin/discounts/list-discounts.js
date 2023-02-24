@@ -1,32 +1,24 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
 };
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
@@ -87,11 +79,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminGetDiscountsParams = void 0;
 var class_validator_1 = require("class-validator");
 var class_transformer_1 = require("class-transformer");
-var lodash_1 = __importStar(require("lodash"));
-var _1 = require(".");
 var discount_1 = require("../../../../types/discount");
-var validator_1 = require("../../../../utils/validator");
-var utils_1 = require("../../../../utils");
+var common_1 = require("../../../../types/common");
+var is_boolean_1 = require("../../../../utils/validators/is-boolean");
 /**
  * @oas [get] /discounts
  * operationId: "GetDiscounts"
@@ -119,6 +109,9 @@ var utils_1 = require("../../../../utils");
  *   - (query) limit=20 {number} The number of items in the response
  *   - (query) offset=0 {number} The offset of items in response
  *   - (query) expand {string} Comma separated list of relations to include in the results.
+ * x-codegen:
+ *   method: list
+ *   queryParams: AdminGetDiscountsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -146,20 +139,7 @@ var utils_1 = require("../../../../utils");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             discounts:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/discount"
- *             count:
- *               type: integer
- *               description: The total number of items available
- *             offset:
- *               type: integer
- *               description: The number of items skipped before these items
- *             limit:
- *               type: integer
- *               description: The number of items per page
+ *           $ref: "#/components/schemas/AdminDiscountsListRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -174,40 +154,30 @@ var utils_1 = require("../../../../utils");
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var validated, discountService, relations, listConfig, filterableFields, _a, discounts, count;
-    var _b, _c;
-    return __generator(this, function (_d) {
-        switch (_d.label) {
-            case 0: return [4 /*yield*/, (0, validator_1.validator)(AdminGetDiscountsParams, req.query)];
-            case 1:
-                validated = _d.sent();
+    var discountService, filterableFields, listConfig, skip, take, _a, discounts, count;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
+            case 0:
                 discountService = req.scope.resolve("discountService");
-                relations = (_c = (_b = validated.expand) === null || _b === void 0 ? void 0 : _b.split(",")) !== null && _c !== void 0 ? _c : _1.defaultAdminDiscountsRelations;
-                listConfig = {
-                    select: _1.defaultAdminDiscountsFields,
-                    relations: relations,
-                    skip: validated.offset,
-                    take: validated.limit,
-                    order: { created_at: "DESC" },
-                };
-                filterableFields = lodash_1.default.omit(validated, ["limit", "offset", "expand"]);
-                return [4 /*yield*/, discountService.listAndCount((0, lodash_1.pickBy)(filterableFields, function (val) { return (0, utils_1.isDefined)(val); }), listConfig)];
-            case 2:
-                _a = __read.apply(void 0, [_d.sent(), 2]), discounts = _a[0], count = _a[1];
+                filterableFields = req.filterableFields, listConfig = req.listConfig;
+                skip = listConfig.skip, take = listConfig.take;
+                return [4 /*yield*/, discountService.listAndCount(filterableFields, listConfig)];
+            case 1:
+                _a = __read.apply(void 0, [_b.sent(), 2]), discounts = _a[0], count = _a[1];
                 res.status(200).json({
                     discounts: discounts,
                     count: count,
-                    offset: validated.offset,
-                    limit: validated.limit,
+                    offset: skip,
+                    limit: take,
                 });
                 return [2 /*return*/];
         }
     });
 }); });
-var AdminGetDiscountsParams = /** @class */ (function () {
+var AdminGetDiscountsParams = /** @class */ (function (_super) {
+    __extends(AdminGetDiscountsParams, _super);
     function AdminGetDiscountsParams() {
-        this.limit = 20;
-        this.offset = 0;
+        return _super !== null && _super.apply(this, arguments) || this;
     }
     __decorate([
         (0, class_validator_1.ValidateNested)(),
@@ -225,7 +195,7 @@ var AdminGetDiscountsParams = /** @class */ (function () {
         (0, class_validator_1.IsOptional)(),
         (0, class_transformer_1.Transform)(function (_a) {
             var value = _a.value;
-            return value === "true";
+            return is_boolean_1.optionalBooleanMapper.get(value);
         }),
         __metadata("design:type", Boolean)
     ], AdminGetDiscountsParams.prototype, "is_dynamic", void 0);
@@ -234,28 +204,14 @@ var AdminGetDiscountsParams = /** @class */ (function () {
         (0, class_validator_1.IsOptional)(),
         (0, class_transformer_1.Transform)(function (_a) {
             var value = _a.value;
-            return value === "true";
+            return is_boolean_1.optionalBooleanMapper.get(value);
         }),
         __metadata("design:type", Boolean)
     ], AdminGetDiscountsParams.prototype, "is_disabled", void 0);
-    __decorate([
-        (0, class_validator_1.IsInt)(),
-        (0, class_validator_1.IsOptional)(),
-        (0, class_transformer_1.Type)(function () { return Number; }),
-        __metadata("design:type", Object)
-    ], AdminGetDiscountsParams.prototype, "limit", void 0);
-    __decorate([
-        (0, class_validator_1.IsInt)(),
-        (0, class_validator_1.IsOptional)(),
-        (0, class_transformer_1.Type)(function () { return Number; }),
-        __metadata("design:type", Object)
-    ], AdminGetDiscountsParams.prototype, "offset", void 0);
-    __decorate([
-        (0, class_validator_1.IsString)(),
-        (0, class_validator_1.IsOptional)(),
-        __metadata("design:type", String)
-    ], AdminGetDiscountsParams.prototype, "expand", void 0);
     return AdminGetDiscountsParams;
-}());
+}((0, common_1.extendedFindParamsMixin)({
+    limit: 20,
+    offset: 0,
+})));
 exports.AdminGetDiscountsParams = AdminGetDiscountsParams;
 //# sourceMappingURL=list-discounts.js.map

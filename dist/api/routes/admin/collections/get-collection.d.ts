@@ -7,6 +7,8 @@ import { Request, Response } from "express";
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {string} The ID of the Product Collection
+ * x-codegen:
+ *   method: retrieve
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -34,9 +36,7 @@ import { Request, Response } from "express";
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            collection:
- *              $ref: "#/components/schemas/product_collection"
+ *          $ref: "#/components/schemas/AdminCollectionsRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":

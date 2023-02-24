@@ -32,6 +32,10 @@ var StagedJob = /** @class */ (function () {
         __metadata("design:type", Object)
     ], StagedJob.prototype, "data", void 0);
     __decorate([
+        (0, db_aware_column_1.DbAwareColumn)({ type: "jsonb", default: {} }),
+        __metadata("design:type", Object)
+    ], StagedJob.prototype, "options", void 0);
+    __decorate([
         (0, typeorm_1.BeforeInsert)(),
         __metadata("design:type", Function),
         __metadata("design:paramtypes", []),
@@ -44,24 +48,31 @@ var StagedJob = /** @class */ (function () {
 }());
 exports.StagedJob = StagedJob;
 /**
- * @schema staged_job
+ * @schema StagedJob
  * title: "Staged Job"
  * description: "A staged job resource"
- * x-resourceId: staged_job
+ * type: object
  * required:
+ *   - data
  *   - event_name
+ *   - id
+ *   - options
  * properties:
  *   id:
- *     type: string
  *     description: The staged job's ID
+ *     type: string
  *     example: job_01F0YET7BZTARY9MKN1SJ7AAXF
  *   event_name:
- *     description: "The name of the event"
+ *     description: The name of the event
  *     type: string
  *     example: order.placed
  *   data:
  *     description: Data necessary for the job
  *     type: object
  *     example: {}
- */ 
+ *   option:
+ *     description: The staged job's option
+ *     type: object
+ *     example: {}
+ */
 //# sourceMappingURL=staged-job.js.map

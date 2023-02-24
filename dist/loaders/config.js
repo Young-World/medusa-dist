@@ -10,17 +10,34 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-var dist_1 = require("medusa-core-utils/dist");
+exports.handleConfigError = void 0;
+var medusa_core_utils_1 = require("medusa-core-utils");
+var logger_1 = __importDefault(require("./logger"));
+var module_definitions_1 = __importDefault(require("./module-definitions"));
 var isProduction = ["production", "prod"].includes(process.env.NODE_ENV || "");
 var errorHandler = isProduction
     ? function (msg) {
         throw new Error(msg);
     }
     : console.log;
+var handleConfigError = function (error) {
+    logger_1.default.error("Error in loading config: ".concat(error.message));
+    if (error.stack) {
+        logger_1.default.error(error.stack);
+    }
+    process.exit(1);
+};
+exports.handleConfigError = handleConfigError;
 exports.default = (function (rootDirectory) {
-    var _a, _b, _c, _d, _e, _f, _g, _h;
-    var configModule = (0, dist_1.getConfigFile)(rootDirectory, "medusa-config").configModule;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+    var _k = (0, medusa_core_utils_1.getConfigFile)(rootDirectory, "medusa-config"), configModule = _k.configModule, error = _k.error;
+    if (error) {
+        (0, exports.handleConfigError)(error);
+    }
     if (!((_a = configModule === null || configModule === void 0 ? void 0 : configModule.projectConfig) === null || _a === void 0 ? void 0 : _a.redis_url)) {
         console.log("[medusa-config] \u26A0\uFE0F redis_url not found. A fake redis instance will be used.");
     }
@@ -39,10 +56,13 @@ exports.default = (function (rootDirectory) {
     if (!((_f = configModule === null || configModule === void 0 ? void 0 : configModule.projectConfig) === null || _f === void 0 ? void 0 : _f.database_type)) {
         console.log("[medusa-config] \u26A0\uFE0F database_type not found. fallback to default sqlite.");
     }
+    var moduleResolutions = (0, module_definitions_1.default)(configModule);
     return {
         projectConfig: __assign({ jwt_secret: jwt_secret !== null && jwt_secret !== void 0 ? jwt_secret : "supersecret", cookie_secret: cookie_secret !== null && cookie_secret !== void 0 ? cookie_secret : "supersecret" }, configModule === null || configModule === void 0 ? void 0 : configModule.projectConfig),
-        featureFlags: (_g = configModule === null || configModule === void 0 ? void 0 : configModule.featureFlags) !== null && _g !== void 0 ? _g : {},
-        plugins: (_h = configModule === null || configModule === void 0 ? void 0 : configModule.plugins) !== null && _h !== void 0 ? _h : [],
+        modules: (_g = configModule.modules) !== null && _g !== void 0 ? _g : {},
+        moduleResolutions: moduleResolutions,
+        featureFlags: (_h = configModule === null || configModule === void 0 ? void 0 : configModule.featureFlags) !== null && _h !== void 0 ? _h : {},
+        plugins: (_j = configModule === null || configModule === void 0 ? void 0 : configModule.plugins) !== null && _j !== void 0 ? _j : [],
     };
 });
 //# sourceMappingURL=config.js.map

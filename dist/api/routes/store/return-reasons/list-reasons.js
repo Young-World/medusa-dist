@@ -42,6 +42,8 @@ var _1 = require(".");
  * operationId: "GetReturnReasons"
  * summary: "List Return Reasons"
  * description: "Retrieves a list of Return Reasons."
+ * x-codegen:
+ *   method: list
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -64,11 +66,7 @@ var _1 = require(".");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             return_reasons:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/return_reason"
+ *           $ref: "#/components/schemas/StoreReturnReasonsListRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":

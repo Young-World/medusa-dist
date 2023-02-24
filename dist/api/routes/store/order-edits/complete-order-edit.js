@@ -35,10 +35,21 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-var order_edit_1 = require("../../../../types/order-edit");
-var models_1 = require("../../../../models");
 var medusa_core_utils_1 = require("medusa-core-utils");
+var models_1 = require("../../../../models");
+var order_edit_1 = require("../../../../types/order-edit");
 /**
  * @oas [post] /order-edits/{id}/complete
  * operationId: "PostOrderEditsOrderEditComplete"
@@ -46,13 +57,15 @@ var medusa_core_utils_1 = require("medusa-core-utils");
  * description: "Completes an OrderEdit."
  * parameters:
  *   - (path) id=* {string} The ID of the Order Edit.
+ * x-codegen:
+ *   method: complete
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
  *     source: |
  *       import Medusa from "@medusajs/medusa-js"
  *       const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
- *       medusa.orderEdit.complete(orderEditId)
+ *       medusa.orderEdits.complete(order_edit_id)
  *         .then(({ order_edit }) => {
  *           console.log(order_edit.id)
  *         })
@@ -68,9 +81,7 @@ var medusa_core_utils_1 = require("medusa-core-utils");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order_edit:
- *               $ref: "#/components/schemas/order_edit"
+ *           $ref: "#/components/schemas/StoreOrderEditsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -81,24 +92,67 @@ var medusa_core_utils_1 = require("medusa-core-utils");
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var id, orderEditService, manager, userId, orderEdit;
+    var id, orderEditService, paymentProviderService, manager, userId, orderEdit;
     var _a, _b, _c, _d, _e;
     return __generator(this, function (_f) {
         switch (_f.label) {
             case 0:
                 id = req.params.id;
                 orderEditService = req.scope.resolve("orderEditService");
+                paymentProviderService = req.scope.resolve("paymentProviderService");
                 manager = req.scope.resolve("manager");
                 userId = (_d = (_b = (_a = req.user) === null || _a === void 0 ? void 0 : _a.customer_id) !== null && _b !== void 0 ? _b : (_c = req.user) === null || _c === void 0 ? void 0 : _c.id) !== null && _d !== void 0 ? _d : (_e = req.user) === null || _e === void 0 ? void 0 : _e.userId;
                 return [4 /*yield*/, manager.transaction(function (manager) { return __awaiter(void 0, void 0, void 0, function () {
-                        var orderEditServiceTx, orderEdit;
-                        return __generator(this, function (_a) {
-                            switch (_a.label) {
+                        var orderEditServiceTx, paymentProviderServiceTx, orderEdit, allowedStatus, _a, _b, payment, e_1_1, returned;
+                        var e_1, _c;
+                        return __generator(this, function (_d) {
+                            switch (_d.label) {
                                 case 0:
                                     orderEditServiceTx = orderEditService.withTransaction(manager);
-                                    return [4 /*yield*/, orderEditServiceTx.retrieve(id)];
+                                    paymentProviderServiceTx = paymentProviderService.withTransaction(manager);
+                                    return [4 /*yield*/, orderEditServiceTx.retrieve(id, {
+                                            relations: ["payment_collection", "payment_collection.payments"],
+                                        })];
                                 case 1:
-                                    orderEdit = _a.sent();
+                                    orderEdit = _d.sent();
+                                    allowedStatus = [models_1.OrderEditStatus.REQUESTED, models_1.OrderEditStatus.CONFIRMED];
+                                    if (!(orderEdit.payment_collection &&
+                                        allowedStatus.includes(orderEdit.status))) return [3 /*break*/, 9];
+                                    if (orderEdit.payment_collection.status !==
+                                        models_1.PaymentCollectionStatus.AUTHORIZED) {
+                                        throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Unable to complete an order edit if the payment is not authorized");
+                                    }
+                                    if (!orderEdit.payment_collection) return [3 /*break*/, 9];
+                                    _d.label = 2;
+                                case 2:
+                                    _d.trys.push([2, 7, 8, 9]);
+                                    _a = __values(orderEdit.payment_collection.payments), _b = _a.next();
+                                    _d.label = 3;
+                                case 3:
+                                    if (!!_b.done) return [3 /*break*/, 6];
+                                    payment = _b.value;
+                                    if (!(payment.order_id !== orderEdit.order_id)) return [3 /*break*/, 5];
+                                    return [4 /*yield*/, paymentProviderServiceTx.updatePayment(payment.id, {
+                                            order_id: orderEdit.order_id,
+                                        })];
+                                case 4:
+                                    _d.sent();
+                                    _d.label = 5;
+                                case 5:
+                                    _b = _a.next();
+                                    return [3 /*break*/, 3];
+                                case 6: return [3 /*break*/, 9];
+                                case 7:
+                                    e_1_1 = _d.sent();
+                                    e_1 = { error: e_1_1 };
+                                    return [3 /*break*/, 9];
+                                case 8:
+                                    try {
+                                        if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                                    }
+                                    finally { if (e_1) throw e_1.error; }
+                                    return [7 /*endfinally*/];
+                                case 9:
                                     if (orderEdit.status === models_1.OrderEditStatus.CONFIRMED) {
                                         return [2 /*return*/, orderEdit];
                                     }
@@ -106,18 +160,11 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                         throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Cannot complete an order edit with status ".concat(orderEdit.status));
                                     }
                                     return [4 /*yield*/, orderEditServiceTx.confirm(id, {
-                                            loggedInUserId: userId,
+                                            confirmedBy: userId,
                                         })];
-                                case 2: 
-                                // TODO once payment collection is done
-                                /*const paymentCollection = await this.paymentCollectionService_.withTransaction(manager).retrieve(orderEdit.payment_collection_id)
-                                if (!paymentCollection.authorized_at) {
-                                  throw new MedusaError(
-                                    MedusaError.Types.NOT_ALLOWED,
-                                    "Unable to complete an order edit if the payment is not authorized"
-                                  )
-                                }*/
-                                return [2 /*return*/, _a.sent()];
+                                case 10:
+                                    returned = _d.sent();
+                                    return [2 /*return*/, returned];
                             }
                         });
                     }); })];

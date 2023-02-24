@@ -78,8 +78,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var medusa_core_utils_1 = require("medusa-core-utils");
 var interfaces_1 = require("../interfaces");
-var utils_1 = require("../utils");
 var tax_inclusive_pricing_1 = __importDefault(require("../loaders/feature-flags/tax-inclusive-pricing"));
+var models_1 = require("../models");
+var utils_1 = require("../utils");
 /**
  * Provides layer to manipulate profiles.
  */
@@ -176,9 +177,9 @@ var ShippingOptionService = /** @class */ (function (_super) {
         });
     };
     /**
-     * @param {Object} selector - the query object for find
-     * @param {object} config - config object
-     * @return {Promise} the result of the find operation
+     * @param selector - the query object for find
+     * @param config - config object
+     * @return the result of the find operation
      */
     ShippingOptionService.prototype.listAndCount = function (selector, config) {
         if (config === void 0) { config = { skip: 0, take: 50 }; }
@@ -210,6 +211,9 @@ var ShippingOptionService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(optionId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"optionId\" must be defined");
+                        }
                         manager = this.manager_;
                         soRepo = manager.getCustomRepository(this.optionRepository_);
                         query = {
@@ -332,7 +336,7 @@ var ShippingOptionService = /** @class */ (function (_super) {
                                     case 1:
                                         option = _a.sent();
                                         methodRepo = manager.getCustomRepository(this.methodRepository_);
-                                        if (!(0, utils_1.isDefined)(config.cart)) return [3 /*break*/, 3];
+                                        if (!(0, medusa_core_utils_1.isDefined)(config.cart)) return [3 /*break*/, 3];
                                         return [4 /*yield*/, this.validateCartOption(option, config.cart)];
                                     case 2:
                                         _a.sent();
@@ -403,7 +407,7 @@ var ShippingOptionService = /** @class */ (function (_super) {
      */
     ShippingOptionService.prototype.validateCartOption = function (option, cart) {
         return __awaiter(this, void 0, void 0, function () {
-            var subtotal, requirementResults, _a;
+            var amount, requirementResults, _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -413,18 +417,18 @@ var ShippingOptionService = /** @class */ (function (_super) {
                         if (cart.region_id !== option.region_id) {
                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "The shipping option is not available in the cart's region");
                         }
-                        subtotal = cart.subtotal;
+                        amount = option.includes_tax ? cart.total : cart.subtotal;
                         requirementResults = option.requirements.map(function (requirement) {
                             switch (requirement.type) {
                                 case "max_subtotal":
-                                    return requirement.amount > subtotal;
+                                    return requirement.amount > amount;
                                 case "min_subtotal":
-                                    return requirement.amount <= subtotal;
+                                    return requirement.amount <= amount;
                                 default:
                                     return true;
                             }
                         });
-                        if (!requirementResults.every(Boolean)) {
+                        if (requirementResults.some(function (requirement) { return !requirement; })) {
                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "The Cart does not satisfy the shipping option's requirements");
                         }
                         _a = option;
@@ -432,6 +436,35 @@ var ShippingOptionService = /** @class */ (function (_super) {
                     case 1:
                         _a.amount = _b.sent();
                         return [2 /*return*/, option];
+                }
+            });
+        });
+    };
+    ShippingOptionService.prototype.validateAndMutatePrice = function (option, priceInput) {
+        return __awaiter(this, void 0, void 0, function () {
+            var option_, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        option_ = __assign({}, option);
+                        if ((0, medusa_core_utils_1.isDefined)(priceInput.amount)) {
+                            option_.amount = priceInput.amount;
+                        }
+                        if (!(0, medusa_core_utils_1.isDefined)(priceInput.price_type)) return [3 /*break*/, 2];
+                        _a = option_;
+                        return [4 /*yield*/, this.validatePriceType_(priceInput.price_type, option_)];
+                    case 1:
+                        _a.price_type = _b.sent();
+                        if (priceInput.price_type === models_1.ShippingOptionPriceType.CALCULATED) {
+                            option_.amount = null;
+                        }
+                        _b.label = 2;
+                    case 2:
+                        if (option_.price_type === models_1.ShippingOptionPriceType.FLAT_RATE &&
+                            (option_.amount == null || option_.amount < 0)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Shipping options of type `flat_rate` must have an `amount`");
+                        }
+                        return [2 /*return*/, option_];
                 }
             });
         });
@@ -448,33 +481,30 @@ var ShippingOptionService = /** @class */ (function (_super) {
             var _this = this;
             return __generator(this, function (_a) {
                 return [2 /*return*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                        var optionRepo, option, region, _a, isValid, acc, _loop_1, this_1, _b, _c, r, e_2_1, result;
-                        var e_2, _d;
-                        var _e;
-                        return __generator(this, function (_f) {
-                            switch (_f.label) {
-                                case 0:
+                        var optionWithValidatedPrice, optionRepo, option, region, isValid, acc, _loop_1, this_1, _a, _b, r, e_2_1, result;
+                        var e_2, _c;
+                        return __generator(this, function (_d) {
+                            switch (_d.label) {
+                                case 0: return [4 /*yield*/, this.validateAndMutatePrice(data, {
+                                        price_type: data.price_type,
+                                    })];
+                                case 1:
+                                    optionWithValidatedPrice = _d.sent();
                                     optionRepo = manager.getCustomRepository(this.optionRepository_);
-                                    option = optionRepo.create(data);
+                                    option = optionRepo.create(optionWithValidatedPrice);
                                     return [4 /*yield*/, this.regionService_
                                             .withTransaction(manager)
                                             .retrieve(option.region_id, {
                                             relations: ["fulfillment_providers"],
                                         })];
-                                case 1:
-                                    region = _f.sent();
+                                case 2:
+                                    region = _d.sent();
                                     if (!region.fulfillment_providers.find(function (_a) {
                                         var id = _a.id;
                                         return id === option.provider_id;
                                     })) {
                                         throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "The fulfillment provider is not available in the provided region");
                                     }
-                                    _a = option;
-                                    return [4 /*yield*/, this.validatePriceType_(data.price_type, option)];
-                                case 2:
-                                    _a.price_type = _f.sent();
-                                    option.amount =
-                                        data.price_type === "calculated" ? null : (_e = data.amount) !== null && _e !== void 0 ? _e : null;
                                     if (this.featureFlagRouter_.isFeatureEnabled(tax_inclusive_pricing_1.default.key)) {
                                         if (typeof data.includes_tax !== "undefined") {
                                             option.includes_tax = data.includes_tax;
@@ -482,19 +512,19 @@ var ShippingOptionService = /** @class */ (function (_super) {
                                     }
                                     return [4 /*yield*/, this.providerService_.validateOption(option)];
                                 case 3:
-                                    isValid = _f.sent();
+                                    isValid = _d.sent();
                                     if (!isValid) {
                                         throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "The fulfillment provider cannot validate the shipping option");
                                     }
-                                    if (!(0, utils_1.isDefined)(data.requirements)) return [3 /*break*/, 11];
+                                    if (!(0, medusa_core_utils_1.isDefined)(data.requirements)) return [3 /*break*/, 11];
                                     acc = [];
                                     _loop_1 = function (r) {
                                         var validated;
-                                        return __generator(this, function (_g) {
-                                            switch (_g.label) {
+                                        return __generator(this, function (_e) {
+                                            switch (_e.label) {
                                                 case 0: return [4 /*yield*/, this_1.validateRequirement_(r)];
                                                 case 1:
-                                                    validated = _g.sent();
+                                                    validated = _e.sent();
                                                     if (acc.find(function (raw) { return raw.type === validated.type; })) {
                                                         throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Only one requirement of each type is allowed");
                                                     }
@@ -511,35 +541,35 @@ var ShippingOptionService = /** @class */ (function (_super) {
                                         });
                                     };
                                     this_1 = this;
-                                    _f.label = 4;
+                                    _d.label = 4;
                                 case 4:
-                                    _f.trys.push([4, 9, 10, 11]);
-                                    _b = __values(data.requirements), _c = _b.next();
-                                    _f.label = 5;
+                                    _d.trys.push([4, 9, 10, 11]);
+                                    _a = __values(data.requirements), _b = _a.next();
+                                    _d.label = 5;
                                 case 5:
-                                    if (!!_c.done) return [3 /*break*/, 8];
-                                    r = _c.value;
+                                    if (!!_b.done) return [3 /*break*/, 8];
+                                    r = _b.value;
                                     return [5 /*yield**/, _loop_1(r)];
                                 case 6:
-                                    _f.sent();
-                                    _f.label = 7;
+                                    _d.sent();
+                                    _d.label = 7;
                                 case 7:
-                                    _c = _b.next();
+                                    _b = _a.next();
                                     return [3 /*break*/, 5];
                                 case 8: return [3 /*break*/, 11];
                                 case 9:
-                                    e_2_1 = _f.sent();
+                                    e_2_1 = _d.sent();
                                     e_2 = { error: e_2_1 };
                                     return [3 /*break*/, 11];
                                 case 10:
                                     try {
-                                        if (_c && !_c.done && (_d = _b.return)) _d.call(_b);
+                                        if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                                     }
                                     finally { if (e_2) throw e_2.error; }
                                     return [7 /*endfinally*/];
                                 case 11: return [4 /*yield*/, optionRepo.save(option)];
                                 case 12:
-                                    result = _f.sent();
+                                    result = _d.sent();
                                     return [2 /*return*/, result];
                             }
                         });
@@ -560,11 +590,15 @@ var ShippingOptionService = /** @class */ (function (_super) {
                 switch (_a.label) {
                     case 0:
                         if (!priceType ||
-                            (priceType !== "flat_rate" && priceType !== "calculated")) {
+                            (priceType !== models_1.ShippingOptionPriceType.FLAT_RATE &&
+                                priceType !== models_1.ShippingOptionPriceType.CALCULATED)) {
                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "The price must be of type flat_rate or calculated");
                         }
-                        if (!(priceType === "calculated")) return [3 /*break*/, 2];
-                        return [4 /*yield*/, this.providerService_.canCalculate(option)];
+                        if (!(priceType === models_1.ShippingOptionPriceType.CALCULATED)) return [3 /*break*/, 2];
+                        return [4 /*yield*/, this.providerService_.canCalculate({
+                                provider_id: option.provider_id,
+                                data: option.data,
+                            })];
                     case 1:
                         canCalculate = _a.sent();
                         if (!canCalculate) {
@@ -590,34 +624,34 @@ var ShippingOptionService = /** @class */ (function (_super) {
             var _this = this;
             return __generator(this, function (_a) {
                 return [2 /*return*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                        var option, acc, _loop_2, this_2, _a, _b, r, e_3_1, accReqs_1, toRemove, _c, optionRepo;
-                        var e_3, _d;
+                        var option, acc, _loop_2, this_2, _a, _b, r, e_3_1, accReqs_1, toRemove, optionWithValidatedPrice, optionRepo;
+                        var e_3, _c;
                         var _this = this;
-                        return __generator(this, function (_e) {
-                            switch (_e.label) {
+                        return __generator(this, function (_d) {
+                            switch (_d.label) {
                                 case 0: return [4 /*yield*/, this.retrieve(optionId, {
                                         relations: ["requirements"],
                                     })];
                                 case 1:
-                                    option = _e.sent();
-                                    if ((0, utils_1.isDefined)(update.metadata)) {
+                                    option = _d.sent();
+                                    if ((0, medusa_core_utils_1.isDefined)(update.metadata)) {
                                         option.metadata = (0, utils_1.setMetadata)(option, update.metadata);
                                     }
                                     if (update.region_id || update.provider_id || update.data) {
                                         throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Region and Provider cannot be updated after creation");
                                     }
-                                    if ((0, utils_1.isDefined)(update.is_return)) {
+                                    if ((0, medusa_core_utils_1.isDefined)(update.is_return)) {
                                         throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "is_return cannot be changed after creation");
                                     }
-                                    if (!(0, utils_1.isDefined)(update.requirements)) return [3 /*break*/, 12];
+                                    if (!(0, medusa_core_utils_1.isDefined)(update.requirements)) return [3 /*break*/, 12];
                                     acc = [];
                                     _loop_2 = function (r) {
                                         var validated;
-                                        return __generator(this, function (_f) {
-                                            switch (_f.label) {
+                                        return __generator(this, function (_e) {
+                                            switch (_e.label) {
                                                 case 0: return [4 /*yield*/, this_2.validateRequirement_(r, optionId)];
                                                 case 1:
-                                                    validated = _f.sent();
+                                                    validated = _e.sent();
                                                     if (acc.find(function (raw) { return raw.type === validated.type; })) {
                                                         throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Only one requirement of each type is allowed");
                                                     }
@@ -634,29 +668,29 @@ var ShippingOptionService = /** @class */ (function (_super) {
                                         });
                                     };
                                     this_2 = this;
-                                    _e.label = 2;
+                                    _d.label = 2;
                                 case 2:
-                                    _e.trys.push([2, 7, 8, 9]);
+                                    _d.trys.push([2, 7, 8, 9]);
                                     _a = __values(update.requirements), _b = _a.next();
-                                    _e.label = 3;
+                                    _d.label = 3;
                                 case 3:
                                     if (!!_b.done) return [3 /*break*/, 6];
                                     r = _b.value;
                                     return [5 /*yield**/, _loop_2(r)];
                                 case 4:
-                                    _e.sent();
-                                    _e.label = 5;
+                                    _d.sent();
+                                    _d.label = 5;
                                 case 5:
                                     _b = _a.next();
                                     return [3 /*break*/, 3];
                                 case 6: return [3 /*break*/, 9];
                                 case 7:
-                                    e_3_1 = _e.sent();
+                                    e_3_1 = _d.sent();
                                     e_3 = { error: e_3_1 };
                                     return [3 /*break*/, 9];
                                 case 8:
                                     try {
-                                        if (_b && !_b.done && (_d = _a.return)) _d.call(_a);
+                                        if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                                     }
                                     finally { if (e_3) throw e_3.error; }
                                     return [7 /*endfinally*/];
@@ -675,39 +709,34 @@ var ShippingOptionService = /** @class */ (function (_super) {
                                             });
                                         }); }))];
                                 case 10:
-                                    _e.sent();
-                                    _e.label = 11;
+                                    _d.sent();
+                                    _d.label = 11;
                                 case 11:
                                     option.requirements = acc;
-                                    _e.label = 12;
-                                case 12:
-                                    if (!(0, utils_1.isDefined)(update.price_type)) return [3 /*break*/, 14];
-                                    _c = option;
-                                    return [4 /*yield*/, this.validatePriceType_(update.price_type, option)];
+                                    _d.label = 12;
+                                case 12: return [4 /*yield*/, this.validateAndMutatePrice(option, {
+                                        price_type: update.price_type,
+                                        amount: update.amount,
+                                    })];
                                 case 13:
-                                    _c.price_type = _e.sent();
-                                    if (update.price_type === "calculated") {
-                                        option.amount = null;
+                                    optionWithValidatedPrice = _d.sent();
+                                    if ((0, medusa_core_utils_1.isDefined)(update.name)) {
+                                        optionWithValidatedPrice.name = update.name;
                                     }
-                                    _e.label = 14;
-                                case 14:
-                                    if ((0, utils_1.isDefined)(update.amount) && option.price_type !== "calculated") {
-                                        option.amount = update.amount;
+                                    if ((0, medusa_core_utils_1.isDefined)(update.admin_only)) {
+                                        optionWithValidatedPrice.admin_only = update.admin_only;
                                     }
-                                    if ((0, utils_1.isDefined)(update.name)) {
-                                        option.name = update.name;
-                                    }
-                                    if ((0, utils_1.isDefined)(update.admin_only)) {
-                                        option.admin_only = update.admin_only;
+                                    if ((0, medusa_core_utils_1.isDefined)(update.profile_id)) {
+                                        optionWithValidatedPrice.profile_id = update.profile_id;
                                     }
                                     if (this.featureFlagRouter_.isFeatureEnabled(tax_inclusive_pricing_1.default.key)) {
                                         if (typeof update.includes_tax !== "undefined") {
-                                            option.includes_tax = update.includes_tax;
+                                            optionWithValidatedPrice.includes_tax = update.includes_tax;
                                         }
                                     }
                                     optionRepo = manager.getCustomRepository(this.optionRepository_);
-                                    return [4 /*yield*/, optionRepo.save(option)];
-                                case 15: return [2 /*return*/, _e.sent()];
+                                    return [4 /*yield*/, optionRepo.save(optionWithValidatedPrice)];
+                                case 14: return [2 /*return*/, _d.sent()];
                             }
                         });
                     }); })];
@@ -813,6 +842,34 @@ var ShippingOptionService = /** @class */ (function (_super) {
                                         }
                                         return [4 /*yield*/, reqRepo.softRemove(requirement)];
                                     case 2: return [2 /*return*/, _a.sent()];
+                                }
+                            });
+                        }); })];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
+    /**
+     *
+     * @param optionIds ID or IDs of the shipping options to update
+     * @param profileId Shipping profile ID to update the shipping options with
+     * @returns updated shipping options
+     */
+    ShippingOptionService.prototype.updateShippingProfile = function (optionIds, profileId) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
+                            var optionRepo, ids;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        optionRepo = manager.getCustomRepository(this.optionRepository_);
+                                        ids = (0, utils_1.isString)(optionIds) ? [optionIds] : optionIds;
+                                        return [4 /*yield*/, optionRepo.upsertShippingProfile(ids, profileId)];
+                                    case 1: return [2 /*return*/, _a.sent()];
                                 }
                             });
                         }); })];

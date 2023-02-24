@@ -4,11 +4,15 @@ import { User } from "../models";
 import { UserRepository } from "../repositories/user";
 import { FindConfig } from "../types/common";
 import { CreateUserInput, FilterableUserProps, UpdateUserInput } from "../types/user";
+import { FlagRouter } from "../utils/flag-router";
+import AnalyticsConfigService from "./analytics-config";
 import EventBusService from "./event-bus";
 declare type UserServiceProps = {
     userRepository: typeof UserRepository;
+    analyticsConfigService: AnalyticsConfigService;
     eventBusService: EventBusService;
     manager: EntityManager;
+    featureFlagRouter: FlagRouter;
 };
 /**
  * Provides layer to manipulate users.
@@ -22,9 +26,11 @@ declare class UserService extends TransactionBaseService {
     };
     protected manager_: EntityManager;
     protected transactionManager_: EntityManager;
+    protected readonly analyticsConfigService_: AnalyticsConfigService;
     protected readonly userRepository_: typeof UserRepository;
     protected readonly eventBus_: EventBusService;
-    constructor({ userRepository, eventBusService, manager }: UserServiceProps);
+    protected readonly featureFlagRouter_: FlagRouter;
+    constructor({ userRepository, eventBusService, analyticsConfigService, featureFlagRouter, manager, }: UserServiceProps);
     /**
      * @param {FilterableUserProps} selector - the query object for find
      * @param {Object} config - the configuration object for the query
@@ -43,7 +49,7 @@ declare class UserService extends TransactionBaseService {
      * Gets a user by api token.
      * Throws in case of DB Error and if user was not found.
      * @param {string} apiToken - the token of the user to get.
-     * @param {string[]} relations - relations to include with the user
+     * @param {string[]} relations - relations to include with the user.
      * @return {Promise<User>} the user document.
      */
     retrieveByApiToken(apiToken: string, relations?: string[]): Promise<User>;

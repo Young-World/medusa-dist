@@ -39,10 +39,10 @@ declare class ClaimItemService extends TransactionBaseService {
     list(selector: Selector<ClaimItem>, config?: FindConfig<ClaimItem>): Promise<ClaimItem[]>;
     /**
      * Gets a claim item by id.
-     * @param {string} id - id of ClaimItem to retrieve
+     * @param {string} claimItemId - id of ClaimItem to retrieve
      * @param {Object} config - configuration for the find operation
      * @return {Promise<Order>} the ClaimItem
      */
-    retrieve(id: string, config?: FindConfig<ClaimItem>): Promise<ClaimItem>;
+    retrieve(claimItemId: string, config?: FindConfig<ClaimItem>): Promise<ClaimItem>;
 }
 export default ClaimItemService;

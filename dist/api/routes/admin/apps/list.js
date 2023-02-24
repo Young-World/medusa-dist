@@ -42,6 +42,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * summary: "List Applications"
  * description: "Retrieve a list of applications."
  * x-authenticated: true
+ * x-codegen:
+ *   method: list
  * x-codeSamples:
  *   - lang: Shell
  *     label: cURL
@@ -59,11 +61,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            apps:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/OAuth"
+ *          $ref: "#/components/schemas/AdminAppsListRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":

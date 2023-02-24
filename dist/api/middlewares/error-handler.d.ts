@@ -3,9 +3,9 @@ import { MedusaError } from "medusa-core-utils";
 declare const _default: () => (err: MedusaError, req: Request, res: Response, next: NextFunction) => void;
 export default _default;
 /**
- * @schema error
+ * @schema Error
  * title: "Response Error"
- * x-resourceId: error
+ * type: object
  * properties:
  *  code:
  *    type: string

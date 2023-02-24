@@ -87,15 +87,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminPostProductsReq = void 0;
-var product_variant_1 = require("../../../../types/product-variant");
 var class_validator_1 = require("class-validator");
-var product_1 = require("../../../../types/product");
 var _1 = require(".");
-var feature_flag_decorators_1 = require("../../../../utils/feature-flag-decorators");
-var models_1 = require("../../../../models");
-var sales_channels_1 = __importDefault(require("../../../../loaders/feature-flags/sales-channels"));
+var product_1 = require("../../../../types/product");
+var product_variant_1 = require("../../../../types/product-variant");
 var class_transformer_1 = require("class-transformer");
+var sales_channels_1 = __importDefault(require("../../../../loaders/feature-flags/sales-channels"));
+var models_1 = require("../../../../models");
+var feature_flag_decorators_1 = require("../../../../utils/feature-flag-decorators");
 var validator_1 = require("../../../../utils/validator");
+var create_product_variant_1 = require("./transaction/create-product-variant");
 /**
  * @oas [post] /products
  * operationId: "PostProducts"
@@ -106,209 +107,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - title
- *         properties:
- *           title:
- *             description: "The title of the Product"
- *             type: string
- *           subtitle:
- *             description: "The subtitle of the Product"
- *             type: string
- *           description:
- *             description: "A description of the Product."
- *             type: string
- *           is_giftcard:
- *             description: A flag to indicate if the Product represents a Gift Card. Purchasing Products with this flag set to `true` will result in a Gift Card being created.
- *             type: boolean
- *             default: false
- *           discountable:
- *             description: A flag to indicate if discounts can be applied to the LineItems generated from this Product
- *             type: boolean
- *             default: true
- *           images:
- *             description: Images of the Product.
- *             type: array
- *             items:
- *               type: string
- *           thumbnail:
- *             description: The thumbnail to use for the Product.
- *             type: string
- *           handle:
- *             description: A unique handle to identify the Product by.
- *             type: string
- *           status:
- *             description: The status of the product.
- *             type: string
- *             enum: [draft, proposed, published, rejected]
- *             default: draft
- *           type:
- *             description: The Product Type to associate the Product with.
- *             type: object
- *             required:
- *               - value
- *             properties:
- *               id:
- *                 description: The ID of the Product Type.
- *                 type: string
- *               value:
- *                 description: The value of the Product Type.
- *                 type: string
- *           collection_id:
- *             description: The ID of the Collection the Product should belong to.
- *             type: string
- *           tags:
- *             description: Tags to associate the Product with.
- *             type: array
- *             items:
- *               required:
- *                 - value
- *               properties:
- *                 id:
- *                   description: The ID of an existing Tag.
- *                   type: string
- *                 value:
- *                   description: The value of the Tag, these will be upserted.
- *                   type: string
- *           sales_channels:
- *             description: "[EXPERIMENTAL] Sales channels to associate the Product with."
- *             type: array
- *             items:
- *               required:
- *                 - id
- *               properties:
- *                 id:
- *                   description: The ID of an existing Sales channel.
- *                   type: string
- *           options:
- *             description: The Options that the Product should have. These define on which properties the Product's Product Variants will differ.
- *             type: array
- *             items:
- *               required:
- *                 - title
- *               properties:
- *                 title:
- *                   description: The title to identify the Product Option by.
- *                   type: string
- *           variants:
- *             description: A list of Product Variants to create with the Product.
- *             type: array
- *             items:
- *               required:
- *                 - title
- *               properties:
- *                 title:
- *                   description: The title to identify the Product Variant by.
- *                   type: string
- *                 sku:
- *                   description: The unique SKU for the Product Variant.
- *                   type: string
- *                 ean:
- *                   description: The EAN number of the item.
- *                   type: string
- *                 upc:
- *                   description: The UPC number of the item.
- *                   type: string
- *                 barcode:
- *                   description: A generic GTIN field for the Product Variant.
- *                   type: string
- *                 hs_code:
- *                   description: The Harmonized System code for the Product Variant.
- *                   type: string
- *                 inventory_quantity:
- *                   description: The amount of stock kept for the Product Variant.
- *                   type: integer
- *                   default: 0
- *                 allow_backorder:
- *                   description: Whether the Product Variant can be purchased when out of stock.
- *                   type: boolean
- *                 manage_inventory:
- *                   description: Whether Medusa should keep track of the inventory for this Product Variant.
- *                   type: boolean
- *                 weight:
- *                   description: The wieght of the Product Variant.
- *                   type: number
- *                 length:
- *                   description: The length of the Product Variant.
- *                   type: number
- *                 height:
- *                   description: The height of the Product Variant.
- *                   type: number
- *                 width:
- *                   description: The width of the Product Variant.
- *                   type: number
- *                 origin_country:
- *                   description: The country of origin of the Product Variant.
- *                   type: string
- *                 mid_code:
- *                   description: The Manufacturer Identification code for the Product Variant.
- *                   type: string
- *                 material:
- *                   description: The material composition of the Product Variant.
- *                   type: string
- *                 metadata:
- *                   description: An optional set of key-value pairs with additional information.
- *                   type: object
- *                 prices:
- *                   type: array
- *                   items:
- *                     required:
- *                       - amount
- *                     properties:
- *                       region_id:
- *                         description: The ID of the Region for which the price is used. Only required if currency_code is not provided.
- *                         type: string
- *                       currency_code:
- *                         description: The 3 character ISO currency code for which the price will be used. Only required if region_id is not provided.
- *                         type: string
- *                         externalDocs:
- *                           url: https://en.wikipedia.org/wiki/ISO_4217#Active_codes
- *                           description: See a list of codes.
- *                       amount:
- *                         description: The amount to charge for the Product Variant.
- *                         type: integer
- *                       min_quantity:
- *                         description: The minimum quantity for which the price will be used.
- *                         type: integer
- *                       max_quantity:
- *                         description: The maximum quantity for which the price will be used.
- *                         type: integer
- *                 options:
- *                   type: array
- *                   items:
- *                     required:
- *                       - value
- *                     properties:
- *                       value:
- *                         description: The value to give for the Product Option at the same index in the Product's `options` field.
- *                         type: string
- *           weight:
- *             description: The weight of the Product.
- *             type: number
- *           length:
- *             description: The length of the Product.
- *             type: number
- *           height:
- *             description: The height of the Product.
- *             type: number
- *           width:
- *             description: The width of the Product.
- *             type: number
- *           hs_code:
- *             description: The Harmonized System code for the Product Variant.
- *             type: string
- *           origin_country:
- *             description: The country of origin of the Product.
- *             type: string
- *           mid_code:
- *             description: The Manufacturer Identification code for the Product.
- *             type: string
- *           material:
- *             description: The material composition of the Product.
- *             type: string
- *           metadata:
- *             description: An optional set of key-value pairs with additional information.
- *             type: object
+ *         $ref: "#/components/schemas/AdminPostProductsReq"
+ * x-codegen:
+ *   method: create
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -344,9 +145,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             product:
- *               $ref: "#/components/schemas/product"
+ *           $ref: "#/components/schemas/AdminProductsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -361,23 +160,27 @@ var validator_1 = require("../../../../utils/validator");
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var validated, productService, pricingService, productVariantService, shippingProfileService, entityManager, newProduct, rawProduct, _a, product;
+    var validated, logger, productService, pricingService, productVariantService, shippingProfileService, productVariantInventoryService, inventoryService, salesChannelService, entityManager, newProduct, rawProduct, _a, product;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0: return [4 /*yield*/, (0, validator_1.validator)(AdminPostProductsReq, req.body)];
             case 1:
                 validated = _b.sent();
+                logger = req.scope.resolve("logger");
                 productService = req.scope.resolve("productService");
                 pricingService = req.scope.resolve("pricingService");
                 productVariantService = req.scope.resolve("productVariantService");
                 shippingProfileService = req.scope.resolve("shippingProfileService");
+                productVariantInventoryService = req.scope.resolve("productVariantInventoryService");
+                inventoryService = req.scope.resolve("inventoryService");
+                salesChannelService = req.scope.resolve("salesChannelService");
                 entityManager = req.scope.resolve("manager");
                 return [4 /*yield*/, entityManager.transaction(function (manager) { return __awaiter(void 0, void 0, void 0, function () {
-                        var variants, shippingProfile, newProduct, _a, _b, _c, i, variant, optionIds_1;
-                        var e_1, _d;
-                        var _e;
-                        return __generator(this, function (_f) {
-                            switch (_f.label) {
+                        var variants, shippingProfile, defaultSalesChannel, newProduct, _a, _b, _c, index, variant, optionIds_1, allVariantTransactions_1, transactionDependencies_1, e_1;
+                        var e_2, _d;
+                        var _e, _f;
+                        return __generator(this, function (_g) {
+                            switch (_g.label) {
                                 case 0:
                                     variants = validated.variants;
                                     delete validated.variants;
@@ -389,54 +192,88 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                             .withTransaction(manager)
                                             .retrieveGiftCardDefault()];
                                 case 1:
-                                    shippingProfile = _f.sent();
+                                    shippingProfile = _g.sent();
                                     return [3 /*break*/, 4];
                                 case 2: return [4 /*yield*/, shippingProfileService
                                         .withTransaction(manager)
                                         .retrieveDefault()];
                                 case 3:
-                                    shippingProfile = _f.sent();
-                                    _f.label = 4;
-                                case 4: return [4 /*yield*/, productService
+                                    shippingProfile = _g.sent();
+                                    _g.label = 4;
+                                case 4:
+                                    if (!!((_e = validated === null || validated === void 0 ? void 0 : validated.sales_channels) === null || _e === void 0 ? void 0 : _e.length)) return [3 /*break*/, 6];
+                                    return [4 /*yield*/, salesChannelService
+                                            .withTransaction(manager)
+                                            .retrieveDefault()];
+                                case 5:
+                                    defaultSalesChannel = _g.sent();
+                                    validated.sales_channels = [defaultSalesChannel];
+                                    _g.label = 6;
+                                case 6: return [4 /*yield*/, productService
                                         .withTransaction(manager)
                                         .create(__assign(__assign({}, validated), { profile_id: shippingProfile.id }))];
-                                case 5:
-                                    newProduct = _f.sent();
-                                    if (!variants) return [3 /*break*/, 7];
+                                case 7:
+                                    newProduct = _g.sent();
+                                    if (!variants) return [3 /*break*/, 12];
                                     try {
                                         for (_a = __values(variants.entries()), _b = _a.next(); !_b.done; _b = _a.next()) {
-                                            _c = __read(_b.value, 2), i = _c[0], variant = _c[1];
-                                            variant["variant_rank"] = i;
+                                            _c = __read(_b.value, 2), index = _c[0], variant = _c[1];
+                                            variant["variant_rank"] = index;
                                         }
                                     }
-                                    catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                                    catch (e_2_1) { e_2 = { error: e_2_1 }; }
                                     finally {
                                         try {
                                             if (_b && !_b.done && (_d = _a.return)) _d.call(_a);
                                         }
-                                        finally { if (e_1) throw e_1.error; }
+                                        finally { if (e_2) throw e_2.error; }
                                     }
-                                    optionIds_1 = ((_e = validated === null || validated === void 0 ? void 0 : validated.options) === null || _e === void 0 ? void 0 : _e.map(function (o) { var _a; return (_a = newProduct.options.find(function (newO) { return newO.title === o.title; })) === null || _a === void 0 ? void 0 : _a.id; })) || [];
-                                    return [4 /*yield*/, Promise.all(variants.map(function (v) { return __awaiter(void 0, void 0, void 0, function () {
-                                            var variant;
+                                    optionIds_1 = ((_f = validated === null || validated === void 0 ? void 0 : validated.options) === null || _f === void 0 ? void 0 : _f.map(function (o) { var _a; return (_a = newProduct.options.find(function (newO) { return newO.title === o.title; })) === null || _a === void 0 ? void 0 : _a.id; })) || [];
+                                    allVariantTransactions_1 = [];
+                                    transactionDependencies_1 = {
+                                        manager: manager,
+                                        inventoryService: inventoryService,
+                                        productVariantInventoryService: productVariantInventoryService,
+                                        productVariantService: productVariantService,
+                                    };
+                                    _g.label = 8;
+                                case 8:
+                                    _g.trys.push([8, 10, , 12]);
+                                    return [4 /*yield*/, Promise.all(variants.map(function (variant) { return __awaiter(void 0, void 0, void 0, function () {
+                                            var options, input, varTransation;
                                             var _a;
                                             return __generator(this, function (_b) {
                                                 switch (_b.label) {
                                                     case 0:
-                                                        variant = __assign(__assign({}, v), { options: ((_a = v === null || v === void 0 ? void 0 : v.options) === null || _a === void 0 ? void 0 : _a.map(function (o, index) { return (__assign(__assign({}, o), { option_id: optionIds_1[index] })); })) || [] });
-                                                        return [4 /*yield*/, productVariantService
-                                                                .withTransaction(manager)
-                                                                .create(newProduct.id, variant)];
+                                                        options = ((_a = variant === null || variant === void 0 ? void 0 : variant.options) === null || _a === void 0 ? void 0 : _a.map(function (option, index) { return (__assign(__assign({}, option), { option_id: optionIds_1[index] })); })) || [];
+                                                        input = __assign(__assign({}, variant), { options: options });
+                                                        return [4 /*yield*/, (0, create_product_variant_1.createVariantTransaction)(transactionDependencies_1, newProduct.id, input)];
                                                     case 1:
-                                                        _b.sent();
+                                                        varTransation = _b.sent();
+                                                        allVariantTransactions_1.push(varTransation);
                                                         return [2 /*return*/];
                                                 }
                                             });
                                         }); }))];
-                                case 6:
-                                    _f.sent();
-                                    _f.label = 7;
-                                case 7: return [2 /*return*/, newProduct];
+                                case 9:
+                                    _g.sent();
+                                    return [3 /*break*/, 12];
+                                case 10:
+                                    e_1 = _g.sent();
+                                    return [4 /*yield*/, Promise.all(allVariantTransactions_1.map(function (transaction) { return __awaiter(void 0, void 0, void 0, function () {
+                                            return __generator(this, function (_a) {
+                                                switch (_a.label) {
+                                                    case 0: return [4 /*yield*/, (0, create_product_variant_1.revertVariantTransaction)(transactionDependencies_1, transaction).catch(function () { return logger.warn("Transaction couldn't be reverted."); })];
+                                                    case 1:
+                                                        _a.sent();
+                                                        return [2 /*return*/];
+                                                }
+                                            });
+                                        }); }))];
+                                case 11:
+                                    _g.sent();
+                                    throw e_1;
+                                case 12: return [2 /*return*/, newProduct];
                             }
                         });
                     }); })];
@@ -511,7 +348,7 @@ var ProductVariantReq = /** @class */ (function () {
     __decorate([
         (0, class_validator_1.IsNumber)(),
         (0, class_validator_1.IsOptional)(),
-        __metadata("design:type", Object)
+        __metadata("design:type", Number)
     ], ProductVariantReq.prototype, "inventory_quantity", void 0);
     __decorate([
         (0, class_validator_1.IsBoolean)(),
@@ -578,6 +415,229 @@ var ProductVariantReq = /** @class */ (function () {
     ], ProductVariantReq.prototype, "options", void 0);
     return ProductVariantReq;
 }());
+/**
+ * @schema AdminPostProductsReq
+ * type: object
+ * required:
+ *   - title
+ * properties:
+ *   title:
+ *     description: "The title of the Product"
+ *     type: string
+ *   subtitle:
+ *     description: "The subtitle of the Product"
+ *     type: string
+ *   description:
+ *     description: "A description of the Product."
+ *     type: string
+ *   is_giftcard:
+ *     description: A flag to indicate if the Product represents a Gift Card. Purchasing Products with this flag set to `true` will result in a Gift Card being created.
+ *     type: boolean
+ *     default: false
+ *   discountable:
+ *     description: A flag to indicate if discounts can be applied to the LineItems generated from this Product
+ *     type: boolean
+ *     default: true
+ *   images:
+ *     description: Images of the Product.
+ *     type: array
+ *     items:
+ *       type: string
+ *   thumbnail:
+ *     description: The thumbnail to use for the Product.
+ *     type: string
+ *   handle:
+ *     description: A unique handle to identify the Product by.
+ *     type: string
+ *   status:
+ *     description: The status of the product.
+ *     type: string
+ *     enum: [draft, proposed, published, rejected]
+ *     default: draft
+ *   type:
+ *     description: The Product Type to associate the Product with.
+ *     type: object
+ *     required:
+ *       - value
+ *     properties:
+ *       id:
+ *         description: The ID of the Product Type.
+ *         type: string
+ *       value:
+ *         description: The value of the Product Type.
+ *         type: string
+ *   collection_id:
+ *     description: The ID of the Collection the Product should belong to.
+ *     type: string
+ *   tags:
+ *     description: Tags to associate the Product with.
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - value
+ *       properties:
+ *         id:
+ *           description: The ID of an existing Tag.
+ *           type: string
+ *         value:
+ *           description: The value of the Tag, these will be upserted.
+ *           type: string
+ *   sales_channels:
+ *     description: "[EXPERIMENTAL] Sales channels to associate the Product with."
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - id
+ *       properties:
+ *         id:
+ *           description: The ID of an existing Sales channel.
+ *           type: string
+ *   categories:
+ *     description: "Categories to add the Product to."
+ *     type: array
+ *     items:
+ *       required:
+ *         - id
+ *       properties:
+ *         id:
+ *           description: The ID of a Product Category.
+ *           type: string
+ *   options:
+ *     description: The Options that the Product should have. These define on which properties the Product's Product Variants will differ.
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - title
+ *       properties:
+ *         title:
+ *           description: The title to identify the Product Option by.
+ *           type: string
+ *   variants:
+ *     description: A list of Product Variants to create with the Product.
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - title
+ *       properties:
+ *         title:
+ *           description: The title to identify the Product Variant by.
+ *           type: string
+ *         sku:
+ *           description: The unique SKU for the Product Variant.
+ *           type: string
+ *         ean:
+ *           description: The EAN number of the item.
+ *           type: string
+ *         upc:
+ *           description: The UPC number of the item.
+ *           type: string
+ *         barcode:
+ *           description: A generic GTIN field for the Product Variant.
+ *           type: string
+ *         hs_code:
+ *           description: The Harmonized System code for the Product Variant.
+ *           type: string
+ *         inventory_quantity:
+ *           description: The amount of stock kept for the Product Variant.
+ *           type: integer
+ *           default: 0
+ *         allow_backorder:
+ *           description: Whether the Product Variant can be purchased when out of stock.
+ *           type: boolean
+ *         manage_inventory:
+ *           description: Whether Medusa should keep track of the inventory for this Product Variant.
+ *           type: boolean
+ *         weight:
+ *           description: The wieght of the Product Variant.
+ *           type: number
+ *         length:
+ *           description: The length of the Product Variant.
+ *           type: number
+ *         height:
+ *           description: The height of the Product Variant.
+ *           type: number
+ *         width:
+ *           description: The width of the Product Variant.
+ *           type: number
+ *         origin_country:
+ *           description: The country of origin of the Product Variant.
+ *           type: string
+ *         mid_code:
+ *           description: The Manufacturer Identification code for the Product Variant.
+ *           type: string
+ *         material:
+ *           description: The material composition of the Product Variant.
+ *           type: string
+ *         metadata:
+ *           description: An optional set of key-value pairs with additional information.
+ *           type: object
+ *         prices:
+ *           type: array
+ *           items:
+ *             type: object
+ *             required:
+ *               - amount
+ *             properties:
+ *               region_id:
+ *                 description: The ID of the Region for which the price is used. Only required if currency_code is not provided.
+ *                 type: string
+ *               currency_code:
+ *                 description: The 3 character ISO currency code for which the price will be used. Only required if region_id is not provided.
+ *                 type: string
+ *                 externalDocs:
+ *                   url: https://en.wikipedia.org/wiki/ISO_4217#Active_codes
+ *                   description: See a list of codes.
+ *               amount:
+ *                 description: The amount to charge for the Product Variant.
+ *                 type: integer
+ *               min_quantity:
+ *                 description: The minimum quantity for which the price will be used.
+ *                 type: integer
+ *               max_quantity:
+ *                 description: The maximum quantity for which the price will be used.
+ *                 type: integer
+ *         options:
+ *           type: array
+ *           items:
+ *             type: object
+ *             required:
+ *               - value
+ *             properties:
+ *               value:
+ *                 description: The value to give for the Product Option at the same index in the Product's `options` field.
+ *                 type: string
+ *   weight:
+ *     description: The weight of the Product.
+ *     type: number
+ *   length:
+ *     description: The length of the Product.
+ *     type: number
+ *   height:
+ *     description: The height of the Product.
+ *     type: number
+ *   width:
+ *     description: The width of the Product.
+ *     type: number
+ *   hs_code:
+ *     description: The Harmonized System code for the Product Variant.
+ *     type: string
+ *   origin_country:
+ *     description: The country of origin of the Product.
+ *     type: string
+ *   mid_code:
+ *     description: The Manufacturer Identification code for the Product.
+ *     type: string
+ *   material:
+ *     description: The material composition of the Product.
+ *     type: string
+ *   metadata:
+ *     description: An optional set of key-value pairs with additional information.
+ *     type: object
+ */
 var AdminPostProductsReq = /** @class */ (function () {
     function AdminPostProductsReq() {
         this.is_giftcard = false;
@@ -653,6 +713,13 @@ var AdminPostProductsReq = /** @class */ (function () {
         ]),
         __metadata("design:type", Array)
     ], AdminPostProductsReq.prototype, "sales_channels", void 0);
+    __decorate([
+        (0, class_validator_1.IsOptional)(),
+        (0, class_transformer_1.Type)(function () { return product_1.ProductProductCategoryReq; }),
+        (0, class_validator_1.ValidateNested)({ each: true }),
+        (0, class_validator_1.IsArray)(),
+        __metadata("design:type", Array)
+    ], AdminPostProductsReq.prototype, "categories", void 0);
     __decorate([
         (0, class_validator_1.IsOptional)(),
         (0, class_transformer_1.Type)(function () { return ProductOptionReq; }),

@@ -1,16 +1,17 @@
 import { EntityManager, UpdateResult } from "typeorm";
+import { TransactionBaseService } from "../interfaces";
+import { DraftOrder } from "../models";
 import { DraftOrderRepository } from "../repositories/draft-order";
-import { PaymentRepository } from "../repositories/payment";
-import EventBusService from "./event-bus";
-import CartService from "./cart";
-import LineItemService from "./line-item";
 import { OrderRepository } from "../repositories/order";
+import { PaymentRepository } from "../repositories/payment";
+import { FindConfig } from "../types/common";
+import { DraftOrderCreateProps } from "../types/draft-orders";
+import CartService from "./cart";
+import CustomShippingOptionService from "./custom-shipping-option";
+import EventBusService from "./event-bus";
+import LineItemService from "./line-item";
 import ProductVariantService from "./product-variant";
 import ShippingOptionService from "./shipping-option";
-import { DraftOrder } from "../models";
-import { AdminPostDraftOrdersReq } from "../api/routes/admin/draft-orders";
-import { TransactionBaseService } from "../interfaces";
-import { FindConfig } from "../types/common";
 declare type InjectedDependencies = {
     manager: EntityManager;
     draftOrderRepository: typeof DraftOrderRepository;
@@ -21,6 +22,7 @@ declare type InjectedDependencies = {
     lineItemService: LineItemService;
     productVariantService: ProductVariantService;
     shippingOptionService: ShippingOptionService;
+    customShippingOptionService: CustomShippingOptionService;
 };
 /**
  * Handles draft orders
@@ -41,14 +43,15 @@ declare class DraftOrderService extends TransactionBaseService {
     protected readonly lineItemService_: LineItemService;
     protected readonly productVariantService_: ProductVariantService;
     protected readonly shippingOptionService_: ShippingOptionService;
-    constructor({ manager, draftOrderRepository, paymentRepository, orderRepository, eventBusService, cartService, lineItemService, productVariantService, shippingOptionService, }: InjectedDependencies);
+    protected readonly customShippingOptionService_: CustomShippingOptionService;
+    constructor({ manager, draftOrderRepository, paymentRepository, orderRepository, eventBusService, cartService, lineItemService, productVariantService, shippingOptionService, customShippingOptionService, }: InjectedDependencies);
     /**
      * Retrieves a draft order with the given id.
-     * @param id - id of the draft order to retrieve
+     * @param draftOrderId - id of the draft order to retrieve
      * @param config - query object for findOne
      * @return the draft order
      */
-    retrieve(id: string, config?: FindConfig<DraftOrder>): Promise<DraftOrder | never>;
+    retrieve(draftOrderId: string, config?: FindConfig<DraftOrder>): Promise<DraftOrder | never>;
     /**
      * Retrieves a draft order based on its associated cart id
      * @param cartId - cart id that the draft orders's cart has
@@ -81,7 +84,7 @@ declare class DraftOrderService extends TransactionBaseService {
      * @param data - data to create draft order from
      * @return the created draft order
      */
-    create(data: AdminPostDraftOrdersReq): Promise<DraftOrder>;
+    create(data: DraftOrderCreateProps): Promise<DraftOrder>;
     /**
      * Registers a draft order as completed, when an order has been completed.
      * @param draftOrderId - id of draft order to complete

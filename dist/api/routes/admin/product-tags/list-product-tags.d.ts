@@ -1,4 +1,5 @@
 import { DateComparisonOperator, StringComparisonOperator } from "../../../../types/common";
+import { Request, Response } from "express";
 /**
  * @oas [get] /product-tags
  * operationId: "GetProductTags"
@@ -9,6 +10,7 @@ import { DateComparisonOperator, StringComparisonOperator } from "../../../../ty
  *   - (query) limit=10 {integer} The number of tags to return.
  *   - (query) offset=0 {integer} The number of items to skip before the results.
  *   - (query) order {string} The field to sort items by.
+ *   - (query) discount_condition_id {string} The discount condition id on which to filter the tags.
  *   - in: query
  *     name: value
  *     style: form
@@ -72,6 +74,9 @@ import { DateComparisonOperator, StringComparisonOperator } from "../../../../ty
  *            type: string
  *            description: filter by dates greater than or equal to this date
  *            format: date
+ * x-codegen:
+ *   method: list
+ *   queryParams: AdminGetProductTagsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -99,18 +104,7 @@ import { DateComparisonOperator, StringComparisonOperator } from "../../../../ty
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            product_tags:
- *              $ref: "#/components/schemas/product_tag"
- *            count:
- *              type: integer
- *              description: The total number of items available
- *            offset:
- *              type: integer
- *              description: The number of items skipped before these items
- *            limit:
- *              type: integer
- *              description: The number of items per page
+ *          $ref: "#/components/schemas/AdminProductTagsListRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":
@@ -124,7 +118,7 @@ import { DateComparisonOperator, StringComparisonOperator } from "../../../../ty
  *  "500":
  *    $ref: "#/components/responses/500_error"
  */
-declare const _default: (req: any, res: any) => Promise<void>;
+declare const _default: (req: Request, res: Response) => Promise<void>;
 export default _default;
 export declare class AdminGetProductTagsPaginationParams {
     limit: number;
@@ -137,4 +131,5 @@ export declare class AdminGetProductTagsParams extends AdminGetProductTagsPagina
     created_at?: DateComparisonOperator;
     updated_at?: DateComparisonOperator;
     order?: string;
+    discount_condition_id?: string;
 }

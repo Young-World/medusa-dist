@@ -81,7 +81,7 @@ var ProductTagRepository = /** @class */ (function (_super) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.query("\n        SELECT id, COUNT(pts.product_tag_id) as usage_count, pt.value\n        FROM product_tag pt\n        LEFT JOIN product_tags pts ON pt.id = pts.product_tag_id\n        GROUP BY id\n        ORDER BY usage_count DESC\n        LIMIT $1\n      ", [count])];
+                    case 0: return [4 /*yield*/, this.query("\n          SELECT id, COUNT(pts.product_tag_id) as usage_count, pt.value\n          FROM product_tag pt\n                   LEFT JOIN product_tags pts ON pt.id = pts.product_tag_id\n          GROUP BY id\n          ORDER BY usage_count DESC\n              LIMIT $1\n      ", [count])];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
@@ -138,6 +138,31 @@ var ProductTagRepository = /** @class */ (function (_super) {
                         finally { if (e_1) throw e_1.error; }
                         return [7 /*endfinally*/];
                     case 10: return [2 /*return*/, upsertedTags];
+                }
+            });
+        });
+    };
+    ProductTagRepository.prototype.findAndCountByDiscountConditionId = function (conditionId, query) {
+        return __awaiter(this, void 0, void 0, function () {
+            var qb;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        qb = this.createQueryBuilder("pt");
+                        if (query === null || query === void 0 ? void 0 : query.select) {
+                            qb.select(query.select.map(function (select) { return "pt.".concat(select); }));
+                        }
+                        if (query.skip) {
+                            qb.skip(query.skip);
+                        }
+                        if (query.take) {
+                            qb.take(query.take);
+                        }
+                        return [4 /*yield*/, qb
+                                .where(query.where)
+                                .innerJoin("discount_condition_product_tag", "dc_pt", "dc_pt.product_tag_id = pt.id AND dc_pt.condition_id = :dcId", { dcId: conditionId })
+                                .getManyAndCount()];
+                    case 1: return [2 /*return*/, _a.sent()];
                 }
             });
         });

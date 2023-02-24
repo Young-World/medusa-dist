@@ -61,12 +61,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - provider_id
- *         properties:
- *           provider_id:
- *             description: "The ID of the Fulfillment Provider to add."
- *             type: string
+ *         $ref: "#/components/schemas/AdminPostRegionsRegionFulfillmentProvidersReq"
+ * x-codegen:
+ *   method: addFulfillmentProvider
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -100,9 +97,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             region:
- *               $ref: "#/components/schemas/region"
+ *           $ref: "#/components/schemas/AdminRegionsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -150,6 +145,16 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostRegionsRegionFulfillmentProvidersReq
+ * type: object
+ * required:
+ *   - provider_id
+ * properties:
+ *   provider_id:
+ *     description: "The ID of the Fulfillment Provider to add."
+ *     type: string
+ */
 var AdminPostRegionsRegionFulfillmentProvidersReq = /** @class */ (function () {
     function AdminPostRegionsRegionFulfillmentProvidersReq() {
     }

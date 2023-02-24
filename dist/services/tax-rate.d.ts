@@ -1,8 +1,5 @@
 import { EntityManager } from "typeorm";
-import { ProductTaxRate } from "../models/product-tax-rate";
-import { ProductTypeTaxRate } from "../models/product-type-tax-rate";
-import { ShippingTaxRate } from "../models/shipping-tax-rate";
-import { TaxRate } from "../models/tax-rate";
+import { ProductTaxRate, ProductTypeTaxRate, ShippingTaxRate, TaxRate } from "../models";
 import { TaxRateRepository } from "../repositories/tax-rate";
 import ProductService from "../services/product";
 import ProductTypeService from "../services/product-type";
@@ -26,7 +23,7 @@ declare class TaxRateService extends TransactionBaseService {
     });
     list(selector: FilterableTaxRateProps, config?: FindConfig<TaxRate>): Promise<TaxRate[]>;
     listAndCount(selector: FilterableTaxRateProps, config?: FindConfig<TaxRate>): Promise<[TaxRate[], number]>;
-    retrieve(id: string, config?: FindConfig<TaxRate>): Promise<TaxRate>;
+    retrieve(taxRateId: string, config?: FindConfig<TaxRate>): Promise<TaxRate>;
     create(data: CreateTaxRateInput): Promise<TaxRate>;
     update(id: string, data: UpdateTaxRateInput): Promise<TaxRate>;
     delete(id: string | string[]): Promise<void>;

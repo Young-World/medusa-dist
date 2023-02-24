@@ -4,6 +4,8 @@
  * summary: Get Payment Methods
  * description: "Retrieves a list of a Customer's saved payment methods. Payment methods are saved with Payment Providers and it is their responsibility to fetch saved methods."
  * x-authenticated: true
+ * x-codegen:
+ *   method: listPaymentMethods
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -30,17 +32,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             payment_methods:
- *               type: array
- *               items:
- *                 properties:
- *                   provider_id:
- *                     type: string
- *                     description: The id of the Payment Provider where the payment method is saved.
- *                   data:
- *                     type: object
- *                     description: The data needed for the Payment Provider to use the saved payment method.
+ *           $ref: "#/components/schemas/StoreCustomersListPaymentMethodsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

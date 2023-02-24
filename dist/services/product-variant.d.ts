@@ -6,10 +6,10 @@ import { MoneyAmountRepository } from "../repositories/money-amount";
 import { ProductRepository } from "../repositories/product";
 import { ProductOptionValueRepository } from "../repositories/product-option-value";
 import { FindWithRelationsOptions, ProductVariantRepository } from "../repositories/product-variant";
-import EventBusService from "./event-bus";
-import RegionService from "./region";
 import { FindConfig } from "../types/common";
 import { CreateProductVariantInput, FilterableProductVariantProps, GetRegionPriceContext, ProductVariantPrice, UpdateProductVariantInput } from "../types/product-variant";
+import EventBusService from "./event-bus";
+import RegionService from "./region";
 declare class ProductVariantService extends TransactionBaseService {
     static Events: {
         UPDATED: string;
@@ -149,6 +149,13 @@ declare class ProductVariantService extends TransactionBaseService {
      * @return empty promise
      */
     delete(variantId: string): Promise<void>;
+    /**
+     * Check if the variant is assigned to at least one of the provided sales channels.
+     *
+     * @param id - product variant id
+     * @param salesChannelIds - an array of sales channel ids
+     */
+    isVariantInSalesChannels(id: string, salesChannelIds: string[]): Promise<boolean>;
     /**
      * Creates a query object to be used for list queries.
      * @param selector - the selector to create the query from

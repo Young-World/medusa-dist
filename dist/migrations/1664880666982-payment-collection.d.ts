@@ -1,5 +1,4 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
-export declare const featureFlag: string;
 export declare class paymentCollection1664880666982 implements MigrationInterface {
     name: string;
     up(queryRunner: QueryRunner): Promise<void>;

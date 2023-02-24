@@ -45,6 +45,8 @@ var _1 = require(".");
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {string} The ID of the Swap.
+ * x-codegen:
+ *   method: retrieve
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -72,9 +74,7 @@ var _1 = require(".");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             swap:
- *               $ref: "#/components/schemas/swap"
+ *           $ref: "#/components/schemas/AdminSwapsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

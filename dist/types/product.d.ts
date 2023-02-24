@@ -1,6 +1,7 @@
-import { Product, ProductOptionValue, ProductStatus } from "../models";
-import { DateComparisonOperator, FindConfig, StringComparisonOperator } from "./common";
+import { PriceList, Product, ProductOptionValue, ProductStatus, SalesChannel, ProductCategory } from "../models";
+import { DateComparisonOperator, FindConfig, Selector } from "./common";
 import { PriceListLoadConfig } from "./price-list";
+import { FindOperator } from "typeorm";
 /**
  * API Level DTOs + Validation rules
  */
@@ -15,26 +16,22 @@ export declare class FilterableProductProps {
     description?: string;
     handle?: string;
     is_giftcard?: boolean;
-    type?: string;
+    type_id?: string[];
     sales_channel_id?: string[];
+    discount_condition_id?: string;
+    category_id?: string[];
+    include_category_children?: boolean;
     created_at?: DateComparisonOperator;
     updated_at?: DateComparisonOperator;
     deleted_at?: DateComparisonOperator;
 }
-export declare class FilterableProductTagProps {
-    id?: string | string[] | StringComparisonOperator;
-    value?: string | string[] | StringComparisonOperator;
-    created_at?: DateComparisonOperator;
-    updated_at?: DateComparisonOperator;
+export declare type ProductSelector = FilterableProductProps | (Selector<Product> & {
     q?: string;
-}
-export declare class FilterableProductTypeProps {
-    id?: string | string[] | StringComparisonOperator;
-    value?: string | string[] | StringComparisonOperator;
-    created_at?: DateComparisonOperator;
-    updated_at?: DateComparisonOperator;
-    q?: string;
-}
+    discount_condition_id?: string;
+    price_list_id?: string[] | FindOperator<PriceList>;
+    sales_channel_id?: string[] | FindOperator<SalesChannel>;
+    category_id?: string[] | FindOperator<ProductCategory>;
+});
 /**
  * Service Level DTOs
  */
@@ -55,6 +52,7 @@ export declare type CreateProductInput = {
     options?: CreateProductProductOption[];
     variants?: CreateProductProductVariantInput[];
     sales_channels?: CreateProductProductSalesChannelInput[] | null;
+    categories?: CreateProductProductCategoryInput[] | null;
     weight?: number;
     length?: number;
     height?: number;
@@ -64,12 +62,16 @@ export declare type CreateProductInput = {
     mid_code?: string;
     material?: string;
     metadata?: Record<string, unknown>;
+    external_id?: string | null;
 };
 export declare type CreateProductProductTagInput = {
     id?: string;
     value: string;
 };
 export declare type CreateProductProductSalesChannelInput = {
+    id: string;
+};
+export declare type CreateProductProductCategoryInput = {
     id: string;
 };
 export declare type CreateProductProductTypeInput = {
@@ -143,6 +145,9 @@ export declare type ProductOptionInput = {
 };
 export declare type FindProductConfig = FindConfig<Product> & PriceListLoadConfig;
 export declare class ProductSalesChannelReq {
+    id: string;
+}
+export declare class ProductProductCategoryReq {
     id: string;
 }
 export declare class ProductTagReq {

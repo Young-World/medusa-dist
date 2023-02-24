@@ -47,6 +47,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminPostShippingProfilesProfileReq = void 0;
 var class_validator_1 = require("class-validator");
+var models_1 = require("../../../../models");
 var validator_1 = require("../../../../utils/validator");
 /**
  * @oas [post] /shipping-profiles/{id}
@@ -59,10 +60,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           name:
- *             description: "The name of the Shipping Profile"
- *             type: string
+ *         $ref: "#/components/schemas/AdminPostShippingProfilesProfileReq"
+ * x-codegen:
+ *   method: update
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -96,9 +96,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             shipping_profile:
- *               $ref: "#/components/schemas/shipping_profile"
+ *           $ref: "#/components/schemas/AdminShippingProfilesRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -143,6 +141,27 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostShippingProfilesProfileReq
+ * type: object
+ * properties:
+ *   name:
+ *     description: The name of the Shipping Profile
+ *     type: string
+ *   metadata:
+ *     description: An optional set of key-value pairs with additional information.
+ *     type: object
+ *   type:
+ *     description: The type of the Shipping Profile
+ *     type: string
+ *     enum: [default, gift_card, custom]
+ *   products:
+ *     description: An optional array of product ids to associate with the Shipping Profile
+ *     type: array
+ *   shipping_options:
+ *     description: An optional array of shipping option ids to associate with the Shipping Profile
+ *     type: array
+ */
 var AdminPostShippingProfilesProfileReq = /** @class */ (function () {
     function AdminPostShippingProfilesProfileReq() {
     }
@@ -151,6 +170,30 @@ var AdminPostShippingProfilesProfileReq = /** @class */ (function () {
         (0, class_validator_1.IsOptional)(),
         __metadata("design:type", String)
     ], AdminPostShippingProfilesProfileReq.prototype, "name", void 0);
+    __decorate([
+        (0, class_validator_1.IsOptional)(),
+        (0, class_validator_1.IsObject)(),
+        __metadata("design:type", Object)
+    ], AdminPostShippingProfilesProfileReq.prototype, "metadata", void 0);
+    __decorate([
+        (0, class_validator_1.IsOptional)(),
+        (0, class_validator_1.IsEnum)(models_1.ShippingProfileType, {
+            message: "type must be one of 'default', 'custom', 'gift_card'",
+        }),
+        __metadata("design:type", String)
+    ], AdminPostShippingProfilesProfileReq.prototype, "type", void 0);
+    __decorate([
+        (0, class_validator_1.IsOptional)(),
+        (0, class_validator_1.IsArray)(),
+        (0, class_validator_1.IsString)({ each: true }),
+        __metadata("design:type", Array)
+    ], AdminPostShippingProfilesProfileReq.prototype, "products", void 0);
+    __decorate([
+        (0, class_validator_1.IsOptional)(),
+        (0, class_validator_1.IsArray)(),
+        (0, class_validator_1.IsString)({ each: true }),
+        __metadata("design:type", Array)
+    ], AdminPostShippingProfilesProfileReq.prototype, "shipping_options", void 0);
     return AdminPostShippingProfilesProfileReq;
 }());
 exports.AdminPostShippingProfilesProfileReq = AdminPostShippingProfilesProfileReq;

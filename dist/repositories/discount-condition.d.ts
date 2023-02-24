@@ -1,11 +1,5 @@
 import { DeleteResult, EntityTarget, Repository } from "typeorm";
-import { Discount } from "../models";
-import { DiscountCondition, DiscountConditionType } from "../models/discount-condition";
-import { DiscountConditionCustomerGroup } from "../models/discount-condition-customer-group";
-import { DiscountConditionProduct } from "../models/discount-condition-product";
-import { DiscountConditionProductCollection } from "../models/discount-condition-product-collection";
-import { DiscountConditionProductTag } from "../models/discount-condition-product-tag";
-import { DiscountConditionProductType } from "../models/discount-condition-product-type";
+import { Discount, DiscountCondition, DiscountConditionCustomerGroup, DiscountConditionProduct, DiscountConditionProductCollection, DiscountConditionProductTag, DiscountConditionProductType, DiscountConditionType } from "../models";
 export declare enum DiscountConditionJoinTableForeignKey {
     PRODUCT_ID = "product_id",
     PRODUCT_TYPE_ID = "product_type_id",
@@ -25,8 +19,12 @@ export declare class DiscountConditionRepository extends Repository<DiscountCond
         conditionTable: DiscountConditionResourceType;
         joinTableKey: string;
     };
-    removeConditionResources(id: string, type: DiscountConditionType, resourceIds: string[]): Promise<DeleteResult | void>;
-    addConditionResources(conditionId: string, resourceIds: string[], type: DiscountConditionType, overrideExisting?: boolean): Promise<(DiscountConditionProduct | DiscountConditionProductType | DiscountConditionProductCollection | DiscountConditionProductTag | DiscountConditionCustomerGroup)[]>;
+    removeConditionResources(id: string, type: DiscountConditionType, resourceIds: (string | {
+        id: string;
+    })[]): Promise<DeleteResult | void>;
+    addConditionResources(conditionId: string, resourceIds: (string | {
+        id: string;
+    })[], type: DiscountConditionType, overrideExisting?: boolean): Promise<(DiscountConditionProduct | DiscountConditionProductType | DiscountConditionProductCollection | DiscountConditionProductTag | DiscountConditionCustomerGroup)[]>;
     queryConditionTable({ type, condId, resourceId }: {
         type: any;
         condId: any;

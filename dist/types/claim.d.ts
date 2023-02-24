@@ -23,6 +23,7 @@ declare type CreateClaimShippingMethodInput = {
     id?: string;
     option_id?: string;
     price?: number;
+    data?: Record<string, unknown>;
 };
 export declare type CreateClaimItemInput = {
     item_id: string;
@@ -47,6 +48,7 @@ declare type UpdateClaimShippingMethodInput = {
     id?: string;
     option_id?: string;
     price?: number;
+    data?: Record<string, unknown>;
 };
 declare type UpdateClaimItemInput = {
     id: string;

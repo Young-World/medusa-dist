@@ -4,6 +4,8 @@
  * summary: "List Applications"
  * description: "Retrieve a list of applications."
  * x-authenticated: true
+ * x-codegen:
+ *   method: list
  * x-codeSamples:
  *   - lang: Shell
  *     label: cURL
@@ -21,11 +23,7 @@
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            apps:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/OAuth"
+ *          $ref: "#/components/schemas/AdminAppsListRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":

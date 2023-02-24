@@ -1,6 +1,13 @@
 import { User } from "../../../..";
 declare const _default: (app: any) => any;
 export default _default;
+/**
+ * @schema AdminAuthRes
+ * type: object
+ * properties:
+ *   user:
+ *     $ref: "#/components/schemas/User"
+ */
 export declare type AdminAuthRes = {
     user: Omit<User, "password_hash">;
 };

@@ -18,15 +18,10 @@ var pgSqliteGenerationMapping = {
 };
 var dbType;
 function resolveDbType(pgSqlType) {
+    var _a;
     if (!dbType) {
-        try {
-            var configModule = (0, medusa_core_utils_1.getConfigFile)(path_1.default.resolve("."), "medusa-config").configModule;
-            dbType = configModule.projectConfig.database_type;
-        }
-        catch (error) {
-            // Default to Postgres to allow for e.g. migrations to run
-            dbType = "postgres";
-        }
+        var configModule = (0, medusa_core_utils_1.getConfigFile)(path_1.default.resolve("."), "medusa-config").configModule;
+        dbType = ((_a = configModule === null || configModule === void 0 ? void 0 : configModule.projectConfig) === null || _a === void 0 ? void 0 : _a.database_type) || "postgres";
     }
     if (dbType === "sqlite" && pgSqlType in pgSqliteTypeMapping) {
         return pgSqliteTypeMapping[pgSqlType.toString()];
@@ -35,15 +30,10 @@ function resolveDbType(pgSqlType) {
 }
 exports.resolveDbType = resolveDbType;
 function resolveDbGenerationStrategy(pgSqlType) {
+    var _a;
     if (!dbType) {
-        try {
-            var configModule = (0, medusa_core_utils_1.getConfigFile)(path_1.default.resolve("."), "medusa-config").configModule;
-            dbType = configModule.projectConfig.database_type;
-        }
-        catch (error) {
-            // Default to Postgres to allow for e.g. migrations to run
-            dbType = "postgres";
-        }
+        var configModule = (0, medusa_core_utils_1.getConfigFile)(path_1.default.resolve("."), "medusa-config").configModule;
+        dbType = ((_a = configModule === null || configModule === void 0 ? void 0 : configModule.projectConfig) === null || _a === void 0 ? void 0 : _a.database_type) || "postgres";
     }
     if (dbType === "sqlite" && pgSqlType in pgSqliteTypeMapping) {
         return pgSqliteGenerationMapping[pgSqlType];

@@ -44,6 +44,8 @@ var _1 = require(".");
  * description: "Creates Payment Sessions for each of the available Payment Providers in the Cart's Region."
  * parameters:
  *   - (path) id=* {string} The id of the Cart.
+ * x-codegen:
+ *   method: createPaymentSessions
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -66,9 +68,7 @@ var _1 = require(".");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             cart:
- *               $ref: "#/components/schemas/cart"
+ *           $ref: "#/components/schemas/StoreCartsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":
@@ -81,7 +81,7 @@ var _1 = require(".");
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var id, cartService, idempotencyKeyService, manager, headerKey, idempotencyKey, error_1, inProgress_1, err_1, _a, e_1;
+    var id, cartService, idempotencyKeyService, manager, headerKey, idempotencyKey, error_1, inProgress, err, _a;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
@@ -115,24 +115,21 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
             case 4:
                 res.setHeader("Access-Control-Expose-Headers", "Idempotency-Key");
                 res.setHeader("Idempotency-Key", idempotencyKey.idempotency_key);
+                inProgress = true;
+                err = false;
                 _b.label = 5;
             case 5:
-                _b.trys.push([5, 14, , 15]);
-                inProgress_1 = true;
-                err_1 = false;
-                _b.label = 6;
-            case 6:
-                if (!inProgress_1) return [3 /*break*/, 13];
+                if (!inProgress) return [3 /*break*/, 12];
                 _a = idempotencyKey.recovery_point;
                 switch (_a) {
-                    case "started": return [3 /*break*/, 7];
-                    case "finished": return [3 /*break*/, 9];
+                    case "started": return [3 /*break*/, 6];
+                    case "finished": return [3 /*break*/, 8];
                 }
-                return [3 /*break*/, 10];
-            case 7: return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
-                    var _a, key, error;
-                    return __generator(this, function (_b) {
-                        switch (_b.label) {
+                return [3 /*break*/, 9];
+            case 6: return [4 /*yield*/, manager
+                    .transaction("SERIALIZABLE", function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
                             case 0: return [4 /*yield*/, idempotencyKeyService
                                     .withTransaction(transactionManager)
                                     .workStage(idempotencyKey.idempotency_key, function (stageManager) { return __awaiter(void 0, void 0, void 0, function () {
@@ -160,28 +157,25 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                     });
                                 }); })];
                             case 1:
-                                _a = _b.sent(), key = _a.key, error = _a.error;
-                                if (error) {
-                                    inProgress_1 = false;
-                                    err_1 = error;
-                                }
-                                else {
-                                    idempotencyKey = key;
-                                }
+                                idempotencyKey = _a.sent();
                                 return [2 /*return*/];
                         }
                     });
-                }); })];
-            case 8:
+                }); })
+                    .catch(function (e) {
+                    inProgress = false;
+                    err = e;
+                })];
+            case 7:
                 _b.sent();
-                return [3 /*break*/, 12];
-            case 9:
+                return [3 /*break*/, 11];
+            case 8:
                 {
-                    inProgress_1 = false;
-                    return [3 /*break*/, 12];
+                    inProgress = false;
+                    return [3 /*break*/, 11];
                 }
-                _b.label = 10;
-            case 10: return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
+                _b.label = 9;
+            case 9: return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, idempotencyKeyService
@@ -197,18 +191,16 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                         }
                     });
                 }); })];
-            case 11:
+            case 10:
                 _b.sent();
-                return [3 /*break*/, 12];
-            case 12: return [3 /*break*/, 6];
-            case 13:
+                return [3 /*break*/, 11];
+            case 11: return [3 /*break*/, 5];
+            case 12:
+                if (err) {
+                    throw err;
+                }
                 res.status(idempotencyKey.response_code).json(idempotencyKey.response_body);
-                return [3 /*break*/, 15];
-            case 14:
-                e_1 = _b.sent();
-                console.log(e_1);
-                throw e_1;
-            case 15: return [2 /*return*/];
+                return [2 /*return*/];
         }
     });
 }); });

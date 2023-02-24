@@ -74,10 +74,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminPostDiscountsDiscountConditionsParams = exports.AdminPostDiscountsDiscountConditions = void 0;
 var models_1 = require("../../../../models");
 var class_validator_1 = require("class-validator");
-var _1 = require(".");
 var discount_1 = require("../../../../types/discount");
-var get_query_config_1 = require("../../../../utils/get-query-config");
-var validator_1 = require("../../../../utils/validator");
+var common_1 = require("../../../../types/common");
 /**
  * @oas [post] /discounts/{discount_id}/conditions
  * operationId: "PostDiscountsDiscountConditions"
@@ -92,38 +90,10 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - operator
- *         properties:
- *           operator:
- *              description: Operator of the condition
- *              type: string
- *              enum: [in, not_in]
- *           products:
- *              type: array
- *              description: list of product IDs if the condition is applied on products.
- *              items:
- *                type: string
- *           product_types:
- *              type: array
- *              description: list of product type IDs if the condition is applied on product types.
- *              items:
- *                type: string
- *           product_collections:
- *              type: array
- *              description: list of product collection IDs if the condition is applied on product collections.
- *              items:
- *                type: string
- *           product_tags:
- *              type: array
- *              description: list of product tag IDs if the condition is applied on product tags.
- *              items:
- *                type: string
- *           customer_groups:
- *              type: array
- *              description: list of customer group IDs if the condition is applied on customer groups.
- *              items:
- *                type: string
+ *         $ref: "#/components/schemas/AdminPostDiscountsDiscountConditions"
+ * x-codegen:
+ *   method: createCondition
+ *   queryParams: AdminPostDiscountsDiscountConditionsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -158,9 +128,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             discount:
- *               $ref: "#/components/schemas/discount"
+ *           $ref: "#/components/schemas/AdminDiscountsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -175,45 +143,73 @@ var validator_1 = require("../../../../utils/validator");
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var discount_id, validatedCondition, validatedParams, conditionService, discountService, discount, manager, config;
-    var _a, _b;
-    return __generator(this, function (_c) {
-        switch (_c.label) {
+    var discount_id, conditionService, discountService, discount, manager;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
             case 0:
                 discount_id = req.params.discount_id;
-                return [4 /*yield*/, (0, validator_1.validator)(AdminPostDiscountsDiscountConditions, req.body)];
-            case 1:
-                validatedCondition = _c.sent();
-                return [4 /*yield*/, (0, validator_1.validator)(AdminPostDiscountsDiscountConditionsParams, req.query)];
-            case 2:
-                validatedParams = _c.sent();
                 conditionService = req.scope.resolve("discountConditionService");
                 discountService = req.scope.resolve("discountService");
                 return [4 /*yield*/, discountService.retrieve(discount_id)];
-            case 3:
-                discount = _c.sent();
+            case 1:
+                discount = _a.sent();
                 manager = req.scope.resolve("manager");
                 return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
                         return __generator(this, function (_a) {
                             switch (_a.label) {
                                 case 0: return [4 /*yield*/, conditionService
                                         .withTransaction(transactionManager)
-                                        .upsertCondition(__assign(__assign({}, validatedCondition), { rule_id: discount.rule_id }))];
+                                        .upsertCondition(__assign(__assign({}, req.validatedBody), { rule_id: discount.rule_id }))];
                                 case 1: return [2 /*return*/, _a.sent()];
                             }
                         });
                     }); })];
-            case 4:
-                _c.sent();
-                config = (0, get_query_config_1.getRetrieveConfig)(_1.defaultAdminDiscountsFields, _1.defaultAdminDiscountsRelations, (_a = validatedParams === null || validatedParams === void 0 ? void 0 : validatedParams.fields) === null || _a === void 0 ? void 0 : _a.split(","), (_b = validatedParams === null || validatedParams === void 0 ? void 0 : validatedParams.expand) === null || _b === void 0 ? void 0 : _b.split(","));
-                return [4 /*yield*/, discountService.retrieve(discount.id, config)];
-            case 5:
-                discount = _c.sent();
+            case 2:
+                _a.sent();
+                return [4 /*yield*/, discountService.retrieve(discount.id, req.retrieveConfig)];
+            case 3:
+                discount = _a.sent();
                 res.status(200).json({ discount: discount });
                 return [2 /*return*/];
         }
     });
 }); });
+/**
+ * @schema AdminPostDiscountsDiscountConditions
+ * type: object
+ * required:
+ *   - operator
+ * properties:
+ *   operator:
+ *      description: Operator of the condition
+ *      type: string
+ *      enum: [in, not_in]
+ *   products:
+ *      type: array
+ *      description: list of product IDs if the condition is applied on products.
+ *      items:
+ *        type: string
+ *   product_types:
+ *      type: array
+ *      description: list of product type IDs if the condition is applied on product types.
+ *      items:
+ *        type: string
+ *   product_collections:
+ *      type: array
+ *      description: list of product collection IDs if the condition is applied on product collections.
+ *      items:
+ *        type: string
+ *   product_tags:
+ *      type: array
+ *      description: list of product tag IDs if the condition is applied on product tags.
+ *      items:
+ *        type: string
+ *   customer_groups:
+ *      type: array
+ *      description: list of customer group IDs if the condition is applied on customer groups.
+ *      items:
+ *        type: string
+ */
 // eslint-disable-next-line max-len
 var AdminPostDiscountsDiscountConditions = /** @class */ (function (_super) {
     __extends(AdminPostDiscountsDiscountConditions, _super);
@@ -227,20 +223,12 @@ var AdminPostDiscountsDiscountConditions = /** @class */ (function (_super) {
     return AdminPostDiscountsDiscountConditions;
 }(discount_1.AdminUpsertConditionsReq));
 exports.AdminPostDiscountsDiscountConditions = AdminPostDiscountsDiscountConditions;
-var AdminPostDiscountsDiscountConditionsParams = /** @class */ (function () {
+var AdminPostDiscountsDiscountConditionsParams = /** @class */ (function (_super) {
+    __extends(AdminPostDiscountsDiscountConditionsParams, _super);
     function AdminPostDiscountsDiscountConditionsParams() {
+        return _super !== null && _super.apply(this, arguments) || this;
     }
-    __decorate([
-        (0, class_validator_1.IsString)(),
-        (0, class_validator_1.IsOptional)(),
-        __metadata("design:type", String)
-    ], AdminPostDiscountsDiscountConditionsParams.prototype, "expand", void 0);
-    __decorate([
-        (0, class_validator_1.IsString)(),
-        (0, class_validator_1.IsOptional)(),
-        __metadata("design:type", String)
-    ], AdminPostDiscountsDiscountConditionsParams.prototype, "fields", void 0);
     return AdminPostDiscountsDiscountConditionsParams;
-}());
+}(common_1.FindParams));
 exports.AdminPostDiscountsDiscountConditionsParams = AdminPostDiscountsDiscountConditionsParams;
 //# sourceMappingURL=create-condition.js.map

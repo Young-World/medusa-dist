@@ -1,5 +1,5 @@
 /**
- * [post] /uploads/download-url
+ * @oas [post] /uploads/download-url
  * operationId: "PostUploadsDownloadUrl"
  * summary: "Get a File's Download URL"
  * description: "Creates a presigned download url for a file"
@@ -8,12 +8,7 @@
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - file_key
- *         properties:
- *           file_key:
- *             description: "key of the file to obtain the download link for"
- *             type: string
+ *         $ref: "#/components/schemas/AdminPostUploadsDownloadUrlReq"
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -47,10 +42,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             download_url:
- *               type: string
- *               description: The Download URL of the file
+ *           $ref: "#/components/schemas/AdminUploadsDownloadUrlRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -66,6 +58,16 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostUploadsDownloadUrlReq
+ * type: object
+ * required:
+ *   - file_key
+ * properties:
+ *   file_key:
+ *     description: "key of the file to obtain the download link for"
+ *     type: string
+ */
 export declare class AdminPostUploadsDownloadUrlReq {
     file_key: string;
 }

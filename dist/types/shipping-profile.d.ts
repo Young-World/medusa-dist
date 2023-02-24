@@ -1,6 +1,8 @@
 import { ShippingProfileType } from "../models";
 export declare type CreateShippingProfile = {
     name: string;
+    type: ShippingProfileType;
+    metadata?: Record<string, unknown>;
 };
 export declare type UpdateShippingProfile = {
     name?: string;

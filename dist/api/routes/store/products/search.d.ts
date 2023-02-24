@@ -8,6 +8,9 @@
  *   - (query) offset {integer} How many products to skip in the result.
  *   - (query) limit {integer} Limit the number of products returned.
  *   - (query) filter {} Filter based on the search engine.
+ * x-codegen:
+ *   method: search
+ *   queryParams: StorePostSearchReq
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -32,10 +35,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             hits:
- *               type: array
- *               description: Array of results. The format of the items depends on the search engine installed on the server.
+ *           $ref: "#/components/schemas/StorePostSearchRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":

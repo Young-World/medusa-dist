@@ -74,19 +74,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           unit_price:
- *             description: The potential custom price of the item.
- *             type: integer
- *           title:
- *             description: The potential custom title of the item.
- *             type: string
- *           quantity:
- *             description: The quantity of the Line Item.
- *             type: integer
- *           metadata:
- *             description: The optional key-value map with additional details about the Line Item.
- *             type: object
+ *         $ref: "#/components/schemas/AdminPostDraftOrdersDraftOrderLineItemsItemReq"
+ * x-codegen:
+ *   method: updateLineItem
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -120,9 +110,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             draft_order:
- *               $ref: "#/components/schemas/draft-order"
+ *           $ref: "#/components/schemas/AdminDraftOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -189,7 +177,7 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                     _a = draftOrder;
                                     return [4 /*yield*/, cartService
                                             .withTransaction(manager)
-                                            .retrieve(draftOrder.cart_id, {
+                                            .retrieveWithTotals(draftOrder.cart_id, {
                                             relations: _1.defaultAdminDraftOrdersCartRelations,
                                             select: _1.defaultAdminDraftOrdersCartFields,
                                         })];
@@ -206,6 +194,23 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostDraftOrdersDraftOrderLineItemsItemReq
+ * type: object
+ * properties:
+ *   unit_price:
+ *     description: The potential custom price of the item.
+ *     type: integer
+ *   title:
+ *     description: The potential custom title of the item.
+ *     type: string
+ *   quantity:
+ *     description: The quantity of the Line Item.
+ *     type: integer
+ *   metadata:
+ *     description: The optional key-value map with additional details about the Line Item.
+ *     type: object
+ */
 var AdminPostDraftOrdersDraftOrderLineItemsItemReq = /** @class */ (function () {
     function AdminPostDraftOrdersDraftOrderLineItemsItemReq() {
         this.metadata = {};

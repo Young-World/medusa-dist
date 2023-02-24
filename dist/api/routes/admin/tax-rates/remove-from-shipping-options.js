@@ -79,14 +79,10 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - shipping_options
- *         properties:
- *           shipping_options:
- *             type: array
- *             description: "The IDs of the shipping options to remove association with this tax rate"
- *             items:
- *               type: string
+ *         $ref: "#/components/schemas/AdminDeleteTaxRatesTaxRateShippingOptionsReq"
+ * x-codegen:
+ *   method: removeShippingOptions
+ *   queryParams: AdminDeleteTaxRatesTaxRateShippingOptionsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -124,9 +120,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             tax_rate:
- *               $ref: "#/components/schemas/tax_rate"
+ *           $ref: "#/components/schemas/AdminTaxRatesRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -174,6 +168,18 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminDeleteTaxRatesTaxRateShippingOptionsReq
+ * type: object
+ * required:
+ *   - shipping_options
+ * properties:
+ *   shipping_options:
+ *     type: array
+ *     description: "The IDs of the shipping options to remove association with this tax rate"
+ *     items:
+ *       type: string
+ */
 var AdminDeleteTaxRatesTaxRateShippingOptionsReq = /** @class */ (function () {
     function AdminDeleteTaxRatesTaxRateShippingOptionsReq() {
     }

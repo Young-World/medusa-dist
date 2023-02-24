@@ -1,3 +1,4 @@
+import { FindParams } from "../../../../types/common";
 /**
  * @oas [post] /orders/{id}/swaps/{swap_id}/fulfillments
  * operationId: "PostOrdersOrderSwapsSwapFulfillments"
@@ -7,17 +8,16 @@
  * parameters:
  *   - (path) id=* {string} The ID of the Order.
  *   - (path) swap_id=* {string} The ID of the Swap.
+ *   - (query) expand {string} Comma separated list of relations to include in the result.
+ *   - (query) fields {string} Comma separated list of fields to include in the result.
  * requestBody:
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           metadata:
- *             description: An optional set of key-value pairs to hold additional information.
- *             type: object
- *           no_notification:
- *             description: If set to true no notification will be send related to this Claim.
- *             type: boolean
+ *         $ref: "#/components/schemas/AdminPostOrdersOrderSwapsSwapFulfillmentsReq"
+ * x-codegen:
+ *   method: fulfillSwap
+ *   params: AdminPostOrdersOrderSwapsSwapFulfillmentsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -45,9 +45,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/order"
+ *           $ref: "#/components/schemas/AdminOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -63,7 +61,20 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostOrdersOrderSwapsSwapFulfillmentsReq
+ * type: object
+ * properties:
+ *   metadata:
+ *     description: An optional set of key-value pairs to hold additional information.
+ *     type: object
+ *   no_notification:
+ *     description: If set to true no notification will be send related to this Claim.
+ *     type: boolean
+ */
 export declare class AdminPostOrdersOrderSwapsSwapFulfillmentsReq {
     metadata?: Record<string, unknown>;
     no_notification?: boolean;
+}
+export declare class AdminPostOrdersOrderSwapsSwapFulfillmentsParams extends FindParams {
 }

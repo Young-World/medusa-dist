@@ -28,14 +28,10 @@
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - product_types
- *         properties:
- *           product_types:
- *             type: array
- *             description: "The IDs of the types of products to associate with this tax rate"
- *             items:
- *               type: string
+ *         $ref: "#/components/schemas/AdminPostTaxRatesTaxRateProductTypesReq"
+ * x-codegen:
+ *   method: addProductTypes
+ *   queryParams: AdminPostTaxRatesTaxRateProductTypesParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -73,9 +69,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             tax_rate:
- *               $ref: "#/components/schemas/tax_rate"
+ *           $ref: "#/components/schemas/AdminTaxRatesRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -91,6 +85,18 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostTaxRatesTaxRateProductTypesReq
+ * type: object
+ * required:
+ *   - product_types
+ * properties:
+ *   product_types:
+ *     type: array
+ *     description: "The IDs of the types of products to associate with this tax rate"
+ *     items:
+ *       type: string
+ */
 export declare class AdminPostTaxRatesTaxRateProductTypesReq {
     product_types: string[];
 }

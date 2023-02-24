@@ -2,15 +2,8 @@ import { EntityManager } from "typeorm";
 import { AbstractBatchJobStrategy, IFileService } from "../../../interfaces";
 import { BatchJobService, ProductService } from "../../../services";
 import { CreateBatchJobInput } from "../../../types/batch-job";
-import { ProductExportBatchJob, ProductExportColumnSchemaDescriptor } from "./index";
+import { DynamicProductExportDescriptor, ProductExportBatchJob, ProductExportInjectedDependencies } from "./types";
 import { FlagRouter } from "../../../utils/flag-router";
-declare type InjectedDependencies = {
-    manager: EntityManager;
-    batchJobService: BatchJobService;
-    productService: ProductService;
-    fileService: IFileService;
-    featureFlagRouter: FlagRouter;
-};
 export default class ProductExportStrategy extends AbstractBatchJobStrategy {
     static identifier: string;
     static batchType: string;
@@ -21,11 +14,24 @@ export default class ProductExportStrategy extends AbstractBatchJobStrategy {
     protected readonly fileService_: IFileService;
     protected readonly featureFlagRouter_: FlagRouter;
     protected readonly defaultRelations_: string[];
-    protected readonly columnDescriptors: Map<string, ProductExportColumnSchemaDescriptor>;
+    protected readonly columnsDefinition: {
+        [x: string]: {
+            name: string;
+            importDescriptor?: import("./types").ProductImportDescriptor | undefined;
+            exportDescriptor?: DynamicProductExportDescriptor | import("./types").ProductExportDescriptor | undefined;
+        };
+    };
+    protected readonly salesChannelsColumnsDefinition: {
+        [x: string]: {
+            name: string;
+            importDescriptor?: import("./types").ProductImportDescriptor | undefined;
+            exportDescriptor?: DynamicProductExportDescriptor | import("./types").ProductExportDescriptor | undefined;
+        };
+    };
     private readonly NEWLINE_;
     private readonly DELIMITER_;
     private readonly DEFAULT_LIMIT;
-    constructor({ manager, batchJobService, productService, fileService, featureFlagRouter, }: InjectedDependencies);
+    constructor({ manager, batchJobService, productService, fileService, featureFlagRouter, }: ProductExportInjectedDependencies);
     buildTemplate(): Promise<string>;
     prepareBatchJobForProcessing(batchJob: CreateBatchJobInput, req: Express.Request): Promise<CreateBatchJobInput>;
     preProcessBatchJob(batchJobId: string): Promise<void>;
@@ -52,4 +58,3 @@ export default class ProductExportStrategy extends AbstractBatchJobStrategy {
      */
     private getProductRelationsDynamicColumnsShape;
 }
-export {};

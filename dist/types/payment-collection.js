@@ -13,7 +13,6 @@ exports.defaultPaymentCollectionFields = [
     "description",
     "amount",
     "authorized_amount",
-    "refunded_amount",
     "currency_code",
     "metadata",
     "region",

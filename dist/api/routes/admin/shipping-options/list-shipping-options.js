@@ -89,6 +89,9 @@ var validator_1 = require("../../../../utils/validator");
  *    schema:
  *      type: boolean
  *    description: Flag for fetching admin specific options
+ * x-codegen:
+ *   method: list
+ *   queryParams: AdminGetShippingOptionsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -116,14 +119,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             shipping_options:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/shipping_option"
- *             count:
- *               type: integer
- *               description: The total number of items available
+ *           $ref: "#/components/schemas/AdminShippingOptionsListRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

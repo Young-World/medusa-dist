@@ -45,6 +45,8 @@ var _1 = require(".");
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {string} The ID of the Return Reason.
+ * x-codegen:
+ *   method: retrieve
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -72,9 +74,7 @@ var _1 = require(".");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             return_reason:
- *               $ref: "#/components/schemas/return_reason"
+ *           $ref: "#/components/schemas/AdminReturnReasonsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

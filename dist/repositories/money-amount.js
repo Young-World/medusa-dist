@@ -67,6 +67,17 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
 var __read = (this && this.__read) || function (o, n) {
     var m = typeof Symbol === "function" && o[Symbol.iterator];
     if (!m) return o;
@@ -105,6 +116,11 @@ var MoneyAmountRepository = /** @class */ (function (_super) {
     function MoneyAmountRepository() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
+    /**
+     * Will be removed in a future release.
+     * Use `deleteVariantPricesNotIn` instead.
+     * @deprecated
+     */
     MoneyAmountRepository.prototype.findVariantPricesNotIn = function (variantId, prices) {
         return __awaiter(this, void 0, void 0, function () {
             var pricesNotInPricesPayload;
@@ -124,6 +140,55 @@ var MoneyAmountRepository = /** @class */ (function (_super) {
                     case 1:
                         pricesNotInPricesPayload = _a.sent();
                         return [2 /*return*/, pricesNotInPricesPayload];
+                }
+            });
+        });
+    };
+    MoneyAmountRepository.prototype.deleteVariantPricesNotIn = function (variantId, prices) {
+        return __awaiter(this, void 0, void 0, function () {
+            var where, orWhere, prices_1, prices_1_1, price;
+            var e_1, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        where = {
+                            variant_id: variantId,
+                            price_list_id: (0, typeorm_1.IsNull)(),
+                        };
+                        orWhere = [];
+                        try {
+                            for (prices_1 = __values(prices), prices_1_1 = prices_1.next(); !prices_1_1.done; prices_1_1 = prices_1.next()) {
+                                price = prices_1_1.value;
+                                if (price.currency_code) {
+                                    orWhere.push({
+                                        currency_code: (0, typeorm_1.Not)(price.currency_code),
+                                    }, {
+                                        region_id: price.region_id ? (0, typeorm_1.Not)(price.region_id) : (0, typeorm_1.Not)((0, typeorm_1.IsNull)()),
+                                        currency_code: price.currency_code,
+                                    });
+                                }
+                                if (price.region_id) {
+                                    orWhere.push({
+                                        region_id: (0, typeorm_1.Not)(price.region_id),
+                                    });
+                                }
+                            }
+                        }
+                        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                        finally {
+                            try {
+                                if (prices_1_1 && !prices_1_1.done && (_a = prices_1.return)) _a.call(prices_1);
+                            }
+                            finally { if (e_1) throw e_1.error; }
+                        }
+                        return [4 /*yield*/, this.createQueryBuilder()
+                                .delete()
+                                .where(where)
+                                .andWhere(orWhere)
+                                .execute()];
+                    case 1:
+                        _b.sent();
+                        return [2 /*return*/];
                 }
             });
         });
@@ -264,9 +329,17 @@ var MoneyAmountRepository = /** @class */ (function (_super) {
                         }
                         if (region_id || currency_code) {
                             qb.andWhere(new typeorm_1.Brackets(function (qb) {
-                                return qb
-                                    .where({ region_id: region_id })
-                                    .orWhere({ currency_code: currency_code });
+                                if (region_id && !currency_code) {
+                                    qb.where({ region_id: region_id });
+                                }
+                                if (!region_id && currency_code) {
+                                    qb.where({ currency_code: currency_code });
+                                }
+                                if (currency_code && region_id) {
+                                    qb.where({ region_id: region_id }).orWhere({
+                                        currency_code: currency_code,
+                                    });
+                                }
                             }));
                         }
                         else if (!customer_id && !include_discount_prices) {

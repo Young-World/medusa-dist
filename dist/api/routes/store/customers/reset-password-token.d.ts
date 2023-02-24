@@ -7,13 +7,9 @@
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - email
- *         properties:
- *           email:
- *             description: "The email of the customer."
- *             type: string
- *             format: email
+ *         $ref: "#/components/schemas/StorePostCustomersCustomerPasswordTokenReq"
+ * x-codegen:
+ *   method: generatePasswordToken
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -57,6 +53,17 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema StorePostCustomersCustomerPasswordTokenReq
+ * type: object
+ * required:
+ *   - email
+ * properties:
+ *   email:
+ *     description: "The email of the customer."
+ *     type: string
+ *     format: email
+ */
 export declare class StorePostCustomersCustomerPasswordTokenReq {
     email: string;
 }

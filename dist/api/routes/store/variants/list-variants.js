@@ -59,16 +59,20 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StoreGetVariantsParams = void 0;
 var class_validator_1 = require("class-validator");
-var is_type_1 = require("../../../../utils/validators/is-type");
+var class_transformer_1 = require("class-transformer");
+var lodash_1 = require("lodash");
+var _1 = require(".");
 var common_1 = require("../../../../types/common");
 var price_selection_1 = require("../../../../types/price-selection");
-var class_transformer_1 = require("class-transformer");
-var _1 = require(".");
-var lodash_1 = require("lodash");
 var validator_1 = require("../../../../utils/validator");
+var is_type_1 = require("../../../../utils/validators/is-type");
+var publishable_api_keys_1 = __importDefault(require("../../../../loaders/feature-flags/publishable-api-keys"));
 /**
  * @oas [get] /variants
  * operationId: GetVariants
@@ -76,9 +80,13 @@ var validator_1 = require("../../../../utils/validator");
  * description: "Retrieves a list of Product Variants"
  * parameters:
  *   - (query) ids {string} A comma separated list of Product Variant ids to filter by.
+ *   - (query) sales_channel_id {string} A sales channel id for result configuration.
  *   - (query) expand {string} A comma separated list of Product Variant relations to load.
  *   - (query) offset=0 {number} How many product variants to skip in the result.
  *   - (query) limit=100 {number} Maximum number of Product Variants to return.
+ *   - (query) cart_id {string} The id of the Cart to set prices based on.
+ *   - (query) region_id {string} The id of the Region to set prices based on.
+ *   - (query) currency_code {string} The currency code to use for price selection.
  *   - in: query
  *     name: title
  *     style: form
@@ -114,6 +122,9 @@ var validator_1 = require("../../../../utils/validator");
  *             gte:
  *               type: number
  *               description: filter by inventory quantity greater than or equal to this number
+ * x-codegen:
+ *   method: list
+ *   queryParams: StoreGetVariantsParams
  * x-codeSamples:
  *   - lang: Shell
  *     label: cURL
@@ -127,11 +138,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             variants:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/product_variant"
+ *           $ref: "#/components/schemas/StoreVariantsListRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":
@@ -144,13 +151,13 @@ var validator_1 = require("../../../../utils/validator");
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var validated, expand, offset, limit, expandFields, customer_id, listConfig, filterableFields, pricingService, variantService, cartService, regionService, rawVariants, regionId, currencyCode, cart, region, variants;
-    var _a;
-    return __generator(this, function (_b) {
-        switch (_b.label) {
+    var validated, expand, offset, limit, expandFields, customer_id, listConfig, filterableFields, sales_channel_id, featureFlagRouter, pricingService, variantService, cartService, productVariantInventoryService, regionService, rawVariants, regionId, currencyCode, cart, region, pricedVariants, variants;
+    var _a, _b;
+    return __generator(this, function (_c) {
+        switch (_c.label) {
             case 0: return [4 /*yield*/, (0, validator_1.validator)(StoreGetVariantsParams, req.query)];
             case 1:
-                validated = _b.sent();
+                validated = _c.sent();
                 expand = validated.expand, offset = validated.offset, limit = validated.limit;
                 expandFields = [];
                 if (expand) {
@@ -176,13 +183,21 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                 if (validated.ids) {
                     filterableFields.id = validated.ids.split(",");
                 }
+                sales_channel_id = validated.sales_channel_id;
+                featureFlagRouter = req.scope.resolve("featureFlagRouter");
+                if (featureFlagRouter.isFeatureEnabled(publishable_api_keys_1.default.key)) {
+                    if (((_b = req.publishableApiKeyScopes) === null || _b === void 0 ? void 0 : _b.sales_channel_id.length) === 1) {
+                        sales_channel_id = req.publishableApiKeyScopes.sales_channel_id[0];
+                    }
+                }
                 pricingService = req.scope.resolve("pricingService");
                 variantService = req.scope.resolve("productVariantService");
                 cartService = req.scope.resolve("cartService");
+                productVariantInventoryService = req.scope.resolve("productVariantInventoryService");
                 regionService = req.scope.resolve("regionService");
                 return [4 /*yield*/, variantService.list(filterableFields, listConfig)];
             case 2:
-                rawVariants = _b.sent();
+                rawVariants = _c.sent();
                 regionId = validated.region_id;
                 currencyCode = validated.currency_code;
                 if (!validated.cart_id) return [3 /*break*/, 5];
@@ -190,15 +205,15 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                         select: ["id", "region_id"],
                     })];
             case 3:
-                cart = _b.sent();
+                cart = _c.sent();
                 return [4 /*yield*/, regionService.retrieve(cart.region_id, {
                         select: ["id", "currency_code"],
                     })];
             case 4:
-                region = _b.sent();
+                region = _c.sent();
                 regionId = region.id;
                 currencyCode = region.currency_code;
-                _b.label = 5;
+                _c.label = 5;
             case 5: return [4 /*yield*/, pricingService.setVariantPrices(rawVariants, {
                     cart_id: validated.cart_id,
                     region_id: regionId,
@@ -207,7 +222,10 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                     include_discount_prices: true,
                 })];
             case 6:
-                variants = _b.sent();
+                pricedVariants = _c.sent();
+                return [4 /*yield*/, productVariantInventoryService.setVariantAvailability(pricedVariants, sales_channel_id)];
+            case 7:
+                variants = _c.sent();
                 res.json({ variants: variants });
                 return [2 /*return*/];
         }
@@ -243,6 +261,11 @@ var StoreGetVariantsParams = /** @class */ (function (_super) {
         (0, class_validator_1.IsString)(),
         __metadata("design:type", String)
     ], StoreGetVariantsParams.prototype, "ids", void 0);
+    __decorate([
+        (0, class_validator_1.IsOptional)(),
+        (0, class_validator_1.IsString)(),
+        __metadata("design:type", String)
+    ], StoreGetVariantsParams.prototype, "sales_channel_id", void 0);
     __decorate([
         (0, class_validator_1.IsOptional)(),
         (0, is_type_1.IsType)([String, [String]]),

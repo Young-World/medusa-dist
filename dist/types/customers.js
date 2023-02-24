@@ -10,7 +10,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminListCustomerSelector = void 0;
+var class_transformer_1 = require("class-transformer");
 var class_validator_1 = require("class-validator");
+var is_boolean_1 = require("../utils/validators/is-boolean");
 var AdminListCustomerSelector = /** @class */ (function () {
     function AdminListCustomerSelector() {
     }
@@ -19,6 +21,15 @@ var AdminListCustomerSelector = /** @class */ (function () {
         (0, class_validator_1.IsOptional)(),
         __metadata("design:type", String)
     ], AdminListCustomerSelector.prototype, "q", void 0);
+    __decorate([
+        (0, class_validator_1.IsBoolean)(),
+        (0, class_validator_1.IsOptional)(),
+        (0, class_transformer_1.Transform)(function (_a) {
+            var value = _a.value;
+            return is_boolean_1.optionalBooleanMapper.get(value);
+        }),
+        __metadata("design:type", Boolean)
+    ], AdminListCustomerSelector.prototype, "has_account", void 0);
     __decorate([
         (0, class_validator_1.IsOptional)(),
         (0, class_validator_1.IsString)({ each: true }),

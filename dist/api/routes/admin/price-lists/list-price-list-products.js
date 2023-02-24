@@ -93,7 +93,7 @@ var class_validator_1 = require("class-validator");
 var models_1 = require("../../../../models");
 var class_transformer_1 = require("class-transformer");
 var lodash_1 = require("lodash");
-var utils_1 = require("../../../../utils");
+var medusa_core_utils_1 = require("medusa-core-utils");
 /**
  * @oas [get] /price-lists/{id}/products
  * operationId: "GetPriceListsPriceListProducts"
@@ -208,6 +208,9 @@ var utils_1 = require("../../../../utils");
  *   - (query) limit=50 {integer} Limit the number of products returned.
  *   - (query) expand {string} (Comma separated) Which fields should be expanded in each product of the result.
  *   - (query) fields {string} (Comma separated) Which fields should be included in each product of the result.
+ * x-codegen:
+ *   method: listProducts
+ *   queryParams: AdminGetPriceListsPriceListProductsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -228,27 +231,14 @@ var utils_1 = require("../../../../utils");
  *   - api_token: []
  *   - cookie_auth: []
  * tags:
- *   - Product
+ *   - Price List
  * responses:
  *   200:
  *     description: OK
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             products:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/product"
- *             count:
- *               type: integer
- *               description: The total number of items available
- *             offset:
- *               type: integer
- *               description: The number of items skipped before these items
- *             limit:
- *               type: integer
- *               description: The number of items per page
+ *           $ref: "#/components/schemas/AdminPriceListsProductsListRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -271,7 +261,7 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                 _a = req.validatedQuery, offset = _a.offset, limit = _a.limit;
                 priceListService = req.scope.resolve("priceListService");
                 filterableFields = __assign(__assign({}, req.filterableFields), { price_list_id: [id] });
-                return [4 /*yield*/, priceListService.listProducts(id, (0, lodash_1.pickBy)(filterableFields, function (val) { return (0, utils_1.isDefined)(val); }), req.listConfig)];
+                return [4 /*yield*/, priceListService.listProducts(id, (0, lodash_1.pickBy)(filterableFields, function (val) { return (0, medusa_core_utils_1.isDefined)(val); }), req.listConfig)];
             case 1:
                 _b = __read.apply(void 0, [_c.sent(), 2]), products = _b[0], count = _b[1];
                 res.json({

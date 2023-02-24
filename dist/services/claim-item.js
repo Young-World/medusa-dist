@@ -126,6 +126,9 @@ var ClaimItemService = /** @class */ (function (_super) {
                                                 .retrieve(item_id)];
                                     case 1:
                                         lineItem = _a.sent();
+                                        if (!lineItem.variant_id) {
+                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Cannot claim a custom line item");
+                                        }
                                         if (lineItem.fulfilled_quantity < quantity) {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Cannot claim more of an item than has been fulfilled.");
                                         }
@@ -339,24 +342,27 @@ var ClaimItemService = /** @class */ (function (_super) {
     };
     /**
      * Gets a claim item by id.
-     * @param {string} id - id of ClaimItem to retrieve
+     * @param {string} claimItemId - id of ClaimItem to retrieve
      * @param {Object} config - configuration for the find operation
      * @return {Promise<Order>} the ClaimItem
      */
-    ClaimItemService.prototype.retrieve = function (id, config) {
+    ClaimItemService.prototype.retrieve = function (claimItemId, config) {
         if (config === void 0) { config = {}; }
         return __awaiter(this, void 0, void 0, function () {
             var claimItemRepo, query, item;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(claimItemId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"claimItemId\" must be defined");
+                        }
                         claimItemRepo = this.manager_.getCustomRepository(this.claimItemRepository_);
-                        query = (0, utils_1.buildQuery)({ id: id }, config);
+                        query = (0, utils_1.buildQuery)({ id: claimItemId }, config);
                         return [4 /*yield*/, claimItemRepo.findOne(query)];
                     case 1:
                         item = _a.sent();
                         if (!item) {
-                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Claim item with id: ".concat(id, " was not found."));
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Claim item with id: ".concat(claimItemId, " was not found."));
                         }
                         return [2 /*return*/, item];
                 }

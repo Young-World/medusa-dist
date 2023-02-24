@@ -1,4 +1,19 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -45,10 +60,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AdminPostOrdersOrderShipmentReq = void 0;
+exports.AdminPostOrdersOrderShipmentParams = exports.AdminPostOrdersOrderShipmentReq = void 0;
 var class_validator_1 = require("class-validator");
-var _1 = require(".");
-var validator_1 = require("../../../../utils/validator");
+var common_1 = require("../../../../types/common");
 /**
  * @oas [post] /orders/{id}/shipment
  * operationId: "PostOrdersOrderShipment"
@@ -57,24 +71,16 @@ var validator_1 = require("../../../../utils/validator");
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {string} The ID of the Order.
+ *   - (query) expand {string} Comma separated list of relations to include in the result.
+ *   - (query) fields {string} Comma separated list of fields to include in the result.
  * requestBody:
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - fulfillment_id
- *         properties:
- *           fulfillment_id:
- *             description: The ID of the Fulfillment.
- *             type: string
- *           tracking_numbers:
- *             description: The tracking numbers for the shipment.
- *             type: array
- *             items:
- *               type: string
- *           no_notification:
- *             description: If set to true no notification will be send related to this Shipment.
- *             type: boolean
+ *         $ref: "#/components/schemas/AdminPostOrdersOrderShipmentReq"
+ * x-codegen:
+ *   method: createShipment
+ *   params: AdminPostOrdersOrderShipmentParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -108,9 +114,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/order"
+ *           $ref: "#/components/schemas/AdminOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -130,9 +134,7 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         switch (_a.label) {
             case 0:
                 id = req.params.id;
-                return [4 /*yield*/, (0, validator_1.validator)(AdminPostOrdersOrderShipmentReq, req.body)];
-            case 1:
-                validated = _a.sent();
+                validated = req.validatedBody;
                 orderService = req.scope.resolve("orderService");
                 manager = req.scope.resolve("manager");
                 return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
@@ -151,19 +153,36 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                             }
                         });
                     }); })];
-            case 2:
+            case 1:
                 _a.sent();
-                return [4 /*yield*/, orderService.retrieve(id, {
-                        select: _1.defaultAdminOrdersFields,
-                        relations: _1.defaultAdminOrdersRelations,
+                return [4 /*yield*/, orderService.retrieveWithTotals(id, req.retrieveConfig, {
+                        includes: req.includes,
                     })];
-            case 3:
+            case 2:
                 order = _a.sent();
                 res.json({ order: order });
                 return [2 /*return*/];
         }
     });
 }); });
+/**
+ * @schema AdminPostOrdersOrderShipmentReq
+ * type: object
+ * required:
+ *   - fulfillment_id
+ * properties:
+ *   fulfillment_id:
+ *     description: The ID of the Fulfillment.
+ *     type: string
+ *   tracking_numbers:
+ *     description: The tracking numbers for the shipment.
+ *     type: array
+ *     items:
+ *       type: string
+ *   no_notification:
+ *     description: If set to true no notification will be send related to this Shipment.
+ *     type: boolean
+ */
 var AdminPostOrdersOrderShipmentReq = /** @class */ (function () {
     function AdminPostOrdersOrderShipmentReq() {
     }
@@ -186,4 +205,12 @@ var AdminPostOrdersOrderShipmentReq = /** @class */ (function () {
     return AdminPostOrdersOrderShipmentReq;
 }());
 exports.AdminPostOrdersOrderShipmentReq = AdminPostOrdersOrderShipmentReq;
+var AdminPostOrdersOrderShipmentParams = /** @class */ (function (_super) {
+    __extends(AdminPostOrdersOrderShipmentParams, _super);
+    function AdminPostOrdersOrderShipmentParams() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return AdminPostOrdersOrderShipmentParams;
+}(common_1.FindParams));
+exports.AdminPostOrdersOrderShipmentParams = AdminPostOrdersOrderShipmentParams;
 //# sourceMappingURL=create-shipment.js.map

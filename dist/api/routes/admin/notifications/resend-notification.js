@@ -48,7 +48,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminPostNotificationsNotificationResendReq = void 0;
 var _1 = require(".");
 var class_validator_1 = require("class-validator");
-var class_validator_2 = require("class-validator");
 var validator_1 = require("../../../../utils/validator");
 /**
  * @oas [post] /notifications/{id}/resend
@@ -62,10 +61,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           to:
- *             description: "A new address or user identifier that the Notification should be sent to"
- *             type: string
+ *         $ref: "#/components/schemas/AdminPostNotificationsNotificationResendReq"
+ * x-codegen:
+ *   method: resend
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -93,9 +91,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             notification:
- *               $ref: "#/components/schemas/notification"
+ *           $ref: "#/components/schemas/AdminNotificationsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -147,12 +143,20 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostNotificationsNotificationResendReq
+ * type: object
+ * properties:
+ *   to:
+ *     description: "A new address or user identifier that the Notification should be sent to"
+ *     type: string
+ */
 var AdminPostNotificationsNotificationResendReq = /** @class */ (function () {
     function AdminPostNotificationsNotificationResendReq() {
     }
     __decorate([
         (0, class_validator_1.IsOptional)(),
-        (0, class_validator_2.IsString)(),
+        (0, class_validator_1.IsString)(),
         __metadata("design:type", String)
     ], AdminPostNotificationsNotificationResendReq.prototype, "to", void 0);
     return AdminPostNotificationsNotificationResendReq;

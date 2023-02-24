@@ -71,7 +71,7 @@ var countriesCurrencies1611063174563 = /** @class */ (function () {
     }
     countriesCurrencies1611063174563.prototype.up = function (queryRunner) {
         return __awaiter(this, void 0, void 0, function () {
-            var countries_2, countries_2_1, c, query, iso2, iso3, numeric, name, display, e_1_1, _a, _b, _c, _1, c, query, code, sym, nat, name, e_2_1;
+            var countries_2, countries_2_1, c, query, iso2, iso3, numeric, name_1, display, e_1_1, _a, _b, _c, _1, c, query, code, sym, nat, name_2, e_2_1;
             var e_1, _d, e_2, _e;
             return __generator(this, function (_f) {
                 switch (_f.label) {
@@ -86,9 +86,9 @@ var countriesCurrencies1611063174563 = /** @class */ (function () {
                         iso2 = c.alpha2.toLowerCase();
                         iso3 = c.alpha3.toLowerCase();
                         numeric = c.numeric;
-                        name = c.name.toUpperCase();
+                        name_1 = c.name.toUpperCase();
                         display = c.name;
-                        return [4 /*yield*/, queryRunner.query(query, [iso2, iso3, numeric, name, display])];
+                        return [4 /*yield*/, queryRunner.query(query, [iso2, iso3, numeric, name_1, display])];
                     case 2:
                         _f.sent();
                         _f.label = 3;
@@ -117,8 +117,8 @@ var countriesCurrencies1611063174563 = /** @class */ (function () {
                         code = c.code.toLowerCase();
                         sym = c.symbol;
                         nat = c.symbol_native;
-                        name = c.name;
-                        return [4 /*yield*/, queryRunner.query(query, [code, sym, nat, name])];
+                        name_2 = c.name;
+                        return [4 /*yield*/, queryRunner.query(query, [code, sym, nat, name_2])];
                     case 9:
                         _f.sent();
                         _f.label = 10;

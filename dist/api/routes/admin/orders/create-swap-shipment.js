@@ -1,4 +1,19 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -45,10 +60,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AdminPostOrdersOrderSwapsSwapShipmentsReq = void 0;
+exports.AdminPostOrdersOrderSwapsSwapShipmentsParams = exports.AdminPostOrdersOrderSwapsSwapShipmentsReq = void 0;
 var class_validator_1 = require("class-validator");
-var _1 = require(".");
 var validator_1 = require("../../../../utils/validator");
+var common_1 = require("../../../../types/common");
 /**
  * @oas [post] /orders/{id}/swaps/{swap_id}/shipments
  * operationId: "PostOrdersOrderSwapsSwapShipments"
@@ -58,24 +73,16 @@ var validator_1 = require("../../../../utils/validator");
  * parameters:
  *   - (path) id=* {string} The ID of the Order.
  *   - (path) swap_id=* {string} The ID of the Swap.
+ *   - (query) expand {string} Comma separated list of relations to include in the result.
+ *   - (query) fields {string} Comma separated list of fields to include in the result.
  * requestBody:
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - fulfillment_id
- *         properties:
- *           fulfillment_id:
- *             description: The ID of the Fulfillment.
- *             type: string
- *           tracking_numbers:
- *             description: The tracking numbers for the shipment.
- *             type: array
- *             items:
- *               type: string
- *           no_notification:
- *             description: If set to true no notification will be sent related to this Claim.
- *             type: boolean
+ *         $ref: "#/components/schemas/AdminPostOrdersOrderSwapsSwapShipmentsReq"
+ * x-codegen:
+ *   method: createSwapShipment
+ *   params: AdminPostOrdersOrderSwapsSwapShipmentsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -109,9 +116,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/order"
+ *           $ref: "#/components/schemas/AdminOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -148,9 +153,8 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                     }); })];
             case 2:
                 _b.sent();
-                return [4 /*yield*/, orderService.retrieve(id, {
-                        select: _1.defaultAdminOrdersFields,
-                        relations: _1.defaultAdminOrdersRelations,
+                return [4 /*yield*/, orderService.retrieveWithTotals(id, req.retrieveConfig, {
+                        includes: req.includes,
                     })];
             case 3:
                 order = _b.sent();
@@ -159,6 +163,24 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostOrdersOrderSwapsSwapShipmentsReq
+ * type: object
+ * required:
+ *   - fulfillment_id
+ * properties:
+ *   fulfillment_id:
+ *     description: The ID of the Fulfillment.
+ *     type: string
+ *   tracking_numbers:
+ *     description: The tracking numbers for the shipment.
+ *     type: array
+ *     items:
+ *       type: string
+ *   no_notification:
+ *     description: If set to true no notification will be sent related to this Claim.
+ *     type: boolean
+ */
 var AdminPostOrdersOrderSwapsSwapShipmentsReq = /** @class */ (function () {
     function AdminPostOrdersOrderSwapsSwapShipmentsReq() {
         this.tracking_numbers = [];
@@ -182,4 +204,12 @@ var AdminPostOrdersOrderSwapsSwapShipmentsReq = /** @class */ (function () {
     return AdminPostOrdersOrderSwapsSwapShipmentsReq;
 }());
 exports.AdminPostOrdersOrderSwapsSwapShipmentsReq = AdminPostOrdersOrderSwapsSwapShipmentsReq;
+var AdminPostOrdersOrderSwapsSwapShipmentsParams = /** @class */ (function (_super) {
+    __extends(AdminPostOrdersOrderSwapsSwapShipmentsParams, _super);
+    function AdminPostOrdersOrderSwapsSwapShipmentsParams() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return AdminPostOrdersOrderSwapsSwapShipmentsParams;
+}(common_1.FindParams));
+exports.AdminPostOrdersOrderSwapsSwapShipmentsParams = AdminPostOrdersOrderSwapsSwapShipmentsParams;
 //# sourceMappingURL=create-swap-shipment.js.map

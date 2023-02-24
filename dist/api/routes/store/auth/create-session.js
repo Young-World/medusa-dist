@@ -57,9 +57,13 @@ var validator_1 = require("../../../../utils/validator");
  * operationId: "PostAuth"
  * summary: "Customer Login"
  * description: "Logs a Customer in and authorizes them to view their details. Successful authentication will set a session cookie in the Customer's browser."
- * parameters:
- *   - (body) email=* {string} The Customer's email.
- *   - (body) password=* {string} The Customer's password.
+ * requestBody:
+ *   content:
+ *     application/json:
+ *       schema:
+ *         $ref: "#/components/schemas/StorePostAuthReq"
+ * x-codegen:
+ *   method: authenticate
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -90,9 +94,7 @@ var validator_1 = require("../../../../utils/validator");
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            customer:
- *              $ref: "#/components/schemas/customer"
+ *          $ref: "#/components/schemas/StoreAuthRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":
@@ -133,7 +135,7 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                     return [2 /*return*/];
                 }
                 jwt_secret = req.scope.resolve("configModule").projectConfig.jwt_secret;
-                req.session.jwt = jsonwebtoken_1.default.sign({ customer_id: (_a = result.customer) === null || _a === void 0 ? void 0 : _a.id }, jwt_secret, {
+                req.session.jwt_store = jsonwebtoken_1.default.sign({ customer_id: (_a = result.customer) === null || _a === void 0 ? void 0 : _a.id }, jwt_secret, {
                     expiresIn: "30d",
                 });
                 customerService = req.scope.resolve("customerService");
@@ -147,6 +149,20 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema StorePostAuthReq
+ * type: object
+ * required:
+ *   - email
+ *   - password
+ * properties:
+ *   email:
+ *     type: string
+ *     description: The Customer's email.
+ *   password:
+ *     type: string
+ *     description: The Customer's password.
+ */
 var StorePostAuthReq = /** @class */ (function () {
     function StorePostAuthReq() {
     }

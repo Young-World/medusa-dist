@@ -1,24 +1,24 @@
+import { EntityManager } from "typeorm";
+import { TransactionBaseService } from "../interfaces";
+import { ClaimOrder, Order } from "../models";
+import { AddressRepository } from "../repositories/address";
+import { ClaimRepository } from "../repositories/claim";
+import { LineItemRepository } from "../repositories/line-item";
+import { ShippingMethodRepository } from "../repositories/shipping-method";
+import { CreateClaimInput, CreateClaimItemInput, UpdateClaimInput } from "../types/claim";
+import { FindConfig } from "../types/common";
 import ClaimItemService from "./claim-item";
 import EventBusService from "./event-bus";
-import FulfillmentProviderService from "./fulfillment-provider";
 import FulfillmentService from "./fulfillment";
-import InventoryService from "./inventory";
+import FulfillmentProviderService from "./fulfillment-provider";
 import LineItemService from "./line-item";
 import PaymentProviderService from "./payment-provider";
+import ProductVariantInventoryService from "./product-variant-inventory";
 import RegionService from "./region";
 import ReturnService from "./return";
 import ShippingOptionService from "./shipping-option";
 import TaxProviderService from "./tax-provider";
 import TotalsService from "./totals";
-import { AddressRepository } from "../repositories/address";
-import { ClaimOrder } from "../models";
-import { ClaimRepository } from "../repositories/claim";
-import { EntityManager } from "typeorm";
-import { LineItemRepository } from "../repositories/line-item";
-import { ShippingMethodRepository } from "../repositories/shipping-method";
-import { TransactionBaseService } from "../interfaces";
-import { FindConfig } from "../types/common";
-import { CreateClaimInput, UpdateClaimInput } from "../types/claim";
 declare type InjectedDependencies = {
     manager: EntityManager;
     addressRepository: typeof AddressRepository;
@@ -29,7 +29,7 @@ declare type InjectedDependencies = {
     eventBusService: EventBusService;
     fulfillmentProviderService: FulfillmentProviderService;
     fulfillmentService: FulfillmentService;
-    inventoryService: InventoryService;
+    productVariantInventoryService: ProductVariantInventoryService;
     lineItemService: LineItemService;
     paymentProviderService: PaymentProviderService;
     regionService: RegionService;
@@ -57,7 +57,6 @@ export default class ClaimService extends TransactionBaseService {
     protected readonly eventBus_: EventBusService;
     protected readonly fulfillmentProviderService_: FulfillmentProviderService;
     protected readonly fulfillmentService_: FulfillmentService;
-    protected readonly inventoryService_: InventoryService;
     protected readonly lineItemService_: LineItemService;
     protected readonly paymentProviderService_: PaymentProviderService;
     protected readonly regionService_: RegionService;
@@ -65,8 +64,22 @@ export default class ClaimService extends TransactionBaseService {
     protected readonly shippingOptionService_: ShippingOptionService;
     protected readonly taxProviderService_: TaxProviderService;
     protected readonly totalsService_: TotalsService;
-    constructor({ manager, addressRepository, claimRepository, shippingMethodRepository, lineItemRepository, claimItemService, eventBusService, fulfillmentProviderService, fulfillmentService, inventoryService, lineItemService, paymentProviderService, regionService, returnService, shippingOptionService, taxProviderService, totalsService, }: InjectedDependencies);
+    protected readonly productVariantInventoryService_: ProductVariantInventoryService;
+    constructor({ manager, addressRepository, claimRepository, shippingMethodRepository, lineItemRepository, claimItemService, eventBusService, fulfillmentProviderService, fulfillmentService, productVariantInventoryService, lineItemService, paymentProviderService, regionService, returnService, shippingOptionService, taxProviderService, totalsService, }: InjectedDependencies);
     update(id: string, data: UpdateClaimInput): Promise<ClaimOrder>;
+    protected validateCreateClaimInput(data: CreateClaimInput): Promise<void>;
+    /**
+     * Finds claim line items on an order and calculates the refund amount.
+     * There are three places too look:
+     * - Order items
+     * - Swap items
+     * - Claim items (from previous claims)
+     * Note, it will attempt to return early from each of these places to avoid having to iterate over all items every time.
+     * @param order - the order to find claim lines on
+     * @param claimItems - the claim items to match against
+     * @return the refund amount
+     */
+    protected getRefundTotalForClaimLinesOnOrder(order: Order, claimItems: CreateClaimItemInput[]): Promise<number>;
     /**
      * Creates a Claim on an Order. Claims consists of items that are claimed and
      * optionally items to be sent as replacement for the claimed items. The
@@ -103,10 +116,10 @@ export default class ClaimService extends TransactionBaseService {
     list(selector: any, config?: FindConfig<ClaimOrder>): Promise<ClaimOrder[]>;
     /**
      * Gets an order by id.
-     * @param id - id of the claim order to retrieve
+     * @param claimId - id of the claim order to retrieve
      * @param config - the config object containing query settings
      * @return the order document
      */
-    retrieve(id: string, config?: FindConfig<ClaimOrder>): Promise<ClaimOrder>;
+    retrieve(claimId: string, config?: FindConfig<ClaimOrder>): Promise<ClaimOrder>;
 }
 export {};

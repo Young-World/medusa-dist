@@ -14,34 +14,11 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
 };
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
@@ -101,7 +78,6 @@ var __read = (this && this.__read) || function (o, n) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminGetCollectionsParams = exports.AdminGetCollectionsPaginationParams = void 0;
 var class_validator_1 = require("class-validator");
-var lodash_1 = __importStar(require("lodash"));
 var common_1 = require("../../../../types/common");
 var class_transformer_1 = require("class-transformer");
 /**
@@ -116,6 +92,7 @@ var class_transformer_1 = require("class-transformer");
  *   - (query) title {string} The title of collections to return.
  *   - (query) handle {string} The handle of collections to return.
  *   - (query) q {string} a search term to search titles and handles.
+ *   - (query) discount_condition_id {string} The discount condition id on which to filter the product collections.
  *   - in: query
  *     name: created_at
  *     description: Date comparison for when resulting collections were created.
@@ -182,6 +159,9 @@ var class_transformer_1 = require("class-transformer");
  *            type: string
  *            description: filter by dates greater than or equal to this date
  *            format: date
+ * x-codegen:
+ *   method: list
+ *   queryParams: AdminGetCollectionsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -209,20 +189,7 @@ var class_transformer_1 = require("class-transformer");
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            collections:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/product_collection"
- *            count:
- *               type: integer
- *               description: The total number of items available
- *            offset:
- *               type: integer
- *               description: The number of items skipped before these items
- *            limit:
- *               type: integer
- *               description: The number of items per page
+ *          $ref: "#/components/schemas/AdminCollectionsListRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":
@@ -237,20 +204,21 @@ var class_transformer_1 = require("class-transformer");
  *    $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var productCollectionService, _a, limit, offset, filterableFields, listConfig, _b, collections, count;
-    return __generator(this, function (_c) {
-        switch (_c.label) {
+    var productCollectionService, filterableFields, listConfig, skip, take, _a, collections, count;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
             case 0:
                 productCollectionService = req.scope.resolve("productCollectionService");
-                _a = req.validatedQuery, limit = _a.limit, offset = _a.offset, filterableFields = req.filterableFields, listConfig = req.listConfig;
-                return [4 /*yield*/, productCollectionService.listAndCount(lodash_1.default.pickBy(filterableFields, lodash_1.identity), listConfig)];
+                filterableFields = req.filterableFields, listConfig = req.listConfig;
+                skip = listConfig.skip, take = listConfig.take;
+                return [4 /*yield*/, productCollectionService.listAndCount(filterableFields, listConfig)];
             case 1:
-                _b = __read.apply(void 0, [_c.sent(), 2]), collections = _b[0], count = _b[1];
+                _a = __read.apply(void 0, [_b.sent(), 2]), collections = _a[0], count = _a[1];
                 res.status(200).json({
                     collections: collections,
                     count: count,
-                    offset: offset,
-                    limit: limit,
+                    offset: skip,
+                    limit: take,
                 });
                 return [2 /*return*/];
         }
@@ -315,6 +283,11 @@ var AdminGetCollectionsParams = /** @class */ (function (_super) {
         (0, class_validator_1.IsOptional)(),
         __metadata("design:type", String)
     ], AdminGetCollectionsParams.prototype, "q", void 0);
+    __decorate([
+        (0, class_validator_1.IsString)(),
+        (0, class_validator_1.IsOptional)(),
+        __metadata("design:type", String)
+    ], AdminGetCollectionsParams.prototype, "discount_condition_id", void 0);
     return AdminGetCollectionsParams;
 }(AdminGetCollectionsPaginationParams));
 exports.AdminGetCollectionsParams = AdminGetCollectionsParams;

@@ -9,18 +9,9 @@ import { Request, Response } from "express";
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - name
- *         properties:
- *           name:
- *             description: The name of the Sales Channel
- *             type: string
- *           description:
- *             description: The description of the Sales Channel
- *             type: string
- *           is_disabled:
- *             description: Whether the Sales Channel is disabled or not.
- *             type: boolean
+ *         $ref: "#/components/schemas/AdminPostSalesChannelsReq"
+ * x-codegen:
+ *   method: create
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -55,9 +46,7 @@ import { Request, Response } from "express";
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             sales_channel:
- *               $ref: "#/components/schemas/sales_channel"
+ *           $ref: "#/components/schemas/AdminSalesChannelsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -73,6 +62,22 @@ import { Request, Response } from "express";
  */
 declare const _default: (req: Request, res: Response) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostSalesChannelsReq
+ * type: object
+ * required:
+ *   - name
+ * properties:
+ *   name:
+ *     description: The name of the Sales Channel
+ *     type: string
+ *   description:
+ *     description: The description of the Sales Channel
+ *     type: string
+ *   is_disabled:
+ *     description: Whether the Sales Channel is disabled or not.
+ *     type: boolean
+ */
 export declare class AdminPostSalesChannelsReq {
     name: string;
     description: string;

@@ -1,3 +1,4 @@
+import { FindParams } from "../../../../types/common";
 /**
  * @oas [get] /orders/{id}
  * operationId: GetOrdersOrder
@@ -5,6 +6,10 @@
  * description: "Retrieves an Order"
  * parameters:
  *   - (path) id=* {string} The id of the Order.
+ *   - (query) fields {string} (Comma separated) Which fields should be included in the result.
+ *   - (query) expand {string} (Comma separated) Which fields should be expanded in the result.
+ * x-codegen:
+ *   method: retrieve
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -27,9 +32,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/order"
+ *           $ref: "#/components/schemas/StoreOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":
@@ -43,3 +46,5 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+export declare class StoreGetOrderParams extends FindParams {
+}

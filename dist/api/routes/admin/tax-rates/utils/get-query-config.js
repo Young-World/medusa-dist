@@ -28,7 +28,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getListConfig = exports.getRetrieveConfig = exports.pickByConfig = void 0;
 var lodash_1 = require("lodash");
 var __1 = require("../");
-var utils_1 = require("../../../../../utils");
+var medusa_core_utils_1 = require("medusa-core-utils");
 function pickByConfig(obj, config) {
     var _a, _b;
     var fields = __spreadArray(__spreadArray([], __read(((_a = config.select) !== null && _a !== void 0 ? _a : [])), false), __read(((_b = config.relations) !== null && _b !== void 0 ? _b : [])), false);
@@ -45,13 +45,13 @@ function pickByConfig(obj, config) {
 exports.pickByConfig = pickByConfig;
 function getRetrieveConfig(fields, expand) {
     var includeFields = [];
-    if ((0, utils_1.isDefined)(fields)) {
+    if ((0, medusa_core_utils_1.isDefined)(fields)) {
         var fieldSet = new Set(fields);
         fieldSet.add("id");
         includeFields = Array.from(fieldSet);
     }
     var expandFields = [];
-    if ((0, utils_1.isDefined)(expand)) {
+    if ((0, medusa_core_utils_1.isDefined)(expand)) {
         expandFields = expand;
     }
     return {
@@ -66,7 +66,7 @@ function getListConfig(fields, expand, limit, offset, order) {
     if (limit === void 0) { limit = 50; }
     if (offset === void 0) { offset = 0; }
     var includeFields = [];
-    if ((0, utils_1.isDefined)(fields)) {
+    if ((0, medusa_core_utils_1.isDefined)(fields)) {
         var fieldSet = new Set(fields);
         // Ensure created_at is included, since we are sorting on this
         fieldSet.add("created_at");
@@ -74,7 +74,7 @@ function getListConfig(fields, expand, limit, offset, order) {
         includeFields = Array.from(fieldSet);
     }
     var expandFields = [];
-    if ((0, utils_1.isDefined)(expand)) {
+    if ((0, medusa_core_utils_1.isDefined)(expand)) {
         expandFields = expand;
     }
     var orderBy = order !== null && order !== void 0 ? order : {

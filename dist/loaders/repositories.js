@@ -37,9 +37,9 @@ exports.default = (function (_a) {
             var _b;
             var _c = __read(_a, 2), val = _c[1];
             if (typeof val === "function") {
-                var name = (0, format_registration_name_1.default)(fn);
+                var name_1 = (0, format_registration_name_1.default)(fn);
                 container.register((_b = {},
-                    _b[name] = (0, awilix_1.asClass)(val),
+                    _b[name_1] = (0, awilix_1.asClass)(val),
                     _b));
             }
         });

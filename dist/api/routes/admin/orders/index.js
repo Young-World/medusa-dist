@@ -54,132 +54,260 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.filterableAdminOrdersFields = exports.allowedAdminOrdersRelations = exports.allowedAdminOrdersFields = exports.defaultAdminOrdersFields = exports.defaultAdminOrdersRelations = void 0;
+exports.allowedOrderIncludesFields = exports.AvailableOrderIncludesFields = exports.filterableAdminOrdersFields = exports.defaultAdminOrdersFields = exports.defaultAdminOrdersRelations = void 0;
 var express_1 = require("express");
 require("reflect-metadata");
 var sales_channels_1 = __importDefault(require("../../../../loaders/feature-flags/sales-channels"));
 var common_1 = require("../../../../types/common");
 var middlewares_1 = __importStar(require("../../../middlewares"));
+var check_registered_modules_1 = require("../../../middlewares/check-registered-modules");
+var create_reservation_for_line_item_1 = require("./create-reservation-for-line-item");
+var get_reservations_1 = require("./get-reservations");
 var list_orders_1 = require("./list-orders");
+var create_swap_1 = require("./create-swap");
+var update_order_1 = require("./update-order");
+var complete_order_1 = require("./complete-order");
+var refund_payment_1 = require("./refund-payment");
+var capture_payment_1 = require("./capture-payment");
+var create_fulfillment_1 = require("./create-fulfillment");
+var cancel_fulfillment_1 = require("./cancel-fulfillment");
+var cancel_fulfillment_swap_1 = require("./cancel-fulfillment-swap");
+var cancel_fulfillment_claim_1 = require("./cancel-fulfillment-claim");
+var create_shipment_1 = require("./create-shipment");
+var request_return_1 = require("./request-return");
+var cancel_order_1 = require("./cancel-order");
+var add_shipping_method_1 = require("./add-shipping-method");
+var archive_order_1 = require("./archive-order");
+var cancel_swap_1 = require("./cancel-swap");
+var fulfill_swap_1 = require("./fulfill-swap");
+var create_swap_shipment_1 = require("./create-swap-shipment");
+var process_swap_payment_1 = require("./process-swap-payment");
+var create_claim_1 = require("./create-claim");
+var cancel_claim_1 = require("./cancel-claim");
+var update_claim_1 = require("./update-claim");
+var fulfill_claim_1 = require("./fulfill-claim");
+var create_claim_shipment_1 = require("./create-claim-shipment");
 var route = (0, express_1.Router)();
 exports.default = (function (app, featureFlagRouter) {
     app.use("/orders", route);
     var relations = __spreadArray([], __read(exports.defaultAdminOrdersRelations), false);
+    var defaultFields = __spreadArray([], __read(exports.defaultAdminOrdersFields), false);
     if (featureFlagRouter.isFeatureEnabled(sales_channels_1.default.key)) {
         relations.push("sales_channel");
+        defaultFields.push("sales_channel_id");
     }
     /**
      * List orders
      */
-    route.get("/", (0, middlewares_1.transformQuery)(list_orders_1.AdminGetOrdersParams, {
+    route.get("/", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields), (0, middlewares_1.transformQuery)(list_orders_1.AdminGetOrdersParams, {
         defaultRelations: relations,
         defaultFields: exports.defaultAdminOrdersFields,
-        allowedFields: exports.allowedAdminOrdersFields,
-        allowedRelations: exports.allowedAdminOrdersRelations,
         isList: true,
     }), middlewares_1.default.wrap(require("./list-orders").default));
     /**
      * Get an order
      */
-    route.get("/:id", (0, middlewares_1.transformQuery)(common_1.FindParams, {
+    route.get("/:id", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields, [
+        exports.AvailableOrderIncludesFields.RETURNABLE_ITEMS,
+    ]), (0, middlewares_1.transformQuery)(update_order_1.AdminPostOrdersOrderParams, {
         defaultRelations: relations,
-        defaultFields: exports.defaultAdminOrdersFields,
-        allowedFields: exports.allowedAdminOrdersFields,
-        allowedRelations: exports.allowedAdminOrdersRelations,
+        defaultFields: defaultFields,
         isList: false,
     }), middlewares_1.default.wrap(require("./get-order").default));
     /**
      * Update an order
      */
-    route.post("/:id", middlewares_1.default.wrap(require("./update-order").default));
+    route.post("/:id", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields), (0, middlewares_1.transformBody)(update_order_1.AdminPostOrdersOrderReq), (0, middlewares_1.transformQuery)(common_1.FindParams, {
+        defaultRelations: relations,
+        defaultFields: defaultFields,
+        isList: false,
+    }), middlewares_1.default.wrap(require("./update-order").default));
     /**
      * Mark an order as completed
      */
-    route.post("/:id/complete", middlewares_1.default.wrap(require("./complete-order").default));
+    route.post("/:id/complete", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields), (0, middlewares_1.transformQuery)(complete_order_1.AdminPostOrdersOrderCompleteParams, {
+        defaultRelations: relations,
+        defaultFields: defaultFields,
+        isList: false,
+    }), middlewares_1.default.wrap(require("./complete-order").default));
     /**
      * Refund an amount to the customer's card.
      */
-    route.post("/:id/refund", middlewares_1.default.wrap(require("./refund-payment").default));
+    route.post("/:id/refund", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields), (0, middlewares_1.transformBody)(refund_payment_1.AdminPostOrdersOrderRefundsReq), (0, middlewares_1.transformQuery)(refund_payment_1.AdminPostOrdersOrderRefundsParams, {
+        defaultRelations: relations,
+        defaultFields: defaultFields,
+        isList: false,
+    }), middlewares_1.default.wrap(require("./refund-payment").default));
     /**
      * Capture the authorized amount on the customer's card.
      */
-    route.post("/:id/capture", middlewares_1.default.wrap(require("./capture-payment").default));
+    route.post("/:id/capture", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields), (0, middlewares_1.transformQuery)(capture_payment_1.AdminPostOrdersOrderCaptureParams, {
+        defaultRelations: relations,
+        defaultFields: defaultFields,
+        isList: false,
+    }), middlewares_1.default.wrap(require("./capture-payment").default));
     /**
      * Create a fulfillment.
      */
-    route.post("/:id/fulfillment", middlewares_1.default.wrap(require("./create-fulfillment").default));
+    route.post("/:id/fulfillment", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields), (0, middlewares_1.transformBody)(create_fulfillment_1.AdminPostOrdersOrderFulfillmentsReq), (0, middlewares_1.transformQuery)(create_fulfillment_1.AdminPostOrdersOrderFulfillmentsParams, {
+        defaultRelations: relations,
+        defaultFields: defaultFields,
+        isList: false,
+    }), middlewares_1.default.wrap(require("./create-fulfillment").default));
     /**
      * Cancel a fulfillment related to an order.
      */
-    route.post("/:id/fulfillments/:fulfillment_id/cancel", middlewares_1.default.wrap(require("./cancel-fulfillment").default));
+    route.post("/:id/fulfillments/:fulfillment_id/cancel", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields), (0, middlewares_1.transformQuery)(cancel_fulfillment_1.AdminPostOrdersOrderFulfillementsCancelParams, {
+        defaultRelations: relations,
+        defaultFields: defaultFields,
+        isList: false,
+    }), middlewares_1.default.wrap(require("./cancel-fulfillment").default));
     /**
      * Cancel a fulfillment related to a swap.
      */
-    route.post("/:id/swaps/:swap_id/fulfillments/:fulfillment_id/cancel", middlewares_1.default.wrap(require("./cancel-fulfillment-swap").default));
+    route.post("/:id/swaps/:swap_id/fulfillments/:fulfillment_id/cancel", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields), (0, middlewares_1.transformQuery)(cancel_fulfillment_swap_1.AdminPostOrdersOrderSwapFulfillementsCancelParams, {
+        defaultRelations: relations,
+        defaultFields: defaultFields,
+        isList: false,
+    }), middlewares_1.default.wrap(require("./cancel-fulfillment-swap").default));
     /**
      * Cancel a fulfillment related to a claim.
      */
-    route.post("/:id/claims/:claim_id/fulfillments/:fulfillment_id/cancel", middlewares_1.default.wrap(require("./cancel-fulfillment-claim").default));
+    route.post("/:id/claims/:claim_id/fulfillments/:fulfillment_id/cancel", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields), (0, middlewares_1.transformQuery)(cancel_fulfillment_claim_1.AdminPostOrdersClaimFulfillmentsCancelParams, {
+        defaultRelations: relations,
+        defaultFields: defaultFields,
+        isList: false,
+    }), middlewares_1.default.wrap(require("./cancel-fulfillment-claim").default));
     /**
      * Create a shipment.
      */
-    route.post("/:id/shipment", middlewares_1.default.wrap(require("./create-shipment").default));
+    route.post("/:id/shipment", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields), (0, middlewares_1.transformBody)(create_shipment_1.AdminPostOrdersOrderShipmentReq), (0, middlewares_1.transformQuery)(create_shipment_1.AdminPostOrdersOrderShipmentParams, {
+        defaultRelations: relations,
+        defaultFields: defaultFields,
+        isList: false,
+    }), middlewares_1.default.wrap(require("./create-shipment").default));
     /**
      * Request a return.
      */
-    route.post("/:id/return", middlewares_1.default.wrap(require("./request-return").default));
+    route.post("/:id/return", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields), (0, middlewares_1.transformBody)(request_return_1.AdminPostOrdersOrderReturnsReq), (0, middlewares_1.transformQuery)(request_return_1.AdminPostOrdersOrderReturnsParams, {
+        defaultRelations: relations,
+        defaultFields: defaultFields,
+        isList: false,
+    }), middlewares_1.default.wrap(require("./request-return").default));
     /**
      * Cancel an order.
      */
-    route.post("/:id/cancel", middlewares_1.default.wrap(require("./cancel-order").default));
+    route.post("/:id/cancel", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields), (0, middlewares_1.transformQuery)(cancel_order_1.AdminPostOrdersOrderCancel, {
+        defaultRelations: relations,
+        defaultFields: defaultFields,
+        isList: false,
+    }), middlewares_1.default.wrap(require("./cancel-order").default));
     /**
      * Add a shipping method
      */
-    route.post("/:id/shipping-methods", middlewares_1.default.wrap(require("./add-shipping-method").default));
+    route.post("/:id/shipping-methods", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields), (0, middlewares_1.transformBody)(add_shipping_method_1.AdminPostOrdersOrderShippingMethodsReq), (0, middlewares_1.transformQuery)(add_shipping_method_1.AdminPostOrdersOrderShippingMethodsParams, {
+        defaultRelations: relations,
+        defaultFields: defaultFields,
+        isList: false,
+    }), middlewares_1.default.wrap(require("./add-shipping-method").default));
     /**
      * Archive an order.
      */
-    route.post("/:id/archive", middlewares_1.default.wrap(require("./archive-order").default));
+    route.post("/:id/archive", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields), (0, middlewares_1.transformQuery)(archive_order_1.AdminPostOrdersOrderArchiveParams, {
+        defaultRelations: relations,
+        defaultFields: defaultFields,
+        isList: false,
+    }), middlewares_1.default.wrap(require("./archive-order").default));
     /**
      * Creates a swap, requests a return and prepares a cart for payment.
      */
-    route.post("/:id/swaps", middlewares_1.default.wrap(require("./create-swap").default));
+    route.post("/:id/swaps", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields, [
+        exports.AvailableOrderIncludesFields.RETURNABLE_ITEMS,
+    ]), (0, middlewares_1.transformBody)(create_swap_1.AdminPostOrdersOrderSwapsReq), (0, middlewares_1.transformQuery)(create_swap_1.AdminPostOrdersOrderSwapsParams, {
+        defaultRelations: relations,
+        defaultFields: defaultFields,
+        isList: false,
+    }), middlewares_1.default.wrap(require("./create-swap").default));
     /**
      * Cancels a swap.
      */
-    route.post("/:id/swaps/:swap_id/cancel", middlewares_1.default.wrap(require("./cancel-swap").default));
+    route.post("/:id/swaps/:swap_id/cancel", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields), (0, middlewares_1.transformQuery)(cancel_swap_1.AdminPostOrdersSwapCancelParams, {
+        defaultRelations: relations,
+        defaultFields: defaultFields,
+        isList: false,
+    }), middlewares_1.default.wrap(require("./cancel-swap").default));
     /**
      * Fulfills a swap.
      */
-    route.post("/:id/swaps/:swap_id/fulfillments", middlewares_1.default.wrap(require("./fulfill-swap").default));
+    route.post("/:id/swaps/:swap_id/fulfillments", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields), (0, middlewares_1.transformQuery)(fulfill_swap_1.AdminPostOrdersOrderSwapsSwapFulfillmentsParams, {
+        defaultRelations: relations,
+        defaultFields: defaultFields,
+        isList: false,
+    }), middlewares_1.default.wrap(require("./fulfill-swap").default));
     /**
      * Marks a swap fulfillment as shipped.
      */
-    route.post("/:id/swaps/:swap_id/shipments", middlewares_1.default.wrap(require("./create-swap-shipment").default));
+    route.post("/:id/swaps/:swap_id/shipments", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields), (0, middlewares_1.transformBody)(create_swap_shipment_1.AdminPostOrdersOrderSwapsSwapShipmentsReq), (0, middlewares_1.transformQuery)(create_swap_shipment_1.AdminPostOrdersOrderSwapsSwapShipmentsParams, {
+        defaultRelations: relations,
+        defaultFields: defaultFields,
+        isList: false,
+    }), middlewares_1.default.wrap(require("./create-swap-shipment").default));
     /**
      * Captures the payment associated with a swap
      */
-    route.post("/:id/swaps/:swap_id/process-payment", middlewares_1.default.wrap(require("./process-swap-payment").default));
+    route.post("/:id/swaps/:swap_id/process-payment", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields), (0, middlewares_1.transformQuery)(process_swap_payment_1.AdminPostOrdersOrderSwapsSwapProcessPaymentParams, {
+        defaultRelations: relations,
+        defaultFields: defaultFields,
+        isList: false,
+    }), middlewares_1.default.wrap(require("./process-swap-payment").default));
     /**
      * Creates a claim
      */
-    route.post("/:id/claims", middlewares_1.default.wrap(require("./create-claim").default));
+    route.post("/:id/claims", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields), (0, middlewares_1.transformBody)(create_claim_1.AdminPostOrdersOrderClaimsReq), (0, middlewares_1.transformQuery)(create_claim_1.AdminPostOrdersOrderClaimsParams, {
+        defaultRelations: relations,
+        defaultFields: defaultFields,
+        isList: false,
+    }), middlewares_1.default.wrap(require("./create-claim").default));
     /**
      * Cancels a claim
      */
-    route.post("/:id/claims/:claim_id/cancel", middlewares_1.default.wrap(require("./cancel-claim").default));
+    route.post("/:id/claims/:claim_id/cancel", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields), (0, middlewares_1.transformQuery)(cancel_claim_1.AdminPostOrdersClaimCancel, {
+        defaultRelations: relations,
+        defaultFields: defaultFields,
+        isList: false,
+    }), middlewares_1.default.wrap(require("./cancel-claim").default));
     /**
      * Updates a claim
      */
-    route.post("/:id/claims/:claim_id", middlewares_1.default.wrap(require("./update-claim").default));
+    route.post("/:id/claims/:claim_id", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields), (0, middlewares_1.transformBody)(update_claim_1.AdminPostOrdersOrderClaimsClaimReq), (0, middlewares_1.transformQuery)(update_claim_1.AdminPostOrdersOrderClaimsClaimParams, {
+        defaultRelations: relations,
+        defaultFields: defaultFields,
+        isList: false,
+    }), middlewares_1.default.wrap(require("./update-claim").default));
     /**
      * Creates claim fulfillment
      */
-    route.post("/:id/claims/:claim_id/fulfillments", middlewares_1.default.wrap(require("./fulfill-claim").default));
+    route.post("/:id/claims/:claim_id/fulfillments", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields), (0, middlewares_1.transformBody)(fulfill_claim_1.AdminPostOrdersOrderClaimsClaimFulfillmentsReq), (0, middlewares_1.transformQuery)(fulfill_claim_1.AdminPostOrdersOrderClaimsClaimFulfillmentsParams, {
+        defaultRelations: relations,
+        defaultFields: defaultFields,
+        isList: false,
+    }), middlewares_1.default.wrap(require("./fulfill-claim").default));
     /**
      * Creates claim shipment
      */
-    route.post("/:id/claims/:claim_id/shipments", middlewares_1.default.wrap(require("./create-claim-shipment").default));
+    route.post("/:id/claims/:claim_id/shipments", (0, middlewares_1.transformIncludesOptions)(exports.allowedOrderIncludesFields), (0, middlewares_1.transformBody)(create_claim_shipment_1.AdminPostOrdersOrderClaimsClaimShipmentsReq), (0, middlewares_1.transformQuery)(create_claim_shipment_1.AdminPostOrdersOrderClaimsClaimShipmentsParams, {
+        defaultRelations: relations,
+        defaultFields: defaultFields,
+        isList: false,
+    }), middlewares_1.default.wrap(require("./create-claim-shipment").default));
+    route.get("/:id/reservations", (0, check_registered_modules_1.checkRegisteredModules)({
+        inventoryService: "Inventory is not enabled. Please add an Inventory module to enable this functionality.",
+    }), (0, middlewares_1.transformQuery)(get_reservations_1.AdminGetOrdersOrderReservationsParams, {
+        isList: true,
+    }), middlewares_1.default.wrap(require("./get-reservations").default));
+    route.post("/:id/line-items/:line_item_id/reserve", (0, check_registered_modules_1.checkRegisteredModules)({
+        inventoryService: "Inventory is not enabled. Please add an Inventory module to enable this functionality.",
+    }), (0, middlewares_1.transformBody)(create_reservation_for_line_item_1.AdminOrdersOrderLineItemReservationReq), middlewares_1.default.wrap(require("./create-reservation-for-line-item").default));
     return app;
 });
 exports.defaultAdminOrdersRelations = [
@@ -245,63 +373,7 @@ exports.defaultAdminOrdersFields = [
     "items.refundable",
     "swaps.additional_items.refundable",
     "claims.additional_items.refundable",
-    "shipping_total",
-    "discount_total",
-    "tax_total",
-    "refunded_total",
-    "gift_card_total",
-    "subtotal",
-    "total",
-    "paid_total",
-    "refundable_amount",
     "no_notification",
-];
-exports.allowedAdminOrdersFields = [
-    "id",
-    "status",
-    "fulfillment_status",
-    "payment_status",
-    "display_id",
-    "cart_id",
-    "draft_order_id",
-    "customer_id",
-    "email",
-    "region_id",
-    "currency_code",
-    "tax_rate",
-    "canceled_at",
-    "created_at",
-    "updated_at",
-    "metadata",
-    "shipping_total",
-    "discount_total",
-    "tax_total",
-    "refunded_total",
-    "subtotal",
-    "gift_card_total",
-    "total",
-    "paid_total",
-    "refundable_amount",
-    "no_notification",
-];
-exports.allowedAdminOrdersRelations = [
-    "customer",
-    "region",
-    "edits",
-    "sales_channel",
-    "billing_address",
-    "shipping_address",
-    "discounts",
-    "discounts.rule",
-    "shipping_methods",
-    "payments",
-    "fulfillments",
-    "fulfillments.tracking_links",
-    "returns",
-    "claims",
-    "swaps",
-    "swaps.return_order",
-    "swaps.additional_items",
 ];
 exports.filterableAdminOrdersFields = [
     "id",
@@ -318,6 +390,12 @@ exports.filterableAdminOrdersFields = [
     "canceled_at",
     "created_at",
     "updated_at",
+];
+exports.AvailableOrderIncludesFields = {
+    RETURNABLE_ITEMS: "returnable_items",
+};
+exports.allowedOrderIncludesFields = [
+    exports.AvailableOrderIncludesFields.RETURNABLE_ITEMS,
 ];
 __exportStar(require("./add-shipping-method"), exports);
 __exportStar(require("./archive-order"), exports);

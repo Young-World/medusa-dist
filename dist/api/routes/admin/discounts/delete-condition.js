@@ -1,13 +1,19 @@
 "use strict";
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -46,11 +52,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminDeleteDiscountsDiscountConditionsConditionParams = void 0;
-var class_validator_1 = require("class-validator");
-var _1 = require(".");
 var medusa_core_utils_1 = require("medusa-core-utils");
-var get_query_config_1 = require("../../../../utils/get-query-config");
-var validator_1 = require("../../../../utils/validator");
+var common_1 = require("../../../../types/common");
 /**
  * @oas [delete] /discounts/{discount_id}/conditions/{condition_id}
  * operationId: "DeleteDiscountsDiscountConditionsCondition"
@@ -62,6 +65,9 @@ var validator_1 = require("../../../../utils/validator");
  *   - (path) condition_id=* {string} The ID of the DiscountCondition
  *   - (query) expand {string} Comma separated list of relations to include in the results.
  *   - (query) fields {string} Comma separated list of fields to include in the results.
+ * x-codegen:
+ *   method: deleteCondition
+ *   queryParams: AdminDeleteDiscountsDiscountConditionsConditionParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -89,21 +95,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             id:
- *               type: string
- *               description: The ID of the deleted DiscountCondition
- *             object:
- *               type: string
- *               description: The type of the object that was deleted.
- *               default: discount-condition
- *             deleted:
- *               type: boolean
- *               description: Whether the discount condition was deleted successfully or not.
- *               default: true
- *             discount:
- *               description: The Discount to which the condition used to belong
- *               $ref: "#/components/schemas/discount"
+ *           $ref: "#/components/schemas/AdminDiscountConditionsDeleteRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -118,37 +110,37 @@ var validator_1 = require("../../../../utils/validator");
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, discount_id, condition_id, validatedParams, conditionService, condition, discountService, discount, existsOnDiscount, manager, config;
-    var _b, _c;
-    return __generator(this, function (_d) {
-        switch (_d.label) {
+    var _a, discount_id, condition_id, conditionService, discountService, condition, discount_1, discount, manager;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
             case 0:
                 _a = req.params, discount_id = _a.discount_id, condition_id = _a.condition_id;
-                return [4 /*yield*/, (0, validator_1.validator)(AdminDeleteDiscountsDiscountConditionsConditionParams, req.query)];
-            case 1:
-                validatedParams = _d.sent();
                 conditionService = req.scope.resolve("discountConditionService");
+                discountService = req.scope.resolve("discountService");
                 return [4 /*yield*/, conditionService
                         .retrieve(condition_id)
                         .catch(function () { return void 0; })];
-            case 2:
-                condition = _d.sent();
-                if (!condition) {
+            case 1:
+                condition = _b.sent();
+                if (!!condition) return [3 /*break*/, 3];
+                return [4 /*yield*/, discountService.retrieve(discount_id, req.retrieveConfig)
                     // resolves idempotently in case of non-existing condition
-                    return [2 /*return*/, res.json({
-                            id: condition_id,
-                            object: "discount-condition",
-                            deleted: true,
-                        })];
-                }
-                discountService = req.scope.resolve("discountService");
-                return [4 /*yield*/, discountService.retrieve(discount_id, {
-                        relations: ["rule", "rule.conditions"],
+                ];
+            case 2:
+                discount_1 = _b.sent();
+                // resolves idempotently in case of non-existing condition
+                return [2 /*return*/, res.json({
+                        id: condition_id,
+                        object: "discount-condition",
+                        deleted: true,
+                        discount: discount_1,
                     })];
-            case 3:
-                discount = _d.sent();
-                existsOnDiscount = discount.rule.conditions.some(function (c) { return c.id === condition_id; });
-                if (!existsOnDiscount) {
+            case 3: return [4 /*yield*/, discountService.retrieve(discount_id, {
+                    select: ["id", "rule_id"],
+                })];
+            case 4:
+                discount = _b.sent();
+                if (condition.discount_rule_id !== discount.rule_id) {
                     throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Condition with id ".concat(condition_id, " does not belong to Discount with id ").concat(discount_id));
                 }
                 manager = req.scope.resolve("manager");
@@ -162,12 +154,11 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                             }
                         });
                     }); })];
-            case 4:
-                _d.sent();
-                config = (0, get_query_config_1.getRetrieveConfig)(_1.defaultAdminDiscountsFields, _1.defaultAdminDiscountsRelations, (_b = validatedParams === null || validatedParams === void 0 ? void 0 : validatedParams.fields) === null || _b === void 0 ? void 0 : _b.split(","), (_c = validatedParams === null || validatedParams === void 0 ? void 0 : validatedParams.expand) === null || _c === void 0 ? void 0 : _c.split(","));
-                return [4 /*yield*/, discountService.retrieve(discount_id, config)];
             case 5:
-                discount = _d.sent();
+                _b.sent();
+                return [4 /*yield*/, discountService.retrieve(discount_id, req.retrieveConfig)];
+            case 6:
+                discount = _b.sent();
                 res.json({
                     id: condition_id,
                     object: "discount-condition",
@@ -178,20 +169,12 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
-var AdminDeleteDiscountsDiscountConditionsConditionParams = /** @class */ (function () {
+var AdminDeleteDiscountsDiscountConditionsConditionParams = /** @class */ (function (_super) {
+    __extends(AdminDeleteDiscountsDiscountConditionsConditionParams, _super);
     function AdminDeleteDiscountsDiscountConditionsConditionParams() {
+        return _super !== null && _super.apply(this, arguments) || this;
     }
-    __decorate([
-        (0, class_validator_1.IsString)(),
-        (0, class_validator_1.IsOptional)(),
-        __metadata("design:type", String)
-    ], AdminDeleteDiscountsDiscountConditionsConditionParams.prototype, "expand", void 0);
-    __decorate([
-        (0, class_validator_1.IsString)(),
-        (0, class_validator_1.IsOptional)(),
-        __metadata("design:type", String)
-    ], AdminDeleteDiscountsDiscountConditionsConditionParams.prototype, "fields", void 0);
     return AdminDeleteDiscountsDiscountConditionsConditionParams;
-}());
+}(common_1.FindParams));
 exports.AdminDeleteDiscountsDiscountConditionsConditionParams = AdminDeleteDiscountsDiscountConditionsConditionParams;
 //# sourceMappingURL=delete-condition.js.map

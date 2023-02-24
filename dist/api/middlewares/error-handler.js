@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var medusa_core_utils_1 = require("medusa-core-utils");
+var utils_1 = require("../../utils");
 var QUERY_RUNNER_RELEASED = "QueryRunnerAlreadyReleasedError";
 var TRANSACTION_STARTED = "TransactionAlreadyStartedError";
 var TRANSACTION_NOT_STARTED = "TransactionNotStartedError";
@@ -10,6 +11,7 @@ var INVALID_STATE_ERROR = "invalid_state_error";
 exports.default = (function () {
     return function (err, req, res, next) {
         var logger = req.scope.resolve("logger");
+        err = (0, utils_1.formatException)(err);
         logger.error(err);
         var errorType = err.type || err.name;
         var errObj = {
@@ -27,6 +29,12 @@ exports.default = (function () {
                 errObj.code = INVALID_STATE_ERROR;
                 errObj.message =
                     "The request conflicted with another request. You may retry the request with the provided Idempotency-Key.";
+                break;
+            case medusa_core_utils_1.MedusaError.Types.UNAUTHORIZED:
+                statusCode = 401;
+                break;
+            case medusa_core_utils_1.MedusaError.Types.PAYMENT_AUTHORIZATION_ERROR:
+                statusCode = 422;
                 break;
             case medusa_core_utils_1.MedusaError.Types.DUPLICATE_ERROR:
                 statusCode = 422;
@@ -56,9 +64,9 @@ exports.default = (function () {
     };
 });
 /**
- * @schema error
+ * @schema Error
  * title: "Response Error"
- * x-resourceId: error
+ * type: object
  * properties:
  *  code:
  *    type: string

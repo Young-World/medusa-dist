@@ -24,6 +24,7 @@ declare class SalesChannelService extends TransactionBaseService {
     protected readonly eventBusService_: EventBusService;
     protected readonly storeService_: StoreService;
     constructor({ salesChannelRepository, eventBusService, manager, storeService, }: InjectedDependencies);
+    private getManager;
     /**
      * A generic retrieve used to find a sales channel by different attributes.
      *
@@ -79,6 +80,11 @@ declare class SalesChannelService extends TransactionBaseService {
      * @return the sales channel
      */
     createDefault(): Promise<SalesChannel>;
+    /**
+     * Retrieves the default sales channel.
+     * @return the sales channel
+     */
+    retrieveDefault(): Promise<SalesChannel>;
     /**
      * Remove a batch of product from a sales channel
      * @param salesChannelId - The id of the sales channel on which to remove the products

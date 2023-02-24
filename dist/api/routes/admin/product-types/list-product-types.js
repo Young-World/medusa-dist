@@ -76,16 +76,10 @@ var __read = (this && this.__read) || function (o, n) {
     return ar;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AdminGetProductTypesParams = exports.AdminGetProductTypesPaginationParams = void 0;
+exports.AdminGetProductTypesParams = void 0;
 var common_1 = require("../../../../types/common");
 var class_validator_1 = require("class-validator");
-var _1 = require(".");
-var lodash_1 = require("lodash");
 var is_type_1 = require("../../../../utils/validators/is-type");
-var medusa_core_utils_1 = require("medusa-core-utils");
-var class_transformer_1 = require("class-transformer");
-var validator_1 = require("../../../../utils/validator");
-var utils_1 = require("../../../../utils");
 /**
  * @oas [get] /product-types
  * operationId: "GetProductTypes"
@@ -93,9 +87,10 @@ var utils_1 = require("../../../../utils");
  * description: "Retrieve a list of Product Types."
  * x-authenticated: true
  * parameters:
- *   - (query) limit=10 {integer} The number of types to return.
+ *   - (query) limit=20 {integer} The number of types to return.
  *   - (query) offset=0 {integer} The number of items to skip before the results.
  *   - (query) order {string} The field to sort items by.
+ *   - (query) discount_condition_id {string} The discount condition id on which to filter the product types.
  *   - in: query
  *     name: value
  *     style: form
@@ -159,6 +154,9 @@ var utils_1 = require("../../../../utils");
  *            type: string
  *            description: filter by dates greater than or equal to this date
  *            format: date
+ * x-codegen:
+ *   method: list
+ *   queryParams: AdminGetProductTypesParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -186,18 +184,7 @@ var utils_1 = require("../../../../utils");
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            product_types:
- *              $ref: "#/components/schemas/product_type"
- *            count:
- *              type: integer
- *              description: The total number of items available
- *            offset:
- *              type: integer
- *              description: The number of items skipped before these items
- *            limit:
- *              type: integer
- *              description: The number of items per page
+ *          $ref: "#/components/schemas/AdminProductTypesListRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":
@@ -212,68 +199,26 @@ var utils_1 = require("../../../../utils");
  *    $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var validated, typeService, listConfig, orderField, _a, field, filterableFields, _b, types, count;
-    var _c, _d;
-    return __generator(this, function (_e) {
-        switch (_e.label) {
-            case 0: return [4 /*yield*/, (0, validator_1.validator)(AdminGetProductTypesParams, req.query)];
-            case 1:
-                validated = _e.sent();
+    var typeService, listConfig, filterableFields, _a, skip, take, _b, types, count;
+    return __generator(this, function (_c) {
+        switch (_c.label) {
+            case 0:
                 typeService = req.scope.resolve("productTypeService");
-                listConfig = {
-                    select: _1.defaultAdminProductTypeFields,
-                    relations: _1.defaultAdminProductTypeRelations,
-                    skip: validated.offset,
-                    take: validated.limit,
-                };
-                if ((0, utils_1.isDefined)(validated.order)) {
-                    orderField = validated.order;
-                    if (validated.order.startsWith("-")) {
-                        _a = __read(validated.order.split("-"), 2), field = _a[1];
-                        orderField = field;
-                        listConfig.order = (_c = {}, _c[field] = "DESC", _c);
-                    }
-                    else {
-                        listConfig.order = (_d = {}, _d[validated.order] = "ASC", _d);
-                    }
-                    if (!_1.allowedAdminProductTypeFields.includes(orderField)) {
-                        throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Order field must be a valid product type field");
-                    }
-                }
-                filterableFields = (0, lodash_1.omit)(validated, ["limit", "offset"]);
-                return [4 /*yield*/, typeService.listAndCount((0, lodash_1.pickBy)(filterableFields, lodash_1.identity), listConfig)];
-            case 2:
-                _b = __read.apply(void 0, [_e.sent(), 2]), types = _b[0], count = _b[1];
+                listConfig = req.listConfig, filterableFields = req.filterableFields;
+                _a = req.listConfig, skip = _a.skip, take = _a.take;
+                return [4 /*yield*/, typeService.listAndCount(filterableFields, listConfig)];
+            case 1:
+                _b = __read.apply(void 0, [_c.sent(), 2]), types = _b[0], count = _b[1];
                 res.status(200).json({
                     product_types: types,
                     count: count,
-                    offset: validated.offset,
-                    limit: validated.limit,
+                    offset: skip,
+                    limit: take,
                 });
                 return [2 /*return*/];
         }
     });
 }); });
-var AdminGetProductTypesPaginationParams = /** @class */ (function () {
-    function AdminGetProductTypesPaginationParams() {
-        this.limit = 10;
-        this.offset = 0;
-    }
-    __decorate([
-        (0, class_validator_1.IsNumber)(),
-        (0, class_validator_1.IsOptional)(),
-        (0, class_transformer_1.Type)(function () { return Number; }),
-        __metadata("design:type", Object)
-    ], AdminGetProductTypesPaginationParams.prototype, "limit", void 0);
-    __decorate([
-        (0, class_validator_1.IsNumber)(),
-        (0, class_validator_1.IsOptional)(),
-        (0, class_transformer_1.Type)(function () { return Number; }),
-        __metadata("design:type", Object)
-    ], AdminGetProductTypesPaginationParams.prototype, "offset", void 0);
-    return AdminGetProductTypesPaginationParams;
-}());
-exports.AdminGetProductTypesPaginationParams = AdminGetProductTypesPaginationParams;
 // eslint-disable-next-line max-len
 var AdminGetProductTypesParams = /** @class */ (function (_super) {
     __extends(AdminGetProductTypesParams, _super);
@@ -310,7 +255,12 @@ var AdminGetProductTypesParams = /** @class */ (function (_super) {
         (0, class_validator_1.IsOptional)(),
         __metadata("design:type", String)
     ], AdminGetProductTypesParams.prototype, "order", void 0);
+    __decorate([
+        (0, class_validator_1.IsString)(),
+        (0, class_validator_1.IsOptional)(),
+        __metadata("design:type", String)
+    ], AdminGetProductTypesParams.prototype, "discount_condition_id", void 0);
     return AdminGetProductTypesParams;
-}(AdminGetProductTypesPaginationParams));
+}(common_1.FindPaginationParams));
 exports.AdminGetProductTypesParams = AdminGetProductTypesParams;
 //# sourceMappingURL=list-product-types.js.map

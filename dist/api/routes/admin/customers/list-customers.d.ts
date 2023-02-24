@@ -11,6 +11,9 @@ import { AdminListCustomerSelector } from "../../../../types/customers";
  *   - (query) expand {string} (Comma separated) Which fields should be expanded in each customer.
  *   - (query) q {string} a search term to search email, first_name, and last_name.
  *   - (query) groups[] {string} group IDs to search customers by.
+ * x-codegen:
+ *   method: list
+ *   queryParams: AdminGetCustomersParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -38,20 +41,7 @@ import { AdminListCustomerSelector } from "../../../../types/customers";
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             customers:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/customer"
- *             count:
- *               type: integer
- *               description: The total number of items available
- *             offset:
- *               type: integer
- *               description: The number of items skipped before these items
- *             limit:
- *               type: integer
- *               description: The number of items per page
+ *           $ref: "#/components/schemas/AdminCustomersListRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

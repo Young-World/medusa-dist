@@ -75,6 +75,9 @@ var validator_1 = require("../../../../utils/validator");
  *       items:
  *         type: string
  * x-authenticated: true
+ * x-codegen:
+ *   method: retrieve
+ *   queryParams: AdminGetTaxRatesTaxRateParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -102,9 +105,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             tax_rate:
- *               $ref: "#/components/schemas/tax_rate"
+ *           $ref: "#/components/schemas/AdminTaxRatesRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

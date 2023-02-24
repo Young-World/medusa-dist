@@ -3,6 +3,8 @@
  * operationId: "GetReturnReasons"
  * summary: "List Return Reasons"
  * description: "Retrieves a list of Return Reasons."
+ * x-codegen:
+ *   method: list
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -25,11 +27,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             return_reasons:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/return_reason"
+ *           $ref: "#/components/schemas/StoreReturnReasonsListRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":

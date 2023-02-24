@@ -1,17 +1,22 @@
 import { EntityManager } from "typeorm";
-import { AbstractPriceSelectionStrategy, IPriceSelectionStrategy, PriceSelectionContext, PriceSelectionResult } from "../interfaces/price-selection-strategy";
+import { AbstractPriceSelectionStrategy, ICacheService, IPriceSelectionStrategy, PriceSelectionContext, PriceSelectionResult } from "../interfaces";
+import { MoneyAmountRepository } from "../repositories/money-amount";
+import { FlagRouter } from "../utils/flag-router";
 declare class PriceSelectionStrategy extends AbstractPriceSelectionStrategy {
-    private moneyAmountRepository_;
-    private featureFlagRouter_;
-    private manager_;
-    constructor({ manager, featureFlagRouter, moneyAmountRepository }: {
+    protected manager_: EntityManager;
+    protected readonly featureFlagRouter_: FlagRouter;
+    protected moneyAmountRepository_: typeof MoneyAmountRepository;
+    protected cacheService_: ICacheService;
+    constructor({ manager, featureFlagRouter, moneyAmountRepository, cacheService, }: {
         manager: any;
         featureFlagRouter: any;
         moneyAmountRepository: any;
+        cacheService: any;
     });
     withTransaction(manager: EntityManager): IPriceSelectionStrategy;
     calculateVariantPrice(variant_id: string, context: PriceSelectionContext): Promise<PriceSelectionResult>;
     private calculateVariantPrice_new;
     private calculateVariantPrice_old;
+    private getCacheKey;
 }
 export default PriceSelectionStrategy;

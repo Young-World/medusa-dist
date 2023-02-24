@@ -48,7 +48,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminDeleteUploadsReq = void 0;
 var class_validator_1 = require("class-validator");
 /**
- * [delete] /uploads
+ * @oas [delete] /uploads
  * operationId: "AdminDeleteUploads"
  * summary: "Delete an Uploaded File"
  * description: "Removes an uploaded file using the installed fileservice"
@@ -57,12 +57,7 @@ var class_validator_1 = require("class-validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - file_key
- *         properties:
- *           file_key:
- *             description: "key of the file to delete"
- *             type: string
+ *         $ref: "#/components/schemas/AdminDeleteUploadsReq"
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -96,18 +91,7 @@ var class_validator_1 = require("class-validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             id:
- *               type: string
- *               description: The file key of the upload deleted
- *             object:
- *               type: string
- *               description: The type of the object that was deleted.
- *               default: file
- *             deleted:
- *               type: boolean
- *               description: Whether or not the items were deleted.
- *               default: true
+ *           $ref: "#/components/schemas/AdminDeleteUploadsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -138,6 +122,16 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminDeleteUploadsReq
+ * type: object
+ * required:
+ *   - file_key
+ * properties:
+ *   file_key:
+ *     description: "key of the file to delete"
+ *     type: string
+ */
 var AdminDeleteUploadsReq = /** @class */ (function () {
     function AdminDeleteUploadsReq() {
     }

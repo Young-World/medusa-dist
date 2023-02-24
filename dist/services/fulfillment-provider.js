@@ -219,8 +219,12 @@ var FulfillmentProviderService = /** @class */ (function (_super) {
         return __awaiter(this, void 0, void 0, function () {
             var provider;
             return __generator(this, function (_a) {
-                provider = this.retrieveProvider(option.provider_id);
-                return [2 /*return*/, provider.calculatePrice(option.data, data, cart)];
+                switch (_a.label) {
+                    case 0:
+                        provider = this.retrieveProvider(option.provider_id);
+                        return [4 /*yield*/, provider.calculatePrice(option.data, data, cart)];
+                    case 1: return [2 /*return*/, (_a.sent())];
+                }
             });
         });
     };

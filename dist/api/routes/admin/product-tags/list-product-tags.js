@@ -79,13 +79,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminGetProductTagsParams = exports.AdminGetProductTagsPaginationParams = void 0;
 var common_1 = require("../../../../types/common");
 var class_validator_1 = require("class-validator");
-var _1 = require(".");
-var lodash_1 = require("lodash");
 var is_type_1 = require("../../../../utils/validators/is-type");
-var medusa_core_utils_1 = require("medusa-core-utils");
 var class_transformer_1 = require("class-transformer");
-var validator_1 = require("../../../../utils/validator");
-var utils_1 = require("../../../../utils");
 /**
  * @oas [get] /product-tags
  * operationId: "GetProductTags"
@@ -96,6 +91,7 @@ var utils_1 = require("../../../../utils");
  *   - (query) limit=10 {integer} The number of tags to return.
  *   - (query) offset=0 {integer} The number of items to skip before the results.
  *   - (query) order {string} The field to sort items by.
+ *   - (query) discount_condition_id {string} The discount condition id on which to filter the tags.
  *   - in: query
  *     name: value
  *     style: form
@@ -159,6 +155,9 @@ var utils_1 = require("../../../../utils");
  *            type: string
  *            description: filter by dates greater than or equal to this date
  *            format: date
+ * x-codegen:
+ *   method: list
+ *   queryParams: AdminGetProductTagsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -186,18 +185,7 @@ var utils_1 = require("../../../../utils");
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            product_tags:
- *              $ref: "#/components/schemas/product_tag"
- *            count:
- *              type: integer
- *              description: The total number of items available
- *            offset:
- *              type: integer
- *              description: The number of items skipped before these items
- *            limit:
- *              type: integer
- *              description: The number of items per page
+ *          $ref: "#/components/schemas/AdminProductTagsListRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":
@@ -212,43 +200,21 @@ var utils_1 = require("../../../../utils");
  *    $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var validated, tagService, listConfig, orderField, _a, field, filterableFields, _b, tags, count;
-    var _c, _d;
-    return __generator(this, function (_e) {
-        switch (_e.label) {
-            case 0: return [4 /*yield*/, (0, validator_1.validator)(AdminGetProductTagsParams, req.query)];
-            case 1:
-                validated = _e.sent();
+    var tagService, listConfig, filterableFields, _a, skip, take, _b, tags, count;
+    return __generator(this, function (_c) {
+        switch (_c.label) {
+            case 0:
                 tagService = req.scope.resolve("productTagService");
-                listConfig = {
-                    select: _1.defaultAdminProductTagsFields,
-                    relations: _1.defaultAdminProductTagsRelations,
-                    skip: validated.offset,
-                    take: validated.limit,
-                };
-                if ((0, utils_1.isDefined)(validated.order)) {
-                    orderField = validated.order;
-                    if (validated.order.startsWith("-")) {
-                        _a = __read(validated.order.split("-"), 2), field = _a[1];
-                        orderField = field;
-                        listConfig.order = (_c = {}, _c[field] = "DESC", _c);
-                    }
-                    else {
-                        listConfig.order = (_d = {}, _d[validated.order] = "ASC", _d);
-                    }
-                    if (!_1.allowedAdminProductTagsFields.includes(orderField)) {
-                        throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Order field must be a valid product tag field");
-                    }
-                }
-                filterableFields = (0, lodash_1.omit)(validated, ["limit", "offset"]);
-                return [4 /*yield*/, tagService.listAndCount((0, lodash_1.pickBy)(filterableFields, lodash_1.identity), listConfig)];
-            case 2:
-                _b = __read.apply(void 0, [_e.sent(), 2]), tags = _b[0], count = _b[1];
+                listConfig = req.listConfig, filterableFields = req.filterableFields;
+                _a = req.listConfig, skip = _a.skip, take = _a.take;
+                return [4 /*yield*/, tagService.listAndCount(filterableFields, listConfig)];
+            case 1:
+                _b = __read.apply(void 0, [_c.sent(), 2]), tags = _b[0], count = _b[1];
                 res.status(200).json({
                     product_tags: tags,
                     count: count,
-                    offset: validated.offset,
-                    limit: validated.limit,
+                    offset: skip,
+                    limit: take,
                 });
                 return [2 /*return*/];
         }
@@ -274,15 +240,14 @@ var AdminGetProductTagsPaginationParams = /** @class */ (function () {
     return AdminGetProductTagsPaginationParams;
 }());
 exports.AdminGetProductTagsPaginationParams = AdminGetProductTagsPaginationParams;
-// eslint-disable-next-line max-len
 var AdminGetProductTagsParams = /** @class */ (function (_super) {
     __extends(AdminGetProductTagsParams, _super);
     function AdminGetProductTagsParams() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     __decorate([
-        (0, is_type_1.IsType)([String, [String], common_1.StringComparisonOperator]),
         (0, class_validator_1.IsOptional)(),
+        (0, is_type_1.IsType)([String, [String], common_1.StringComparisonOperator]),
         __metadata("design:type", Object)
     ], AdminGetProductTagsParams.prototype, "id", void 0);
     __decorate([
@@ -291,8 +256,8 @@ var AdminGetProductTagsParams = /** @class */ (function (_super) {
         __metadata("design:type", String)
     ], AdminGetProductTagsParams.prototype, "q", void 0);
     __decorate([
-        (0, is_type_1.IsType)([String, [String], common_1.StringComparisonOperator]),
         (0, class_validator_1.IsOptional)(),
+        (0, is_type_1.IsType)([String, [String], common_1.StringComparisonOperator]),
         __metadata("design:type", Object)
     ], AdminGetProductTagsParams.prototype, "value", void 0);
     __decorate([
@@ -310,6 +275,11 @@ var AdminGetProductTagsParams = /** @class */ (function (_super) {
         (0, class_validator_1.IsOptional)(),
         __metadata("design:type", String)
     ], AdminGetProductTagsParams.prototype, "order", void 0);
+    __decorate([
+        (0, class_validator_1.IsString)(),
+        (0, class_validator_1.IsOptional)(),
+        __metadata("design:type", String)
+    ], AdminGetProductTagsParams.prototype, "discount_condition_id", void 0);
     return AdminGetProductTagsParams;
 }(AdminGetProductTagsPaginationParams));
 exports.AdminGetProductTagsParams = AdminGetProductTagsParams;

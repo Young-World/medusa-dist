@@ -169,24 +169,27 @@ var ReturnReasonService = /** @class */ (function (_super) {
     };
     /**
      * Gets an order by id.
-     * @param {string} id - id of order to retrieve
+     * @param {string} returnReasonId - id of order to retrieve
      * @param {Object} config - config object
      * @return {Promise<Order>} the order document
      */
-    ReturnReasonService.prototype.retrieve = function (id, config) {
+    ReturnReasonService.prototype.retrieve = function (returnReasonId, config) {
         if (config === void 0) { config = {}; }
         return __awaiter(this, void 0, void 0, function () {
             var rrRepo, query, item;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(returnReasonId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"returnReasonId\" must be defined");
+                        }
                         rrRepo = this.manager_.getCustomRepository(this.retReasonRepo_);
-                        query = (0, utils_1.buildQuery)({ id: id }, config);
+                        query = (0, utils_1.buildQuery)({ id: returnReasonId }, config);
                         return [4 /*yield*/, rrRepo.findOne(query)];
                     case 1:
                         item = _a.sent();
                         if (!item) {
-                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Return Reason with id: ".concat(id, " was not found."));
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Return Reason with id: ".concat(returnReasonId, " was not found."));
                         }
                         return [2 /*return*/, item];
                 }

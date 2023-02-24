@@ -7,51 +7,9 @@
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - order_id
- *           - return_items
- *           - additional_items
- *         properties:
- *           order_id:
- *             type: string
- *             description: The ID of the Order to create the Swap for.
- *           return_items:
- *             description: "The items to include in the Return."
- *             type: array
- *             items:
- *               required:
- *                 - item_id
- *                 - quantity
- *               properties:
- *                 item_id:
- *                   description: The ID of the Line Item from the Order.
- *                   type: string
- *                 quantity:
- *                   description: The quantity to swap.
- *                   type: integer
- *                 reason_id:
- *                   description: The ID of the reason of this return.
- *                   type: string
- *                 note:
- *                   description: The note to add to the item being swapped.
- *                   type: string
- *           return_shipping_option:
- *             type: string
- *             description: The ID of the Shipping Option to create the Shipping Method from.
- *           additional_items:
- *             description: "The items to exchange the returned items to."
- *             type: array
- *             items:
- *               required:
- *                 - variant_id
- *                 - quantity
- *               properties:
- *                 variant_id:
- *                   description: The ID of the Product Variant to send.
- *                   type: string
- *                 quantity:
- *                   description: The quantity to send of the variant.
- *                   type: integer
+ *         $ref: "#/components/schemas/StorePostSwapsReq"
+ * x-codegen:
+ *   method: create
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -104,9 +62,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             swap:
- *               $ref: "#/components/schemas/swap"
+ *           $ref: "#/components/schemas/StoreSwapsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":
@@ -130,6 +86,57 @@ declare class AdditionalItem {
     variant_id: string;
     quantity: number;
 }
+/**
+ * @schema StorePostSwapsReq
+ * type: object
+ * required:
+ *   - order_id
+ *   - return_items
+ *   - additional_items
+ * properties:
+ *   order_id:
+ *     type: string
+ *     description: The ID of the Order to create the Swap for.
+ *   return_items:
+ *     description: "The items to include in the Return."
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - item_id
+ *         - quantity
+ *       properties:
+ *         item_id:
+ *           description: The ID of the Line Item from the Order.
+ *           type: string
+ *         quantity:
+ *           description: The quantity to swap.
+ *           type: integer
+ *         reason_id:
+ *           description: The ID of the reason of this return.
+ *           type: string
+ *         note:
+ *           description: The note to add to the item being swapped.
+ *           type: string
+ *   return_shipping_option:
+ *     type: string
+ *     description: The ID of the Shipping Option to create the Shipping Method from.
+ *   additional_items:
+ *     description: "The items to exchange the returned items to."
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - variant_id
+ *         - quantity
+ *       properties:
+ *         variant_id:
+ *           description: The ID of the Product Variant to send.
+ *           type: string
+ *         quantity:
+ *           description: The quantity to send of the variant.
+ *           type: integer
+ */
 export declare class StorePostSwapsReq {
     order_id: string;
     return_items: Item[];

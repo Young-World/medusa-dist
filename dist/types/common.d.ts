@@ -12,7 +12,7 @@ export declare type PartialPick<T, K extends keyof T> = {
     [P in K]?: T[P];
 };
 export declare type Writable<T> = {
-    -readonly [key in keyof T]: T[key] | FindOperator<T[key][]> | FindOperator<string[]>;
+    -readonly [key in keyof T]: T[key] | FindOperator<T[key]> | FindOperator<T[key][]> | FindOperator<string[]>;
 };
 export declare type ExtendedFindConfig<TEntity, TWhereKeys = TEntity> = FindConfig<TEntity> & (FindOneOptions<TEntity> | FindManyOptions<TEntity>) & {
     where: Partial<Writable<TWhereKeys>>;

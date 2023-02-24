@@ -10,6 +10,29 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -61,24 +84,25 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var path_1 = __importDefault(require("path"));
-var fs_1 = __importDefault(require("fs"));
 var express_1 = __importDefault(require("express"));
-var typeorm_1 = require("typeorm");
+var fs_1 = __importDefault(require("fs"));
 var fs_exists_cached_1 = require("fs-exists-cached");
 var medusa_core_utils_1 = require("medusa-core-utils");
 var medusa_telemetry_1 = require("medusa-telemetry");
-var logger_1 = __importDefault(require("../loaders/logger"));
+var path_1 = __importDefault(require("path"));
+var typeorm_1 = require("typeorm");
 var loaders_1 = __importDefault(require("../loaders"));
+var config_1 = require("../loaders/config");
+var logger_1 = __importDefault(require("../loaders/logger"));
 var feature_flags_1 = __importDefault(require("../loaders/feature-flags"));
-var get_migrations_1 = __importDefault(require("./utils/get-migrations"));
-var t = function (_a) {
+var get_migrations_1 = __importStar(require("./utils/get-migrations"));
+var seed = function (_a) {
     var directory = _a.directory, migrate = _a.migrate, seedFile = _a.seedFile;
     return __awaiter(this, void 0, void 0, function () {
-        var resolvedPath, configModule, featureFlagRouter, dbType, migrationDirs, connection, app, container, manager, storeService, userService, regionService, productService, productVariantService, shippingOptionService, shippingProfileService;
+        var resolvedPath, _b, configModule, error, featureFlagRouter, dbType, coreMigrations, moduleMigrations, connectionOptions, connection, app, container, manager, storeService, userService, regionService, productService, productVariantService, shippingOptionService, shippingProfileService;
         var _this = this;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
+        return __generator(this, function (_c) {
+            switch (_c.label) {
                 case 0:
                     (0, medusa_telemetry_1.track)("CLI_SEED");
                     resolvedPath = seedFile;
@@ -91,39 +115,44 @@ var t = function (_a) {
                             process.exit(1);
                         }
                     }
-                    configModule = (0, medusa_core_utils_1.getConfigFile)(directory, "medusa-config").configModule;
+                    _b = (0, medusa_core_utils_1.getConfigFile)(directory, "medusa-config"), configModule = _b.configModule, error = _b.error;
+                    if (error) {
+                        (0, config_1.handleConfigError)(error);
+                    }
                     featureFlagRouter = (0, feature_flags_1.default)(configModule);
                     dbType = configModule.projectConfig.database_type;
-                    if (!(migrate && dbType !== "sqlite")) return [3 /*break*/, 5];
-                    return [4 /*yield*/, (0, get_migrations_1.default)(directory, featureFlagRouter)];
+                    if (!(migrate && dbType !== "sqlite")) return [3 /*break*/, 4];
+                    coreMigrations = (0, get_migrations_1.default)(directory, featureFlagRouter).coreMigrations;
+                    moduleMigrations = (0, get_migrations_1.getModuleSharedResources)(configModule, featureFlagRouter).migrations;
+                    connectionOptions = {
+                        type: configModule.projectConfig.database_type,
+                        database: configModule.projectConfig.database_database,
+                        schema: configModule.projectConfig.database_schema,
+                        url: configModule.projectConfig.database_url,
+                        extra: configModule.projectConfig.database_extra || {},
+                        migrations: coreMigrations.concat(moduleMigrations),
+                        logging: true,
+                    };
+                    return [4 /*yield*/, (0, typeorm_1.createConnection)(connectionOptions)];
                 case 1:
-                    migrationDirs = _b.sent();
-                    return [4 /*yield*/, (0, typeorm_1.createConnection)({
-                            type: configModule.projectConfig.database_type,
-                            database: configModule.projectConfig.database_database,
-                            url: configModule.projectConfig.database_url,
-                            extra: configModule.projectConfig.database_extra || {},
-                            migrations: migrationDirs,
-                            logging: true,
-                        })];
-                case 2:
-                    connection = _b.sent();
+                    connection = _c.sent();
                     return [4 /*yield*/, connection.runMigrations()];
-                case 3:
-                    _b.sent();
+                case 2:
+                    _c.sent();
                     return [4 /*yield*/, connection.close()];
-                case 4:
-                    _b.sent();
+                case 3:
+                    _c.sent();
                     logger_1.default.info("Migrations completed.");
-                    _b.label = 5;
-                case 5:
+                    _c.label = 4;
+                case 4:
                     app = (0, express_1.default)();
                     return [4 /*yield*/, (0, loaders_1.default)({
                             directory: directory,
                             expressApp: app,
+                            isTest: false,
                         })];
-                case 6:
-                    container = (_b.sent()).container;
+                case 5:
+                    container = (_c.sent()).container;
                     manager = container.resolve("manager");
                     storeService = container.resolve("storeService");
                     userService = container.resolve("userService");
@@ -132,62 +161,67 @@ var t = function (_a) {
                     productVariantService = container.resolve("productVariantService");
                     shippingOptionService = container.resolve("shippingOptionService");
                     shippingProfileService = container.resolve("shippingProfileService");
+                    /* eslint-enable */
                     return [4 /*yield*/, manager.transaction(function (tx) { return __awaiter(_this, void 0, void 0, function () {
-                            var _a, store, regions, products, shipping_options, users, gcProfile, defaultProfile, users_1, users_1_1, u, pass, e_1_1, regionIds, regions_1, regions_1_1, r, dummyId, reg, e_2_1, shipping_options_1, shipping_options_1_1, so, e_3_1, _loop_1, products_1, products_1_1, p, e_4_1;
+                            var _a, seededStore, regions, products, shipping_options, users, gcProfile, defaultProfile, store, users_1, users_1_1, u, pass, e_1_1, regionIds, regions_1, regions_1_1, r, dummyId, reg, e_2_1, shipping_options_1, shipping_options_1_1, so, e_3_1, _loop_1, products_1, products_1_1, p, e_4_1;
                             var e_1, _b, e_2, _c, e_3, _d, e_4, _e;
                             return __generator(this, function (_f) {
                                 switch (_f.label) {
                                     case 0:
-                                        _a = JSON.parse(fs_1.default.readFileSync(resolvedPath, "utf-8")), store = _a.store, regions = _a.regions, products = _a.products, shipping_options = _a.shipping_options, users = _a.users;
+                                        _a = JSON.parse(fs_1.default.readFileSync(resolvedPath, "utf-8")), seededStore = _a.store, regions = _a.regions, products = _a.products, shipping_options = _a.shipping_options, users = _a.users;
                                         return [4 /*yield*/, shippingProfileService.retrieveGiftCardDefault()];
                                     case 1:
                                         gcProfile = _f.sent();
                                         return [4 /*yield*/, shippingProfileService.retrieveDefault()];
                                     case 2:
                                         defaultProfile = _f.sent();
-                                        if (!store) return [3 /*break*/, 4];
-                                        return [4 /*yield*/, storeService.withTransaction(tx).update(store)];
+                                        if (!seededStore) return [3 /*break*/, 4];
+                                        return [4 /*yield*/, storeService.withTransaction(tx).update(seededStore)];
                                     case 3:
                                         _f.sent();
                                         _f.label = 4;
-                                    case 4:
-                                        _f.trys.push([4, 9, 10, 11]);
-                                        users_1 = __values(users), users_1_1 = users_1.next();
-                                        _f.label = 5;
+                                    case 4: return [4 /*yield*/, storeService.retrieve()];
                                     case 5:
-                                        if (!!users_1_1.done) return [3 /*break*/, 8];
+                                        store = _f.sent();
+                                        _f.label = 6;
+                                    case 6:
+                                        _f.trys.push([6, 11, 12, 13]);
+                                        users_1 = __values(users), users_1_1 = users_1.next();
+                                        _f.label = 7;
+                                    case 7:
+                                        if (!!users_1_1.done) return [3 /*break*/, 10];
                                         u = users_1_1.value;
                                         pass = u.password;
                                         if (pass) {
                                             delete u.password;
                                         }
                                         return [4 /*yield*/, userService.withTransaction(tx).create(u, pass)];
-                                    case 6:
+                                    case 8:
                                         _f.sent();
-                                        _f.label = 7;
-                                    case 7:
-                                        users_1_1 = users_1.next();
-                                        return [3 /*break*/, 5];
-                                    case 8: return [3 /*break*/, 11];
+                                        _f.label = 9;
                                     case 9:
+                                        users_1_1 = users_1.next();
+                                        return [3 /*break*/, 7];
+                                    case 10: return [3 /*break*/, 13];
+                                    case 11:
                                         e_1_1 = _f.sent();
                                         e_1 = { error: e_1_1 };
-                                        return [3 /*break*/, 11];
-                                    case 10:
+                                        return [3 /*break*/, 13];
+                                    case 12:
                                         try {
                                             if (users_1_1 && !users_1_1.done && (_b = users_1.return)) _b.call(users_1);
                                         }
                                         finally { if (e_1) throw e_1.error; }
                                         return [7 /*endfinally*/];
-                                    case 11:
-                                        regionIds = {};
-                                        _f.label = 12;
-                                    case 12:
-                                        _f.trys.push([12, 17, 18, 19]);
-                                        regions_1 = __values(regions), regions_1_1 = regions_1.next();
-                                        _f.label = 13;
                                     case 13:
-                                        if (!!regions_1_1.done) return [3 /*break*/, 16];
+                                        regionIds = {};
+                                        _f.label = 14;
+                                    case 14:
+                                        _f.trys.push([14, 19, 20, 21]);
+                                        regions_1 = __values(regions), regions_1_1 = regions_1.next();
+                                        _f.label = 15;
+                                    case 15:
+                                        if (!!regions_1_1.done) return [3 /*break*/, 18];
                                         r = regions_1_1.value;
                                         dummyId = void 0;
                                         if (!r.id || !r.id.startsWith("reg_")) {
@@ -195,32 +229,32 @@ var t = function (_a) {
                                             delete r.id;
                                         }
                                         return [4 /*yield*/, regionService.withTransaction(tx).create(r)];
-                                    case 14:
+                                    case 16:
                                         reg = _f.sent();
                                         if (dummyId) {
                                             regionIds[dummyId] = reg.id;
                                         }
-                                        _f.label = 15;
-                                    case 15:
-                                        regions_1_1 = regions_1.next();
-                                        return [3 /*break*/, 13];
-                                    case 16: return [3 /*break*/, 19];
+                                        _f.label = 17;
                                     case 17:
+                                        regions_1_1 = regions_1.next();
+                                        return [3 /*break*/, 15];
+                                    case 18: return [3 /*break*/, 21];
+                                    case 19:
                                         e_2_1 = _f.sent();
                                         e_2 = { error: e_2_1 };
-                                        return [3 /*break*/, 19];
-                                    case 18:
+                                        return [3 /*break*/, 21];
+                                    case 20:
                                         try {
                                             if (regions_1_1 && !regions_1_1.done && (_c = regions_1.return)) _c.call(regions_1);
                                         }
                                         finally { if (e_2) throw e_2.error; }
                                         return [7 /*endfinally*/];
-                                    case 19:
-                                        _f.trys.push([19, 24, 25, 26]);
+                                    case 21:
+                                        _f.trys.push([21, 26, 27, 28]);
                                         shipping_options_1 = __values(shipping_options), shipping_options_1_1 = shipping_options_1.next();
-                                        _f.label = 20;
-                                    case 20:
-                                        if (!!shipping_options_1_1.done) return [3 /*break*/, 23];
+                                        _f.label = 22;
+                                    case 22:
+                                        if (!!shipping_options_1_1.done) return [3 /*break*/, 25];
                                         so = shipping_options_1_1.value;
                                         if (regionIds[so.region_id]) {
                                             so.region_id = regionIds[so.region_id];
@@ -231,24 +265,24 @@ var t = function (_a) {
                                             delete so.is_giftcard;
                                         }
                                         return [4 /*yield*/, shippingOptionService.withTransaction(tx).create(so)];
-                                    case 21:
+                                    case 23:
                                         _f.sent();
-                                        _f.label = 22;
-                                    case 22:
-                                        shipping_options_1_1 = shipping_options_1.next();
-                                        return [3 /*break*/, 20];
-                                    case 23: return [3 /*break*/, 26];
+                                        _f.label = 24;
                                     case 24:
+                                        shipping_options_1_1 = shipping_options_1.next();
+                                        return [3 /*break*/, 22];
+                                    case 25: return [3 /*break*/, 28];
+                                    case 26:
                                         e_3_1 = _f.sent();
                                         e_3 = { error: e_3_1 };
-                                        return [3 /*break*/, 26];
-                                    case 25:
+                                        return [3 /*break*/, 28];
+                                    case 27:
                                         try {
                                             if (shipping_options_1_1 && !shipping_options_1_1.done && (_d = shipping_options_1.return)) _d.call(shipping_options_1);
                                         }
                                         finally { if (e_3) throw e_3.error; }
                                         return [7 /*endfinally*/];
-                                    case 26:
+                                    case 28:
                                         _loop_1 = function (p) {
                                             var variants, newProd, optionIds_1, variants_1, variants_1_1, v, variant, e_5_1;
                                             var e_5, _g;
@@ -259,15 +293,18 @@ var t = function (_a) {
                                                         delete p.variants;
                                                         // default to the products being visible
                                                         p.status = p.status || "published";
+                                                        p.sales_channels = [{ id: store.default_sales_channel_id }];
                                                         p.profile_id = defaultProfile.id;
                                                         if (p.is_giftcard) {
                                                             p.profile_id = gcProfile.id;
                                                         }
-                                                        return [4 /*yield*/, productService.withTransaction(tx).create(p)];
+                                                        return [4 /*yield*/, productService
+                                                                .withTransaction(tx)
+                                                                .create(p)];
                                                     case 1:
                                                         newProd = _h.sent();
                                                         if (!(variants && variants.length)) return [3 /*break*/, 9];
-                                                        optionIds_1 = p.options.map(function (o) { return newProd.options.find(function (newO) { return newO.title === o.title; }).id; });
+                                                        optionIds_1 = p.options.map(function (o) { var _a; return (_a = newProd.options.find(function (newO) { return newO.title === o.title; })) === null || _a === void 0 ? void 0 : _a.id; });
                                                         _h.label = 2;
                                                     case 2:
                                                         _h.trys.push([2, 7, 8, 9]);
@@ -301,43 +338,44 @@ var t = function (_a) {
                                                 }
                                             });
                                         };
-                                        _f.label = 27;
-                                    case 27:
-                                        _f.trys.push([27, 32, 33, 34]);
-                                        products_1 = __values(products), products_1_1 = products_1.next();
-                                        _f.label = 28;
-                                    case 28:
-                                        if (!!products_1_1.done) return [3 /*break*/, 31];
-                                        p = products_1_1.value;
-                                        return [5 /*yield**/, _loop_1(p)];
+                                        _f.label = 29;
                                     case 29:
-                                        _f.sent();
+                                        _f.trys.push([29, 34, 35, 36]);
+                                        products_1 = __values(products), products_1_1 = products_1.next();
                                         _f.label = 30;
                                     case 30:
-                                        products_1_1 = products_1.next();
-                                        return [3 /*break*/, 28];
-                                    case 31: return [3 /*break*/, 34];
+                                        if (!!products_1_1.done) return [3 /*break*/, 33];
+                                        p = products_1_1.value;
+                                        return [5 /*yield**/, _loop_1(p)];
+                                    case 31:
+                                        _f.sent();
+                                        _f.label = 32;
                                     case 32:
+                                        products_1_1 = products_1.next();
+                                        return [3 /*break*/, 30];
+                                    case 33: return [3 /*break*/, 36];
+                                    case 34:
                                         e_4_1 = _f.sent();
                                         e_4 = { error: e_4_1 };
-                                        return [3 /*break*/, 34];
-                                    case 33:
+                                        return [3 /*break*/, 36];
+                                    case 35:
                                         try {
                                             if (products_1_1 && !products_1_1.done && (_e = products_1.return)) _e.call(products_1);
                                         }
                                         finally { if (e_4) throw e_4.error; }
                                         return [7 /*endfinally*/];
-                                    case 34: return [2 /*return*/];
+                                    case 36: return [2 /*return*/];
                                 }
                             });
                         }); })];
-                case 7:
-                    _b.sent();
+                case 6:
+                    /* eslint-enable */
+                    _c.sent();
                     (0, medusa_telemetry_1.track)("CLI_SEED_COMPLETED");
                     return [2 /*return*/];
             }
         });
     });
 };
-exports.default = t;
+exports.default = seed;
 //# sourceMappingURL=seed.js.map

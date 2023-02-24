@@ -4,6 +4,8 @@
  * summary: "List Tags Usage Number"
  * description: "Retrieves a list of Product Tags with how many times each is used."
  * x-authenticated: true
+ * x-codegen:
+ *   method: listTags
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -31,20 +33,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             tags:
- *               type: array
- *               items:
- *                 properties:
- *                   id:
- *                     description: The ID of the tag.
- *                     type: string
- *                   usage_count:
- *                     description: The number of products that use this tag.
- *                     type: string
- *                   value:
- *                     description: The value of the tag.
- *                     type: string
+ *           $ref: "#/components/schemas/AdminProductsListTagsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

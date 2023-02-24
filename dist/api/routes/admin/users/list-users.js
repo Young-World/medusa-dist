@@ -42,6 +42,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * summary: "List Users"
  * description: "Retrieves all users."
  * x-authenticated: true
+ * x-codegen:
+ *   method: list
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -69,11 +71,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             users:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/user"
+ *           $ref: "#/components/schemas/AdminUsersListRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

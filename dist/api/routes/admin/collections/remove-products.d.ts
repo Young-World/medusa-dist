@@ -11,15 +11,9 @@ import { Request, Response } from "express";
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - product_ids
- *         properties:
- *           product_ids:
- *             description: "An array of Product IDs to remove from the Product Collection."
- *             type: array
- *             items:
- *               description: "The ID of a Product to add to the Product Collection."
- *               type: string
+ *         $ref: "#/components/schemas/AdminDeleteProductsFromCollectionReq"
+ * x-codegen:
+ *   method: removeProducts
  * x-codeSamples:
  *   - lang: Shell
  *     label: cURL
@@ -43,20 +37,7 @@ import { Request, Response } from "express";
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            id:
- *              type: string
- *              description: "The ID of the collection"
- *            object:
- *              type: string
- *              description: "The type of object the removal was executed on"
- *              default: product-collection
- *            removed_products:
- *              description: "The IDs of the products removed from the collection"
- *              type: array
- *              items:
- *                description: "The ID of a Product to add to the Product Collection."
- *                type: string
+ *          $ref: "#/components/schemas/AdminDeleteProductsFromCollectionRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":
@@ -72,6 +53,19 @@ import { Request, Response } from "express";
  */
 declare const _default: (req: Request, res: Response) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminDeleteProductsFromCollectionReq
+ * type: object
+ * required:
+ *   - product_ids
+ * properties:
+ *   product_ids:
+ *     description: "An array of Product IDs to remove from the Product Collection."
+ *     type: array
+ *     items:
+ *       description: "The ID of a Product to add to the Product Collection."
+ *       type: string
+ */
 export declare class AdminDeleteProductsFromCollectionReq {
     product_ids: string[];
 }

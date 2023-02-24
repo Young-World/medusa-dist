@@ -13,6 +13,10 @@ declare type FulfillmentProviderContainer = MedusaContainer & {
 } & {
     [key in `${FulfillmentProviderKey}`]: typeof BaseFulfillmentService;
 };
+declare type CalculateOptionPriceInput = {
+    provider_id: string;
+    data: Record<string, unknown>;
+};
 /**
  * Helps retrive fulfillment providers
  */
@@ -31,7 +35,7 @@ declare class FulfillmentProviderService extends TransactionBaseService {
      */
     retrieveProvider(providerId: string): typeof BaseFulfillmentService;
     createFulfillment(method: ShippingMethod, items: LineItem[], order: CreateFulfillmentOrder, fulfillment: Omit<Fulfillment, "beforeInsert">): Promise<Record<string, unknown>>;
-    canCalculate(option: ShippingOption): Promise<boolean>;
+    canCalculate(option: CalculateOptionPriceInput): Promise<boolean>;
     validateFulfillmentData(option: ShippingOption, data: Record<string, unknown>, cart: Cart | Record<string, unknown>): Promise<Record<string, unknown>>;
     cancelFulfillment(fulfillment: Fulfillment): Promise<Fulfillment>;
     calculatePrice(option: ShippingOption, data: Record<string, unknown>, cart?: Order | Cart): Promise<number>;

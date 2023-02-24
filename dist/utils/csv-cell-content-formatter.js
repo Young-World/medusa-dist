@@ -4,8 +4,12 @@ exports.csvRevertCellContentFormatter = exports.csvCellContentFormatter = void 0
 function csvCellContentFormatter(str) {
     var newLineRegexp = new RegExp(/\n/g);
     var doubleQuoteRegexp = new RegExp(/"/g);
+    var comaRegexp = new RegExp(/,/g);
+    var semicolonRegexp = new RegExp(/;/g);
     var hasNewLineChar = !!str.match(newLineRegexp);
-    if (!hasNewLineChar) {
+    var hasComaChar = !!str.match(comaRegexp);
+    var hasSemicolonChar = !!str.match(semicolonRegexp);
+    if (!hasNewLineChar && !hasComaChar && !hasSemicolonChar) {
         return str;
     }
     var formatterStr = str.replace(doubleQuoteRegexp, "\"\"");

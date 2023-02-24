@@ -56,23 +56,25 @@ exports.validateProductsExist = void 0;
 function validateProductsExist(getProducts) {
     var _this = this;
     return function (req, res, next) { return __awaiter(_this, void 0, void 0, function () {
-        var products, productService, productIds, _a, existingProducts, nonExistingProducts;
+        var requestedProducts, productService, requestedProductIds, _a, productRecords, nonExistingProducts;
         var _b;
         return __generator(this, function (_c) {
             switch (_c.label) {
                 case 0:
-                    products = getProducts(req);
-                    if (!(products === null || products === void 0 ? void 0 : products.length)) {
+                    requestedProducts = getProducts(req);
+                    if (!(requestedProducts === null || requestedProducts === void 0 ? void 0 : requestedProducts.length)) {
                         return [2 /*return*/, next()];
                     }
                     productService = req.scope.resolve("productService");
-                    productIds = products.map(function (product) { return product.id; });
+                    requestedProductIds = requestedProducts.map(function (product) { return product.id; });
                     return [4 /*yield*/, productService.listAndCount({
-                            id: productIds,
+                            id: requestedProductIds,
                         })];
                 case 1:
-                    _a = __read.apply(void 0, [_c.sent(), 1]), existingProducts = _a[0];
-                    nonExistingProducts = productIds.filter(function (scId) { return existingProducts.findIndex(function (sc) { return sc.id === scId; }) === -1; });
+                    _a = __read.apply(void 0, [_c.sent(), 1]), productRecords = _a[0];
+                    nonExistingProducts = requestedProductIds.filter(function (requestedProductId) {
+                        return productRecords.findIndex(function (productRecord) { return productRecord.id === requestedProductId; }) === -1;
+                    });
                     if (nonExistingProducts.length) {
                         req.errors = (_b = req.errors) !== null && _b !== void 0 ? _b : [];
                         req.errors.push("Products ".concat(nonExistingProducts.join(", "), " do not exist"));

@@ -104,7 +104,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var medusa_core_utils_1 = require("medusa-core-utils");
-var exception_formatter_1 = require("../utils/exception-formatter");
 var interfaces_1 = require("../interfaces");
 var utils_1 = require("../utils");
 var tax_inclusive_pricing_1 = __importDefault(require("../loaders/feature-flags/tax-inclusive-pricing"));
@@ -142,6 +141,9 @@ var PriceListService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(priceListId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"priceListId\" must be defined");
+                        }
                         priceListRepo = this.manager_.getCustomRepository(this.priceListRepo_);
                         query = (0, utils_1.buildQuery)({ id: priceListId }, config);
                         return [4 /*yield*/, priceListRepo.findOne(query)];
@@ -166,16 +168,13 @@ var PriceListService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var priceListRepo, moneyAmountRepo, prices, customer_groups, includes_tax, rest, rawPriceList, entity, priceList, prices_, error_1;
+                            var priceListRepo, moneyAmountRepo, prices, customer_groups, includes_tax, rest, rawPriceList, entity, priceList, prices_;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
                                         priceListRepo = manager.getCustomRepository(this.priceListRepo_);
                                         moneyAmountRepo = manager.getCustomRepository(this.moneyAmountRepo_);
                                         prices = priceListObject.prices, customer_groups = priceListObject.customer_groups, includes_tax = priceListObject.includes_tax, rest = __rest(priceListObject, ["prices", "customer_groups", "includes_tax"]);
-                                        _a.label = 1;
-                                    case 1:
-                                        _a.trys.push([1, 9, , 10]);
                                         rawPriceList = __assign({}, rest);
                                         if (this.featureFlagRouter_.isFeatureEnabled(tax_inclusive_pricing_1.default.key)) {
                                             if (typeof includes_tax !== "undefined") {
@@ -184,30 +183,26 @@ var PriceListService = /** @class */ (function (_super) {
                                         }
                                         entity = priceListRepo.create(rawPriceList);
                                         return [4 /*yield*/, priceListRepo.save(entity)];
-                                    case 2:
+                                    case 1:
                                         priceList = _a.sent();
-                                        if (!prices) return [3 /*break*/, 5];
+                                        if (!prices) return [3 /*break*/, 4];
                                         return [4 /*yield*/, this.addCurrencyFromRegion(prices)];
-                                    case 3:
+                                    case 2:
                                         prices_ = _a.sent();
                                         return [4 /*yield*/, moneyAmountRepo.addPriceListPrices(priceList.id, prices_)];
+                                    case 3:
+                                        _a.sent();
+                                        _a.label = 4;
                                     case 4:
-                                        _a.sent();
-                                        _a.label = 5;
-                                    case 5:
-                                        if (!customer_groups) return [3 /*break*/, 7];
+                                        if (!customer_groups) return [3 /*break*/, 6];
                                         return [4 /*yield*/, this.upsertCustomerGroups_(priceList.id, customer_groups)];
-                                    case 6:
+                                    case 5:
                                         _a.sent();
-                                        _a.label = 7;
-                                    case 7: return [4 /*yield*/, this.retrieve(priceList.id, {
+                                        _a.label = 6;
+                                    case 6: return [4 /*yield*/, this.retrieve(priceList.id, {
                                             relations: ["prices", "customer_groups"],
                                         })];
-                                    case 8: return [2 /*return*/, _a.sent()];
-                                    case 9:
-                                        error_1 = _a.sent();
-                                        throw (0, exception_formatter_1.formatException)(error_1);
-                                    case 10: return [2 /*return*/];
+                                    case 7: return [2 /*return*/, _a.sent()];
                                 }
                             });
                         }); })];

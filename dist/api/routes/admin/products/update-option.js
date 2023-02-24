@@ -62,12 +62,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - title
- *         properties:
- *           title:
- *             description: "The title of the Product Option"
- *             type: string
+ *         $ref: "#/components/schemas/AdminPostProductsProductOptionsOption"
+ * x-codegen:
+ *   method: updateOption
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -101,9 +98,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             product:
- *               $ref: "#/components/schemas/product"
+ *           $ref: "#/components/schemas/AdminProductsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -151,6 +146,16 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostProductsProductOptionsOption
+ * type: object
+ * required:
+ *   - title
+ * properties:
+ *   title:
+ *     description: "The title of the Product Option"
+ *     type: string
+ */
 var AdminPostProductsProductOptionsOption = /** @class */ (function () {
     function AdminPostProductsProductOptionsOption() {
     }

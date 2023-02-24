@@ -9,89 +9,9 @@ import { AddressPayload } from "../../../../types/common";
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - email
- *           - items
- *           - region_id
- *           - shipping_methods
- *         properties:
- *           status:
- *             description: "The status of the draft order"
- *             type: string
- *             enum: [open, completed]
- *           email:
- *             description: "The email of the customer of the draft order"
- *             type: string
- *             format: email
- *           billing_address:
- *             description: "The Address to be used for billing purposes."
- *             $ref: "#/components/schemas/address"
- *           shipping_address:
- *             description: "The Address to be used for shipping."
- *             $ref: "#/components/schemas/address"
- *           items:
- *             description: The Line Items that have been received.
- *             type: array
- *             items:
- *               type: object
- *               required:
- *                 - quantity
- *               properties:
- *                 variant_id:
- *                   description: The ID of the Product Variant to generate the Line Item from.
- *                   type: string
- *                 unit_price:
- *                   description: The potential custom price of the item.
- *                   type: integer
- *                 title:
- *                   description: The potential custom title of the item.
- *                   type: string
- *                 quantity:
- *                   description: The quantity of the Line Item.
- *                   type: integer
- *                 metadata:
- *                   description: The optional key-value map with additional details about the Line Item.
- *                   type: object
- *           region_id:
- *             description: The ID of the region for the draft order
- *             type: string
- *           discounts:
- *             description: The discounts to add on the draft order
- *             type: array
- *             items:
- *               type: object
- *               required:
- *                 - code
- *               properties:
- *                 code:
- *                   description: The code of the discount to apply
- *                   type: string
- *           customer_id:
- *             description: The ID of the customer to add on the draft order
- *             type: string
- *           no_notification_order:
- *             description: An optional flag passed to the resulting order to determine use of notifications.
- *             type: boolean
- *           shipping_methods:
- *             description: The shipping methods for the draft order
- *             type: array
- *             items:
- *               type: object
- *               required:
- *                  - option_id
- *               properties:
- *                 option_id:
- *                   description: The ID of the shipping option in use
- *                   type: string
- *                 data:
- *                   description: The optional additional data needed for the shipping method
- *                   type: object
- *                 price:
- *                   description: The potential custom price of the shipping
- *                   type: integer
- *           metadata:
- *             description: The optional key-value map with additional details about the Draft Order.
- *             type: object
+ *         $ref: "#/components/schemas/AdminPostDraftOrdersReq"
+ * x-codegen:
+ *   method: create
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -147,9 +67,7 @@ import { AddressPayload } from "../../../../types/common";
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             draft_order:
- *               $ref: "#/components/schemas/draft-order"
+ *           $ref: "#/components/schemas/AdminDraftOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -165,12 +83,102 @@ import { AddressPayload } from "../../../../types/common";
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostDraftOrdersReq
+ * type: object
+ * required:
+ *   - email
+ *   - region_id
+ *   - shipping_methods
+ * properties:
+ *   status:
+ *     description: "The status of the draft order"
+ *     type: string
+ *     enum: [open, completed]
+ *   email:
+ *     description: "The email of the customer of the draft order"
+ *     type: string
+ *     format: email
+ *   billing_address:
+ *     description: "The Address to be used for billing purposes."
+ *     anyOf:
+ *       - $ref: "#/components/schemas/AddressFields"
+ *       - type: string
+ *   shipping_address:
+ *     description: "The Address to be used for shipping."
+ *     anyOf:
+ *       - $ref: "#/components/schemas/AddressFields"
+ *       - type: string
+ *   items:
+ *     description: The Line Items that have been received.
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - quantity
+ *       properties:
+ *         variant_id:
+ *           description: The ID of the Product Variant to generate the Line Item from.
+ *           type: string
+ *         unit_price:
+ *           description: The potential custom price of the item.
+ *           type: integer
+ *         title:
+ *           description: The potential custom title of the item.
+ *           type: string
+ *         quantity:
+ *           description: The quantity of the Line Item.
+ *           type: integer
+ *         metadata:
+ *           description: The optional key-value map with additional details about the Line Item.
+ *           type: object
+ *   region_id:
+ *     description: The ID of the region for the draft order
+ *     type: string
+ *   discounts:
+ *     description: The discounts to add on the draft order
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - code
+ *       properties:
+ *         code:
+ *           description: The code of the discount to apply
+ *           type: string
+ *   customer_id:
+ *     description: The ID of the customer to add on the draft order
+ *     type: string
+ *   no_notification_order:
+ *     description: An optional flag passed to the resulting order to determine use of notifications.
+ *     type: boolean
+ *   shipping_methods:
+ *     description: The shipping methods for the draft order
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *          - option_id
+ *       properties:
+ *         option_id:
+ *           description: The ID of the shipping option in use
+ *           type: string
+ *         data:
+ *           description: The optional additional data needed for the shipping method
+ *           type: object
+ *         price:
+ *           description: The potential custom price of the shipping
+ *           type: integer
+ *   metadata:
+ *     description: The optional key-value map with additional details about the Draft Order.
+ *     type: object
+ */
 export declare class AdminPostDraftOrdersReq {
     status?: string;
     email: string;
-    billing_address?: AddressPayload;
-    shipping_address?: AddressPayload;
-    items: Item[];
+    billing_address?: AddressPayload | string;
+    shipping_address?: AddressPayload | string;
+    items?: Item[];
     region_id: string;
     discounts?: Discount[];
     customer_id?: string;

@@ -1,8 +1,5 @@
-import { DeleteResult, SelectQueryBuilder, FindManyOptions, Repository } from "typeorm";
-import { TaxRate } from "../models/tax-rate";
-import { ProductTaxRate } from "../models/product-tax-rate";
-import { ProductTypeTaxRate } from "../models/product-type-tax-rate";
-import { ShippingTaxRate } from "../models/shipping-tax-rate";
+import { DeleteResult, FindManyOptions, Repository, SelectQueryBuilder } from "typeorm";
+import { ProductTaxRate, ProductTypeTaxRate, ShippingTaxRate, TaxRate } from "../models";
 import { TaxRateListByConfig } from "../types/tax-rate";
 export declare class TaxRateRepository extends Repository<TaxRate> {
     getFindQueryBuilder(findOptions: FindManyOptions<TaxRate>): SelectQueryBuilder<TaxRate>;

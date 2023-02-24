@@ -5,8 +5,13 @@
  * summary: "Add a Shipping Method"
  * parameters:
  *   - (path) id=* {string} The cart ID.
- *   - (body) option_id=* {string} ID of the shipping option to create the method from
- *   - (body) data {Object} Used to hold any data that the shipping method may need to process the fulfillment of the order. Look at the documentation for your installed fulfillment providers to find out what to send.
+ * requestBody:
+ *   content:
+ *     application/json:
+ *       schema:
+ *         $ref: "#/components/schemas/StorePostCartsCartShippingMethodReq"
+ * x-codegen:
+ *   method: addShippingMethod
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -35,9 +40,7 @@
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            cart:
- *              $ref: "#/components/schemas/cart"
+ *          $ref: "#/components/schemas/StoreCartsRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "404":
@@ -51,6 +54,19 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema StorePostCartsCartShippingMethodReq
+ * type: object
+ * required:
+ *   - option_id
+ * properties:
+ *   option_id:
+ *     type: string
+ *     description: ID of the shipping option to create the method from
+ *   data:
+ *     type: object
+ *     description: Used to hold any data that the shipping method may need to process the fulfillment of the order. Look at the documentation for your installed fulfillment providers to find out what to send.
+ */
 export declare class StorePostCartsCartShippingMethodReq {
     option_id: string;
     data?: Record<string, any>;

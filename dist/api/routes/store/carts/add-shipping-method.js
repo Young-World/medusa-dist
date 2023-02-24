@@ -56,8 +56,13 @@ var validator_1 = require("../../../../utils/validator");
  * summary: "Add a Shipping Method"
  * parameters:
  *   - (path) id=* {string} The cart ID.
- *   - (body) option_id=* {string} ID of the shipping option to create the method from
- *   - (body) data {Object} Used to hold any data that the shipping method may need to process the fulfillment of the order. Look at the documentation for your installed fulfillment providers to find out what to send.
+ * requestBody:
+ *   content:
+ *     application/json:
+ *       schema:
+ *         $ref: "#/components/schemas/StorePostCartsCartShippingMethodReq"
+ * x-codegen:
+ *   method: addShippingMethod
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -86,9 +91,7 @@ var validator_1 = require("../../../../utils/validator");
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            cart:
- *              $ref: "#/components/schemas/cart"
+ *          $ref: "#/components/schemas/StoreCartsRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "404":
@@ -122,6 +125,7 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                 case 1:
                                     _b.sent();
                                     return [4 /*yield*/, txCartService.retrieve(id, {
+                                            select: ["id"],
                                             relations: ["payment_sessions"],
                                         })];
                                 case 2:
@@ -148,6 +152,19 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema StorePostCartsCartShippingMethodReq
+ * type: object
+ * required:
+ *   - option_id
+ * properties:
+ *   option_id:
+ *     type: string
+ *     description: ID of the shipping option to create the method from
+ *   data:
+ *     type: object
+ *     description: Used to hold any data that the shipping method may need to process the fulfillment of the order. Look at the documentation for your installed fulfillment providers to find out what to send.
+ */
 var StorePostCartsCartShippingMethodReq = /** @class */ (function () {
     function StorePostCartsCartShippingMethodReq() {
         this.data = {};

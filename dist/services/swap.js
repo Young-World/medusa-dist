@@ -113,17 +113,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var medusa_core_utils_1 = require("medusa-core-utils");
-var utils_1 = require("../utils");
+var typeorm_1 = require("typeorm");
 var interfaces_1 = require("../interfaces");
-var cart_1 = __importDefault(require("./cart"));
+var utils_1 = require("../utils");
 var models_1 = require("../models");
+var cart_1 = __importDefault(require("./cart"));
 /**
  * Handles swaps
  */
 var SwapService = /** @class */ (function (_super) {
     __extends(SwapService, _super);
     function SwapService(_a) {
-        var manager = _a.manager, swapRepository = _a.swapRepository, eventBusService = _a.eventBusService, cartService = _a.cartService, totalsService = _a.totalsService, returnService = _a.returnService, lineItemService = _a.lineItemService, paymentProviderService = _a.paymentProviderService, shippingOptionService = _a.shippingOptionService, fulfillmentService = _a.fulfillmentService, orderService = _a.orderService, inventoryService = _a.inventoryService, customShippingOptionService = _a.customShippingOptionService, lineItemAdjustmentService = _a.lineItemAdjustmentService;
+        var manager = _a.manager, swapRepository = _a.swapRepository, eventBusService = _a.eventBusService, cartService = _a.cartService, totalsService = _a.totalsService, returnService = _a.returnService, lineItemService = _a.lineItemService, paymentProviderService = _a.paymentProviderService, shippingOptionService = _a.shippingOptionService, fulfillmentService = _a.fulfillmentService, orderService = _a.orderService, productVariantInventoryService = _a.productVariantInventoryService, customShippingOptionService = _a.customShippingOptionService, lineItemAdjustmentService = _a.lineItemAdjustmentService;
         var _this = 
         // eslint-disable-next-line prefer-rest-params
         _super.call(this, arguments[0]) || this;
@@ -137,7 +138,7 @@ var SwapService = /** @class */ (function (_super) {
         _this.fulfillmentService_ = fulfillmentService;
         _this.orderService_ = orderService;
         _this.shippingOptionService_ = shippingOptionService;
-        _this.inventoryService_ = inventoryService;
+        _this.productVariantInventoryService_ = productVariantInventoryService;
         _this.eventBus_ = eventBusService;
         _this.customShippingOptionService_ = customShippingOptionService;
         _this.lineItemAdjustmentService_ = lineItemAdjustmentService;
@@ -153,7 +154,7 @@ var SwapService = /** @class */ (function (_super) {
         var select = config.select, relations = config.relations;
         var cartSelects;
         var cartRelations;
-        if ((0, utils_1.isDefined)(relations) && relations.includes("cart")) {
+        if ((0, medusa_core_utils_1.isDefined)(relations) && relations.includes("cart")) {
             var _a = __read(relations.reduce(function (acc, next) {
                 if (next === "cart") {
                     return acc;
@@ -170,7 +171,7 @@ var SwapService = /** @class */ (function (_super) {
             relations = swapRelations;
             cartRelations = cartRels;
             var foundCartId_1 = false;
-            if ((0, utils_1.isDefined)(select)) {
+            if ((0, medusa_core_utils_1.isDefined)(select)) {
                 var _b = __read(select.reduce(function (acc, next) {
                     if (next.startsWith("cart.")) {
                         var _a = __read(next.split(".")), rel = _a.slice(1);
@@ -193,20 +194,23 @@ var SwapService = /** @class */ (function (_super) {
     /**
      * Retrieves a swap with the given id.
      *
-     * @param id - the id of the swap to retrieve
+     * @param swapId - the id of the swap to retrieve
      * @param config - the configuration to retrieve the swap
      * @return the swap
      */
-    SwapService.prototype.retrieve = function (id, config) {
+    SwapService.prototype.retrieve = function (swapId, config) {
         if (config === void 0) { config = {}; }
         return __awaiter(this, void 0, void 0, function () {
             var swapRepo, _a, cartSelects, cartRelations, newConfig, query, relations, swap, _b;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(swapId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"swapId\" must be defined");
+                        }
                         swapRepo = this.manager_.getCustomRepository(this.swapRepository_);
                         _a = this.transformQueryForCart(config), cartSelects = _a.cartSelects, cartRelations = _a.cartRelations, newConfig = __rest(_a, ["cartSelects", "cartRelations"]);
-                        query = (0, utils_1.buildQuery)({ id: id }, newConfig);
+                        query = (0, utils_1.buildQuery)({ id: swapId }, newConfig);
                         relations = query.relations;
                         delete query.relations;
                         return [4 /*yield*/, swapRepo.findOneWithRelations(relations, query)];
@@ -313,74 +317,49 @@ var SwapService = /** @class */ (function (_super) {
                     case 0:
                         no_notification = custom.no_notification, rest = __rest(custom, ["no_notification"]);
                         return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                                var lineItemServiceTx, returnItems_1, returnItems_1_1, item, line, e_1_1, newItems, evaluatedNoNotification, swapRepo, created, result;
-                                var e_1, _a;
+                                var areReturnItemsValid, newItems, evaluatedNoNotification, swapRepo, created, result;
                                 var _this = this;
-                                var _b, _c, _d;
-                                return __generator(this, function (_e) {
-                                    switch (_e.label) {
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
                                         case 0:
-                                            if (order.fulfillment_status === "not_fulfilled" ||
-                                                order.payment_status !== "captured") {
-                                                throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Order cannot be swapped");
+                                            if (order.payment_status !== models_1.PaymentStatus.CAPTURED) {
+                                                throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Cannot swap an order that has not been captured");
                                             }
-                                            lineItemServiceTx = this.lineItemService_.withTransaction(manager);
-                                            _e.label = 1;
+                                            if (order.fulfillment_status === models_1.FulfillmentStatus.NOT_FULFILLED) {
+                                                throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Cannot swap an order that has not been fulfilled");
+                                            }
+                                            return [4 /*yield*/, this.areReturnItemsValid(returnItems)];
                                         case 1:
-                                            _e.trys.push([1, 6, 7, 8]);
-                                            returnItems_1 = __values(returnItems), returnItems_1_1 = returnItems_1.next();
-                                            _e.label = 2;
-                                        case 2:
-                                            if (!!returnItems_1_1.done) return [3 /*break*/, 5];
-                                            item = returnItems_1_1.value;
-                                            return [4 /*yield*/, lineItemServiceTx.retrieve(item.item_id, {
-                                                    relations: ["order", "swap", "claim_order"],
-                                                })];
-                                        case 3:
-                                            line = _e.sent();
-                                            if (((_b = line.order) === null || _b === void 0 ? void 0 : _b.canceled_at) ||
-                                                ((_c = line.swap) === null || _c === void 0 ? void 0 : _c.canceled_at) ||
-                                                ((_d = line.claim_order) === null || _d === void 0 ? void 0 : _d.canceled_at)) {
+                                            areReturnItemsValid = _a.sent();
+                                            if (!areReturnItemsValid) {
                                                 throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Cannot create a swap on a canceled item.");
                                             }
-                                            _e.label = 4;
-                                        case 4:
-                                            returnItems_1_1 = returnItems_1.next();
-                                            return [3 /*break*/, 2];
-                                        case 5: return [3 /*break*/, 8];
-                                        case 6:
-                                            e_1_1 = _e.sent();
-                                            e_1 = { error: e_1_1 };
-                                            return [3 /*break*/, 8];
-                                        case 7:
-                                            try {
-                                                if (returnItems_1_1 && !returnItems_1_1.done && (_a = returnItems_1.return)) _a.call(returnItems_1);
-                                            }
-                                            finally { if (e_1) throw e_1.error; }
-                                            return [7 /*endfinally*/];
-                                        case 8:
                                             newItems = [];
-                                            if (!additionalItems) return [3 /*break*/, 10];
+                                            if (!additionalItems) return [3 /*break*/, 3];
                                             return [4 /*yield*/, Promise.all(additionalItems.map(function (_a) {
                                                     var variant_id = _a.variant_id, quantity = _a.quantity;
                                                     return __awaiter(_this, void 0, void 0, function () {
                                                         return __generator(this, function (_b) {
-                                                            return [2 /*return*/, this.lineItemService_
-                                                                    .withTransaction(manager)
-                                                                    .generate(variant_id, order.region_id, quantity)];
+                                                            if (variant_id === null) {
+                                                                throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "You must include a variant when creating additional items on a swap");
+                                                            }
+                                                            return [2 /*return*/, this.lineItemService_.withTransaction(manager).generate({ variantId: variant_id, quantity: quantity }, {
+                                                                    region_id: order.region_id,
+                                                                    cart: order.cart,
+                                                                })];
                                                         });
                                                     });
                                                 }))];
-                                        case 9:
-                                            newItems = _e.sent();
-                                            _e.label = 10;
-                                        case 10:
+                                        case 2:
+                                            newItems = _a.sent();
+                                            _a.label = 3;
+                                        case 3:
                                             evaluatedNoNotification = no_notification !== undefined ? no_notification : order.no_notification;
                                             swapRepo = manager.getCustomRepository(this.swapRepository_);
                                             created = swapRepo.create(__assign(__assign({}, rest), { fulfillment_status: models_1.SwapFulfillmentStatus.NOT_FULFILLED, payment_status: models_1.SwapPaymentStatus.NOT_PAID, order_id: order.id, additional_items: newItems, no_notification: evaluatedNoNotification }));
                                             return [4 /*yield*/, swapRepo.save(created)];
-                                        case 11:
-                                            result = _e.sent();
+                                        case 4:
+                                            result = _a.sent();
                                             return [4 /*yield*/, this.returnService_.withTransaction(manager).create({
                                                     swap_id: result.id,
                                                     order_id: order.id,
@@ -388,16 +367,16 @@ var SwapService = /** @class */ (function (_super) {
                                                     shipping_method: returnShipping,
                                                     no_notification: evaluatedNoNotification,
                                                 })];
-                                        case 12:
-                                            _e.sent();
+                                        case 5:
+                                            _a.sent();
                                             return [4 /*yield*/, this.eventBus_
                                                     .withTransaction(manager)
                                                     .emit(SwapService.Events.CREATED, {
                                                     id: result.id,
                                                     no_notification: evaluatedNoNotification,
                                                 })];
-                                        case 13:
-                                            _e.sent();
+                                        case 6:
+                                            _a.sent();
                                             return [2 /*return*/, result];
                                     }
                                 });
@@ -600,11 +579,12 @@ var SwapService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var swapRepo, swap, order, discounts, cart, customShippingOptionServiceTx, customShippingOptions_1, customShippingOptions_1_1, customShippingOption, e_2_1, lineItemServiceTx, lineItemAdjustmentServiceTx, _a, _b, item, e_3_1;
-                            var e_2, _c, e_3, _d;
-                            var _e;
-                            return __generator(this, function (_f) {
-                                switch (_f.label) {
+                            var swapRepo, swap, order, discounts, cart, customShippingOptionServiceTx, customShippingOptions_1, customShippingOptions_1_1, customShippingOption, e_1_1, lineItemServiceTx, lineItemAdjustmentServiceTx;
+                            var e_1, _a;
+                            var _this = this;
+                            var _b;
+                            return __generator(this, function (_c) {
+                                switch (_c.label) {
                                     case 0:
                                         swapRepo = manager.getCustomRepository(this.swapRepository_);
                                         return [4 /*yield*/, this.retrieve(swapId, {
@@ -626,7 +606,7 @@ var SwapService = /** @class */ (function (_super) {
                                                 ],
                                             })];
                                     case 1:
-                                        swap = _f.sent();
+                                        swap = _c.sent();
                                         if (swap.canceled_at) {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Canceled swap cannot be used to create a cart");
                                         }
@@ -634,7 +614,7 @@ var SwapService = /** @class */ (function (_super) {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.DUPLICATE_ERROR, "A cart has already been created for the swap");
                                         }
                                         order = swap.order;
-                                        discounts = ((_e = order === null || order === void 0 ? void 0 : order.discounts) === null || _e === void 0 ? void 0 : _e.filter(function (_a) {
+                                        discounts = ((_b = order === null || order === void 0 ? void 0 : order.discounts) === null || _b === void 0 ? void 0 : _b.filter(function (_a) {
                                             var rule = _a.rule;
                                             return rule.type !== "free_shipping";
                                         })) ||
@@ -653,13 +633,13 @@ var SwapService = /** @class */ (function (_super) {
                                                 },
                                             })];
                                     case 2:
-                                        cart = _f.sent();
+                                        cart = _c.sent();
                                         customShippingOptionServiceTx = this.customShippingOptionService_.withTransaction(manager);
-                                        _f.label = 3;
+                                        _c.label = 3;
                                     case 3:
-                                        _f.trys.push([3, 8, 9, 10]);
+                                        _c.trys.push([3, 8, 9, 10]);
                                         customShippingOptions_1 = __values(customShippingOptions), customShippingOptions_1_1 = customShippingOptions_1.next();
-                                        _f.label = 4;
+                                        _c.label = 4;
                                     case 4:
                                         if (!!customShippingOptions_1_1.done) return [3 /*break*/, 7];
                                         customShippingOption = customShippingOptions_1_1.value;
@@ -669,62 +649,63 @@ var SwapService = /** @class */ (function (_super) {
                                                 price: customShippingOption.price,
                                             })];
                                     case 5:
-                                        _f.sent();
-                                        _f.label = 6;
+                                        _c.sent();
+                                        _c.label = 6;
                                     case 6:
                                         customShippingOptions_1_1 = customShippingOptions_1.next();
                                         return [3 /*break*/, 4];
                                     case 7: return [3 /*break*/, 10];
                                     case 8:
-                                        e_2_1 = _f.sent();
-                                        e_2 = { error: e_2_1 };
+                                        e_1_1 = _c.sent();
+                                        e_1 = { error: e_1_1 };
                                         return [3 /*break*/, 10];
                                     case 9:
                                         try {
-                                            if (customShippingOptions_1_1 && !customShippingOptions_1_1.done && (_c = customShippingOptions_1.return)) _c.call(customShippingOptions_1);
+                                            if (customShippingOptions_1_1 && !customShippingOptions_1_1.done && (_a = customShippingOptions_1.return)) _a.call(customShippingOptions_1);
                                         }
-                                        finally { if (e_2) throw e_2.error; }
+                                        finally { if (e_1) throw e_1.error; }
                                         return [7 /*endfinally*/];
                                     case 10:
                                         lineItemServiceTx = this.lineItemService_.withTransaction(manager);
                                         lineItemAdjustmentServiceTx = this.lineItemAdjustmentService_.withTransaction(manager);
-                                        _f.label = 11;
+                                        return [4 /*yield*/, Promise.all(swap.additional_items.map(function (item) { return __awaiter(_this, void 0, void 0, function () {
+                                                return __generator(this, function (_a) {
+                                                    switch (_a.label) {
+                                                        case 0: return [4 /*yield*/, lineItemServiceTx.update(item.id, {
+                                                                cart_id: cart.id,
+                                                            })];
+                                                        case 1: return [2 /*return*/, _a.sent()];
+                                                    }
+                                                });
+                                            }); }))];
                                     case 11:
-                                        _f.trys.push([11, 17, 18, 19]);
-                                        _a = __values(swap.additional_items), _b = _a.next();
-                                        _f.label = 12;
+                                        _c.sent();
+                                        return [4 /*yield*/, this.cartService_
+                                                .withTransaction(manager)
+                                                .retrieve(cart.id, {
+                                                relations: ["items", "region", "discounts", "discounts.rule"],
+                                            })];
                                     case 12:
-                                        if (!!_b.done) return [3 /*break*/, 16];
-                                        item = _b.value;
-                                        return [4 /*yield*/, lineItemServiceTx.update(item.id, {
-                                                cart_id: cart.id,
-                                            })
-                                            // we generate adjustments in case the cart has any discounts that should be applied to the additional items
+                                        cart = _c.sent();
+                                        return [4 /*yield*/, Promise.all(cart.items.map(function (item) { return __awaiter(_this, void 0, void 0, function () {
+                                                return __generator(this, function (_a) {
+                                                    switch (_a.label) {
+                                                        case 0: 
+                                                        // we generate adjustments in case the cart has any discounts that should be applied to the additional items
+                                                        return [4 /*yield*/, lineItemAdjustmentServiceTx.createAdjustmentForLineItem(cart, item)];
+                                                        case 1:
+                                                            // we generate adjustments in case the cart has any discounts that should be applied to the additional items
+                                                            _a.sent();
+                                                            return [2 /*return*/];
+                                                    }
+                                                });
+                                            }); }))
+                                            // If the swap has a return shipping method the price has to be added to
+                                            // the cart.
                                         ];
                                     case 13:
-                                        _f.sent();
-                                        // we generate adjustments in case the cart has any discounts that should be applied to the additional items
-                                        return [4 /*yield*/, lineItemAdjustmentServiceTx.createAdjustmentForLineItem(cart, item)];
-                                    case 14:
-                                        // we generate adjustments in case the cart has any discounts that should be applied to the additional items
-                                        _f.sent();
-                                        _f.label = 15;
-                                    case 15:
-                                        _b = _a.next();
-                                        return [3 /*break*/, 12];
-                                    case 16: return [3 /*break*/, 19];
-                                    case 17:
-                                        e_3_1 = _f.sent();
-                                        e_3 = { error: e_3_1 };
-                                        return [3 /*break*/, 19];
-                                    case 18:
-                                        try {
-                                            if (_b && !_b.done && (_d = _a.return)) _d.call(_a);
-                                        }
-                                        finally { if (e_3) throw e_3.error; }
-                                        return [7 /*endfinally*/];
-                                    case 19:
-                                        if (!(swap.return_order && swap.return_order.shipping_method)) return [3 /*break*/, 21];
+                                        _c.sent();
+                                        if (!(swap.return_order && swap.return_order.shipping_method)) return [3 /*break*/, 15];
                                         return [4 /*yield*/, this.lineItemService_.withTransaction(manager).create({
                                                 cart_id: cart.id,
                                                 title: "Return shipping",
@@ -742,17 +723,17 @@ var SwapService = /** @class */ (function (_super) {
                                                     });
                                                 }),
                                             })];
-                                    case 20:
-                                        _f.sent();
-                                        _f.label = 21;
-                                    case 21: return [4 /*yield*/, this.lineItemService_
+                                    case 14:
+                                        _c.sent();
+                                        _c.label = 15;
+                                    case 15: return [4 /*yield*/, this.lineItemService_
                                             .withTransaction(manager)
                                             .createReturnLines(swap.return_order.id, cart.id)];
-                                    case 22:
-                                        _f.sent();
+                                    case 16:
+                                        _c.sent();
                                         swap.cart_id = cart.id;
                                         return [4 /*yield*/, swapRepo.save(swap)];
-                                    case 23: return [2 /*return*/, _f.sent()];
+                                    case 17: return [2 /*return*/, _c.sent()];
                                 }
                             });
                         }); })];
@@ -773,10 +754,11 @@ var SwapService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var swap, cart, payment, items, inventoryServiceTx, paymentProviderServiceTx, cartServiceTx, items_1, items_1_1, item, err_3, e_4_1, total, paymentStatus, inventoryServiceTx, items_2, items_2_1, item, e_5_1, swapRepo, result, shippingOptionServiceTx, _a, _b, method, e_6_1;
-                            var e_4, _c, e_5, _d, e_6, _e;
-                            return __generator(this, function (_f) {
-                                switch (_f.label) {
+                            var swap, cart, payment, items, total, paymentStatus, swapRepo, result, shippingOptionServiceTx, _a, _b, method, e_2_1;
+                            var e_2, _c;
+                            var _this = this;
+                            return __generator(this, function (_d) {
+                                switch (_d.label) {
                                     case 0: return [4 /*yield*/, this.retrieve(swapId, {
                                             select: [
                                                 "id",
@@ -791,7 +773,7 @@ var SwapService = /** @class */ (function (_super) {
                                         // If we already registered the cart completion we just return
                                     ];
                                     case 1:
-                                        swap = _f.sent();
+                                        swap = _d.sent();
                                         // If we already registered the cart completion we just return
                                         if (swap.confirmed_at) {
                                             return [2 /*return*/, swap];
@@ -801,66 +783,15 @@ var SwapService = /** @class */ (function (_super) {
                                         }
                                         return [4 /*yield*/, this.cartService_
                                                 .withTransaction(manager)
-                                                .retrieve(swap.cart_id, {
-                                                select: ["total"],
-                                                relations: [
-                                                    "payment",
-                                                    "shipping_methods",
-                                                    "items",
-                                                    "items.adjustments",
-                                                ],
+                                                .retrieveWithTotals(swap.cart_id, {
+                                                relations: ["payment"],
                                             })];
                                     case 2:
-                                        cart = _f.sent();
+                                        cart = _d.sent();
                                         payment = cart.payment;
                                         items = cart.items;
-                                        if (!!swap.allow_backorder) return [3 /*break*/, 15];
-                                        inventoryServiceTx = this.inventoryService_.withTransaction(manager);
-                                        paymentProviderServiceTx = this.paymentProviderService_.withTransaction(manager);
-                                        cartServiceTx = this.cartService_.withTransaction(manager);
-                                        _f.label = 3;
-                                    case 3:
-                                        _f.trys.push([3, 13, 14, 15]);
-                                        items_1 = __values(items), items_1_1 = items_1.next();
-                                        _f.label = 4;
-                                    case 4:
-                                        if (!!items_1_1.done) return [3 /*break*/, 12];
-                                        item = items_1_1.value;
-                                        _f.label = 5;
-                                    case 5:
-                                        _f.trys.push([5, 7, , 11]);
-                                        return [4 /*yield*/, inventoryServiceTx.confirmInventory(item.variant_id, item.quantity)];
-                                    case 6:
-                                        _f.sent();
-                                        return [3 /*break*/, 11];
-                                    case 7:
-                                        err_3 = _f.sent();
-                                        if (!payment) return [3 /*break*/, 9];
-                                        return [4 /*yield*/, paymentProviderServiceTx.cancelPayment(payment)];
-                                    case 8:
-                                        _f.sent();
-                                        _f.label = 9;
-                                    case 9: return [4 /*yield*/, cartServiceTx.update(cart.id, { payment_authorized_at: null })];
-                                    case 10:
-                                        _f.sent();
-                                        throw err_3;
-                                    case 11:
-                                        items_1_1 = items_1.next();
-                                        return [3 /*break*/, 4];
-                                    case 12: return [3 /*break*/, 15];
-                                    case 13:
-                                        e_4_1 = _f.sent();
-                                        e_4 = { error: e_4_1 };
-                                        return [3 /*break*/, 15];
-                                    case 14:
-                                        try {
-                                            if (items_1_1 && !items_1_1.done && (_c = items_1.return)) _c.call(items_1);
-                                        }
-                                        finally { if (e_4) throw e_4.error; }
-                                        return [7 /*endfinally*/];
-                                    case 15:
                                         total = cart.total;
-                                        if (!(total > 0)) return [3 /*break*/, 25];
+                                        if (!(total > 0)) return [3 /*break*/, 6];
                                         if (!payment) {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_ARGUMENT, "Cart does not contain a payment");
                                         }
@@ -869,8 +800,8 @@ var SwapService = /** @class */ (function (_super) {
                                                 .getStatus(payment)
                                             // If payment status is not authorized, we throw
                                         ];
-                                    case 16:
-                                        paymentStatus = _f.sent();
+                                    case 3:
+                                        paymentStatus = _d.sent();
                                         // If payment status is not authorized, we throw
                                         if (paymentStatus !== models_1.PaymentSessionStatus.AUTHORIZED &&
                                             // @ts-ignore TODO: check why this is not in the enum
@@ -883,88 +814,87 @@ var SwapService = /** @class */ (function (_super) {
                                                 swap_id: swapId,
                                                 order_id: swap.order_id,
                                             })];
-                                    case 17:
-                                        _f.sent();
-                                        inventoryServiceTx = this.inventoryService_.withTransaction(manager);
-                                        _f.label = 18;
-                                    case 18:
-                                        _f.trys.push([18, 23, 24, 25]);
-                                        items_2 = __values(items), items_2_1 = items_2.next();
-                                        _f.label = 19;
-                                    case 19:
-                                        if (!!items_2_1.done) return [3 /*break*/, 22];
-                                        item = items_2_1.value;
-                                        return [4 /*yield*/, inventoryServiceTx.adjustInventory(item.variant_id, -item.quantity)];
-                                    case 20:
-                                        _f.sent();
-                                        _f.label = 21;
-                                    case 21:
-                                        items_2_1 = items_2.next();
-                                        return [3 /*break*/, 19];
-                                    case 22: return [3 /*break*/, 25];
-                                    case 23:
-                                        e_5_1 = _f.sent();
-                                        e_5 = { error: e_5_1 };
-                                        return [3 /*break*/, 25];
-                                    case 24:
-                                        try {
-                                            if (items_2_1 && !items_2_1.done && (_d = items_2.return)) _d.call(items_2);
-                                        }
-                                        finally { if (e_5) throw e_5.error; }
-                                        return [7 /*endfinally*/];
-                                    case 25:
+                                    case 4:
+                                        _d.sent();
+                                        return [4 /*yield*/, Promise.all(items.map(function (item) { return __awaiter(_this, void 0, void 0, function () {
+                                                return __generator(this, function (_a) {
+                                                    switch (_a.label) {
+                                                        case 0:
+                                                            if (!item.variant_id) return [3 /*break*/, 2];
+                                                            return [4 /*yield*/, this.productVariantInventoryService_.reserveQuantity(item.variant_id, item.quantity, {
+                                                                    lineItemId: item.id,
+                                                                    salesChannelId: cart.sales_channel_id,
+                                                                })];
+                                                        case 1:
+                                                            _a.sent();
+                                                            _a.label = 2;
+                                                        case 2: return [2 /*return*/];
+                                                    }
+                                                });
+                                            }); }))];
+                                    case 5:
+                                        _d.sent();
+                                        _d.label = 6;
+                                    case 6:
                                         swap.difference_due = total;
                                         swap.shipping_address_id = cart.shipping_address_id;
-                                        swap.shipping_methods = cart.shipping_methods;
+                                        // TODO: Due to cascade insert we have to remove the tax_lines that have been added by the cart decorate totals.
+                                        // Is the cascade insert really used? Also, is it really necessary to pass the entire entities when creating or updating?
+                                        // We normally should only pass what is needed?
+                                        swap.shipping_methods = cart.shipping_methods.map(function (method) {
+                                            ;
+                                            method.tax_lines = undefined;
+                                            return method;
+                                        });
                                         swap.confirmed_at = new Date();
                                         swap.payment_status =
                                             total === 0 ? models_1.SwapPaymentStatus.CONFIRMED : models_1.SwapPaymentStatus.AWAITING;
                                         swapRepo = manager.getCustomRepository(this.swapRepository_);
                                         return [4 /*yield*/, swapRepo.save(swap)];
-                                    case 26:
-                                        result = _f.sent();
+                                    case 7:
+                                        result = _d.sent();
                                         shippingOptionServiceTx = this.shippingOptionService_.withTransaction(manager);
-                                        _f.label = 27;
-                                    case 27:
-                                        _f.trys.push([27, 32, 33, 34]);
+                                        _d.label = 8;
+                                    case 8:
+                                        _d.trys.push([8, 13, 14, 15]);
                                         _a = __values(cart.shipping_methods), _b = _a.next();
-                                        _f.label = 28;
-                                    case 28:
-                                        if (!!_b.done) return [3 /*break*/, 31];
+                                        _d.label = 9;
+                                    case 9:
+                                        if (!!_b.done) return [3 /*break*/, 12];
                                         method = _b.value;
                                         return [4 /*yield*/, shippingOptionServiceTx.updateShippingMethod(method.id, {
                                                 swap_id: result.id,
                                             })];
-                                    case 29:
-                                        _f.sent();
-                                        _f.label = 30;
-                                    case 30:
+                                    case 10:
+                                        _d.sent();
+                                        _d.label = 11;
+                                    case 11:
                                         _b = _a.next();
-                                        return [3 /*break*/, 28];
-                                    case 31: return [3 /*break*/, 34];
-                                    case 32:
-                                        e_6_1 = _f.sent();
-                                        e_6 = { error: e_6_1 };
-                                        return [3 /*break*/, 34];
-                                    case 33:
+                                        return [3 /*break*/, 9];
+                                    case 12: return [3 /*break*/, 15];
+                                    case 13:
+                                        e_2_1 = _d.sent();
+                                        e_2 = { error: e_2_1 };
+                                        return [3 /*break*/, 15];
+                                    case 14:
                                         try {
-                                            if (_b && !_b.done && (_e = _a.return)) _e.call(_a);
+                                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                                         }
-                                        finally { if (e_6) throw e_6.error; }
+                                        finally { if (e_2) throw e_2.error; }
                                         return [7 /*endfinally*/];
-                                    case 34: return [4 /*yield*/, this.eventBus_
+                                    case 15: return [4 /*yield*/, this.eventBus_
                                             .withTransaction(manager)
                                             .emit(SwapService.Events.PAYMENT_COMPLETED, {
                                             id: swap.id,
                                             no_notification: swap.no_notification,
                                         })];
-                                    case 35:
-                                        _f.sent();
+                                    case 16:
+                                        _d.sent();
                                         return [4 /*yield*/, this.cartService_
                                                 .withTransaction(manager)
                                                 .update(cart.id, { completed_at: new Date() })];
-                                    case 36:
-                                        _f.sent();
+                                    case 17:
+                                        _d.sent();
                                         return [2 /*return*/, result];
                                 }
                             });
@@ -989,7 +919,7 @@ var SwapService = /** @class */ (function (_super) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
                             var swapRepo, swap, _a, _b, f;
-                            var e_7, _c;
+                            var e_3, _c;
                             return __generator(this, function (_d) {
                                 switch (_d.label) {
                                     case 0:
@@ -1013,12 +943,12 @@ var SwapService = /** @class */ (function (_super) {
                                                     }
                                                 }
                                             }
-                                            catch (e_7_1) { e_7 = { error: e_7_1 }; }
+                                            catch (e_3_1) { e_3 = { error: e_3_1 }; }
                                             finally {
                                                 try {
                                                     if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                                                 }
-                                                finally { if (e_7) throw e_7.error; }
+                                                finally { if (e_3) throw e_3.error; }
                                             }
                                         }
                                         if (swap.return_order &&
@@ -1063,8 +993,8 @@ var SwapService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var metadata, no_notification, swapRepo, swap, order, evaluatedNoNotification, _a, successfullyFulfilled, _b, _c, f, lineItemServiceTx, _loop_1, _d, _e, item, e_8_1, result;
-                            var e_9, _f, e_8, _g;
+                            var metadata, no_notification, swapRepo, swap, order, evaluatedNoNotification, _a, successfullyFulfilled, _b, _c, f, lineItemServiceTx, _loop_1, _d, _e, item, e_4_1, result;
+                            var e_5, _f, e_4, _g;
                             var _h;
                             return __generator(this, function (_j) {
                                 switch (_j.label) {
@@ -1117,12 +1047,12 @@ var SwapService = /** @class */ (function (_super) {
                                                 successfullyFulfilled = successfullyFulfilled.concat(f.items);
                                             }
                                         }
-                                        catch (e_9_1) { e_9 = { error: e_9_1 }; }
+                                        catch (e_5_1) { e_5 = { error: e_5_1 }; }
                                         finally {
                                             try {
                                                 if (_c && !_c.done && (_f = _b.return)) _f.call(_b);
                                             }
-                                            finally { if (e_9) throw e_9.error; }
+                                            finally { if (e_5) throw e_5.error; }
                                         }
                                         swap.fulfillment_status = models_1.SwapFulfillmentStatus.FULFILLED;
                                         lineItemServiceTx = this.lineItemService_.withTransaction(manager);
@@ -1171,14 +1101,14 @@ var SwapService = /** @class */ (function (_super) {
                                         return [3 /*break*/, 4];
                                     case 7: return [3 /*break*/, 10];
                                     case 8:
-                                        e_8_1 = _j.sent();
-                                        e_8 = { error: e_8_1 };
+                                        e_4_1 = _j.sent();
+                                        e_4 = { error: e_4_1 };
                                         return [3 /*break*/, 10];
                                     case 9:
                                         try {
                                             if (_e && !_e.done && (_g = _d.return)) _g.call(_d);
                                         }
-                                        finally { if (e_8) throw e_8.error; }
+                                        finally { if (e_4) throw e_4.error; }
                                         return [7 /*endfinally*/];
                                     case 10: return [4 /*yield*/, swapRepo.save(swap)];
                                     case 11:
@@ -1257,8 +1187,8 @@ var SwapService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var metadata, no_notification, swapRepo, swap, evaluatedNoNotification, shipment, lineItemServiceTx, _loop_2, _a, _b, i, e_10_1, result;
-                            var e_10, _c;
+                            var metadata, no_notification, swapRepo, swap, evaluatedNoNotification, shipment, lineItemServiceTx, _loop_2, _a, _b, i, e_6_1, result;
+                            var e_6, _c;
                             return __generator(this, function (_d) {
                                 switch (_d.label) {
                                     case 0:
@@ -1326,14 +1256,14 @@ var SwapService = /** @class */ (function (_super) {
                                         return [3 /*break*/, 4];
                                     case 7: return [3 /*break*/, 10];
                                     case 8:
-                                        e_10_1 = _d.sent();
-                                        e_10 = { error: e_10_1 };
+                                        e_6_1 = _d.sent();
+                                        e_6 = { error: e_6_1 };
                                         return [3 /*break*/, 10];
                                     case 9:
                                         try {
                                             if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                                         }
-                                        finally { if (e_10) throw e_10.error; }
+                                        finally { if (e_6) throw e_6.error; }
                                         return [7 /*endfinally*/];
                                     case 10: return [4 /*yield*/, swapRepo.save(swap)];
                                     case 11:
@@ -1445,6 +1375,34 @@ var SwapService = /** @class */ (function (_super) {
                             });
                         }); })];
                     case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
+    SwapService.prototype.areReturnItemsValid = function (returnItems) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function () {
+            var manager, returnItemsEntities, hasCanceledItem;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        manager = (_a = this.transactionManager_) !== null && _a !== void 0 ? _a : this.manager_;
+                        return [4 /*yield*/, this.lineItemService_
+                                .withTransaction(manager)
+                                .list({
+                                id: (0, typeorm_1.In)(returnItems.map(function (r) { return r.item_id; })),
+                            }, {
+                                relations: ["order", "swap", "claim_order"],
+                            })];
+                    case 1:
+                        returnItemsEntities = _b.sent();
+                        hasCanceledItem = returnItemsEntities.some(function (item) {
+                            var _a, _b, _c;
+                            return (((_a = item.order) === null || _a === void 0 ? void 0 : _a.canceled_at) ||
+                                ((_b = item.swap) === null || _b === void 0 ? void 0 : _b.canceled_at) ||
+                                ((_c = item.claim_order) === null || _c === void 0 ? void 0 : _c.canceled_at));
+                        });
+                        return [2 /*return*/, !hasCanceledItem];
                 }
             });
         });

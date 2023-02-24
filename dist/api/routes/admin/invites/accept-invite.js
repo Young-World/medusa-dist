@@ -58,31 +58,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - token
- *           - user
- *         properties:
- *           token:
- *             description: "The invite token provided by the admin."
- *             type: string
- *           user:
- *             description: "The User to create."
- *             type: object
- *             required:
- *               - first_name
- *               - last_name
- *               - password
- *             properties:
- *               first_name:
- *                 type: string
- *                 description: the first name of the User
- *               last_name:
- *                 type: string
- *                 description: the last name of the User
- *               password:
- *                 description: The desired password for the User
- *                 type: string
- *                 format: password
+ *         $ref: "#/components/schemas/AdminPostInvitesInviteAcceptReq"
+ * x-codegen:
+ *   method: accept
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -183,6 +161,35 @@ var AdminPostInvitesInviteAcceptUserReq = /** @class */ (function () {
     return AdminPostInvitesInviteAcceptUserReq;
 }());
 exports.AdminPostInvitesInviteAcceptUserReq = AdminPostInvitesInviteAcceptUserReq;
+/**
+ * @schema AdminPostInvitesInviteAcceptReq
+ * type: object
+ * required:
+ *   - token
+ *   - user
+ * properties:
+ *   token:
+ *     description: "The invite token provided by the admin."
+ *     type: string
+ *   user:
+ *     description: "The User to create."
+ *     type: object
+ *     required:
+ *       - first_name
+ *       - last_name
+ *       - password
+ *     properties:
+ *       first_name:
+ *         type: string
+ *         description: the first name of the User
+ *       last_name:
+ *         type: string
+ *         description: the last name of the User
+ *       password:
+ *         description: The desired password for the User
+ *         type: string
+ *         format: password
+ */
 var AdminPostInvitesInviteAcceptReq = /** @class */ (function () {
     function AdminPostInvitesInviteAcceptReq() {
     }

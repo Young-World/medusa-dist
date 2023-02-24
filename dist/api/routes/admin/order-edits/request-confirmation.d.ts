@@ -1,11 +1,13 @@
 /**
  * @oas [post] /order-edits/{id}/request
  * operationId: "PostOrderEditsOrderEditRequest"
- * summary: "Request order edit confirmation"
+ * summary: "Request Confirmation"
  * description: "Request customer confirmation of an Order Edit"
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {string} The ID of the Order Edit to request confirmation from.
+ * x-codegen:
+ *   method: requestConfirmation
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -13,7 +15,7 @@
  *       import Medusa from "@medusajs/medusa-js"
  *       const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
  *       // must be previously logged in or use api token
- *       medusa.admin.orderEdits.requestConfirmation(edit_id)
+ *       medusa.admin.orderEdits.requestConfirmation(order_edit_id)
  *         .then({ order_edit }) => {
  *           console.log(order_edit.id)
  *         })
@@ -33,9 +35,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order_edit:
- *               $ref: "#/components/schemas/order_edit"
+ *           $ref: "#/components/schemas/AdminOrderEditsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -47,3 +47,6 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+export declare class AdminPostOrderEditsRequestConfirmationReq {
+    payment_collection_description?: string | undefined;
+}

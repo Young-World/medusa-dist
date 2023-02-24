@@ -75,6 +75,9 @@ var DiscountConditionService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(conditionId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"conditionId\" must be defined");
+                        }
                         manager = this.manager_;
                         conditionRepo = manager.getCustomRepository(this.discountConditionRepository_);
                         query = (0, utils_1.buildQuery)({ id: conditionId }, config);
@@ -121,7 +124,8 @@ var DiscountConditionService = /** @class */ (function (_super) {
                 return undefined;
         }
     };
-    DiscountConditionService.prototype.upsertCondition = function (data) {
+    DiscountConditionService.prototype.upsertCondition = function (data, overrideExisting) {
+        if (overrideExisting === void 0) { overrideExisting = true; }
         return __awaiter(this, void 0, void 0, function () {
             var resolvedConditionType;
             var _this = this;
@@ -148,7 +152,7 @@ var DiscountConditionService = /** @class */ (function (_super) {
                                     case 2:
                                         _a.sent();
                                         _a.label = 3;
-                                    case 3: return [4 /*yield*/, discountConditionRepo.addConditionResources(data.id, resolvedConditionType.resource_ids, resolvedConditionType.type, true)];
+                                    case 3: return [4 /*yield*/, discountConditionRepo.addConditionResources(data.id, resolvedConditionType.resource_ids, resolvedConditionType.type, overrideExisting)];
                                     case 4: return [2 /*return*/, _a.sent()];
                                     case 5:
                                         created = discountConditionRepo.create({
@@ -171,6 +175,42 @@ var DiscountConditionService = /** @class */ (function (_super) {
                                     throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.DUPLICATE_ERROR, "Discount Condition with operator '".concat(data.operator, "' and type '").concat(resolvedConditionType === null || resolvedConditionType === void 0 ? void 0 : resolvedConditionType.type, "' already exist on a Discount Rule"));
                                 }
                                 return [2 /*return*/];
+                            });
+                        }); })];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
+    DiscountConditionService.prototype.removeResources = function (data) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
+                            var resolvedConditionType, discountConditionRepo, resolvedCondition;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        resolvedConditionType = DiscountConditionService.resolveConditionType_(data);
+                                        if (!resolvedConditionType) {
+                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Missing one of products, collections, tags, types or customer groups in data");
+                                        }
+                                        discountConditionRepo = manager.getCustomRepository(this.discountConditionRepository_);
+                                        return [4 /*yield*/, this.retrieve(data.id)];
+                                    case 1:
+                                        resolvedCondition = _a.sent();
+                                        if (!(data.operator && data.operator !== resolvedCondition.operator)) return [3 /*break*/, 3];
+                                        resolvedCondition.operator = data.operator;
+                                        return [4 /*yield*/, discountConditionRepo.save(resolvedCondition)];
+                                    case 2:
+                                        _a.sent();
+                                        _a.label = 3;
+                                    case 3: return [4 /*yield*/, discountConditionRepo.removeConditionResources(data.id, resolvedConditionType.type, resolvedConditionType.resource_ids)];
+                                    case 4:
+                                        _a.sent();
+                                        return [2 /*return*/];
+                                }
                             });
                         }); })];
                     case 1: return [2 /*return*/, _a.sent()];

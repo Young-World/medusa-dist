@@ -44,6 +44,8 @@ var orders_1 = require("../orders");
  * description: "Registers a Return as canceled."
  * parameters:
  *   - (path) id=* {string} The ID of the Return.
+ * x-codegen:
+ *   method: cancel
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -71,9 +73,7 @@ var orders_1 = require("../orders");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/order"
+ *           $ref: "#/components/schemas/AdminReturnsCancelRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

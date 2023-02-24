@@ -51,10 +51,10 @@ var extendedUserApi1633512755401 = /** @class */ (function () {
                         return [4 /*yield*/, queryRunner.query("CREATE TABLE \"invite\" (\"id\" character varying NOT NULL, \"user_email\" character varying NOT NULL, \"role\" \"invite_role_enum\" DEFAULT 'member', \"accepted\" boolean NOT NULL DEFAULT false, \"created_at\" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), \"updated_at\" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), \"deleted_at\" TIMESTAMP WITH TIME ZONE, \"metadata\" jsonb, CONSTRAINT \"PK_fc9fa190e5a3c5d80604a4f63e1\" PRIMARY KEY (\"id\"))")];
                     case 2:
                         _a.sent();
-                        return [4 /*yield*/, queryRunner.query("ALTER TABLE \"public\".\"invite\" ADD \"token\" character varying NOT NULL")];
+                        return [4 /*yield*/, queryRunner.query("ALTER TABLE \"invite\" ADD \"token\" character varying NOT NULL")];
                     case 3:
                         _a.sent();
-                        return [4 /*yield*/, queryRunner.query("ALTER TABLE \"public\".\"invite\" ADD \"expires_at\" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()")];
+                        return [4 /*yield*/, queryRunner.query("ALTER TABLE \"invite\" ADD \"expires_at\" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()")];
                     case 4:
                         _a.sent();
                         return [4 /*yield*/, queryRunner.query("CREATE TYPE \"user_role_enum\" AS ENUM('admin', 'member', 'developer')")];
@@ -72,7 +72,7 @@ var extendedUserApi1633512755401 = /** @class */ (function () {
                         return [4 /*yield*/, queryRunner.query("DROP INDEX \"IDX_e12875dfb3b1d92d7d7c5377e2\"")];
                     case 9:
                         _a.sent();
-                        return [4 /*yield*/, queryRunner.query("CREATE UNIQUE INDEX \"IDX_ba8de19442d86957a3aa3b5006\" ON \"public\".\"user\" (\"email\") WHERE deleted_at IS NULL")];
+                        return [4 /*yield*/, queryRunner.query("CREATE UNIQUE INDEX \"IDX_ba8de19442d86957a3aa3b5006\" ON \"user\" (\"email\") WHERE deleted_at IS NULL")];
                     case 10:
                         _a.sent();
                         return [2 /*return*/];
@@ -87,7 +87,7 @@ var extendedUserApi1633512755401 = /** @class */ (function () {
                     case 0: return [4 /*yield*/, queryRunner.query("DROP INDEX \"IDX_ba8de19442d86957a3aa3b5006\"")];
                     case 1:
                         _a.sent();
-                        return [4 /*yield*/, queryRunner.query("CREATE UNIQUE INDEX \"IDX_e12875dfb3b1d92d7d7c5377e2\" ON \"public\".\"user\" (\"email\") ")];
+                        return [4 /*yield*/, queryRunner.query("CREATE UNIQUE INDEX \"IDX_e12875dfb3b1d92d7d7c5377e2\" ON \"user\" (\"email\") ")];
                     case 2:
                         _a.sent();
                         return [4 /*yield*/, queryRunner.query("DROP INDEX \"IDX_6b0ce4b4bcfd24491510bf19d1\"")];
@@ -99,10 +99,10 @@ var extendedUserApi1633512755401 = /** @class */ (function () {
                         return [4 /*yield*/, queryRunner.query("DROP TYPE \"user_role_enum\"")];
                     case 5:
                         _a.sent();
-                        return [4 /*yield*/, queryRunner.query("ALTER TABLE \"public\".\"invite\" DROP COLUMN \"expires_at\"")];
+                        return [4 /*yield*/, queryRunner.query("ALTER TABLE \"invite\" DROP COLUMN \"expires_at\"")];
                     case 6:
                         _a.sent();
-                        return [4 /*yield*/, queryRunner.query("ALTER TABLE \"public\".\"invite\" DROP COLUMN \"token\"")];
+                        return [4 /*yield*/, queryRunner.query("ALTER TABLE \"invite\" DROP COLUMN \"token\"")];
                     case 7:
                         _a.sent();
                         return [4 /*yield*/, queryRunner.query("DROP TABLE \"invite\"")];

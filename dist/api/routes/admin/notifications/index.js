@@ -17,7 +17,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.allowedAdminNotificationsFields = exports.defaultAdminNotificationsFields = exports.allowedAdminNotificationsRelations = exports.defaultAdminNotificationsRelations = void 0;
+exports.defaultAdminNotificationsFields = exports.defaultAdminNotificationsRelations = void 0;
 var express_1 = require("express");
 var middlewares_1 = __importDefault(require("../../../middlewares"));
 var route = (0, express_1.Router)();
@@ -34,7 +34,6 @@ exports.default = (function (app) {
     return app;
 });
 exports.defaultAdminNotificationsRelations = ["resends"];
-exports.allowedAdminNotificationsRelations = ["resends"];
 exports.defaultAdminNotificationsFields = [
     "id",
     "resource_type",
@@ -42,16 +41,6 @@ exports.defaultAdminNotificationsFields = [
     "event_name",
     "to",
     "provider_id",
-    "created_at",
-    "updated_at",
-];
-exports.allowedAdminNotificationsFields = [
-    "id",
-    "resource_type",
-    "resource_id",
-    "provider_id",
-    "event_name",
-    "to",
     "created_at",
     "updated_at",
 ];

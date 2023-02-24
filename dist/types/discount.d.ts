@@ -1,6 +1,4 @@
-import { DiscountConditionOperator } from "../models/discount-condition";
-import { AllocationType, DiscountRuleType } from "../models/discount-rule";
-import { Region } from "../models";
+import { AllocationType, DiscountConditionOperator, DiscountRuleType, Region } from "../models";
 export declare type QuerySelector = {
     q?: string;
 };
@@ -21,22 +19,39 @@ export declare class AdminUpsertConditionsReq {
     product_tags?: string[];
     customer_groups?: string[];
 }
-export declare type UpsertDiscountConditionInput = {
+export declare const DiscountConditionMapTypeToProperty: {
+    products: string;
+    product_types: string;
+    product_collections: string;
+    product_tags: string;
+    customer_groups: string;
+};
+export declare type DiscountConditionInput = {
     rule_id?: string;
     id?: string;
     operator?: DiscountConditionOperator;
-    products?: string[];
-    product_collections?: string[];
-    product_types?: string[];
-    product_tags?: string[];
-    customer_groups?: string[];
+    products?: (string | {
+        id: string;
+    })[];
+    product_collections?: (string | {
+        id: string;
+    })[];
+    product_types?: (string | {
+        id: string;
+    })[];
+    product_tags?: (string | {
+        id: string;
+    })[];
+    customer_groups?: (string | {
+        id: string;
+    })[];
 };
 export declare type CreateDiscountRuleInput = {
     description?: string;
     type: DiscountRuleType;
     value: number;
     allocation: AllocationType;
-    conditions?: UpsertDiscountConditionInput[];
+    conditions?: DiscountConditionInput[];
 };
 export declare type CreateDiscountInput = {
     code: string;
@@ -55,7 +70,7 @@ export declare type UpdateDiscountRuleInput = {
     description?: string;
     value?: number;
     allocation?: AllocationType;
-    conditions?: UpsertDiscountConditionInput[];
+    conditions?: DiscountConditionInput[];
 };
 export declare type UpdateDiscountInput = {
     code?: string;

@@ -113,7 +113,7 @@ exports.default = (function (_a) {
                     featureFlagRouter = container.resolve("featureFlagRouter");
                     entityManager = container.resolve("manager");
                     return [4 /*yield*/, entityManager.transaction(function (manager) { return __awaiter(void 0, void 0, void 0, function () {
-                            var countryRepo, hasCountries, countries_2, countries_2_1, c, query, iso2, iso3, numeric, name, display, e_1_1;
+                            var countryRepo, hasCountries, countries_2, countries_2_1, c, query, iso2, iso3, numeric, name_1, display, e_1_1;
                             var e_1, _a;
                             var _b;
                             return __generator(this, function (_c) {
@@ -136,13 +136,13 @@ exports.default = (function (_a) {
                                         iso2 = c.alpha2.toLowerCase();
                                         iso3 = c.alpha3.toLowerCase();
                                         numeric = c.numeric;
-                                        name = c.name.toUpperCase();
+                                        name_1 = c.name.toUpperCase();
                                         display = c.name;
                                         return [4 /*yield*/, ((_b = manager.queryRunner) === null || _b === void 0 ? void 0 : _b.query(query, [
                                                 iso2,
                                                 iso3,
                                                 numeric,
-                                                name,
+                                                name_1,
                                                 display,
                                             ]))];
                                     case 4:
@@ -169,7 +169,7 @@ exports.default = (function (_a) {
                 case 1:
                     _b.sent();
                     return [4 /*yield*/, entityManager.transaction(function (manager) { return __awaiter(void 0, void 0, void 0, function () {
-                            var currencyRepo, hasCurrencies, _a, _b, _c, c, query, code, sym, nat, name, e_2_1;
+                            var currencyRepo, hasCurrencies, _a, _b, _c, c, query, code, sym, nat, name_2, e_2_1;
                             var e_2, _d;
                             var _e;
                             return __generator(this, function (_f) {
@@ -192,8 +192,8 @@ exports.default = (function (_a) {
                                         code = c.code.toLowerCase();
                                         sym = c.symbol;
                                         nat = c.symbol_native;
-                                        name = c.name;
-                                        return [4 /*yield*/, ((_e = manager.queryRunner) === null || _e === void 0 ? void 0 : _e.query(query, [code, sym, nat, name]))];
+                                        name_2 = c.name;
+                                        return [4 /*yield*/, ((_e = manager.queryRunner) === null || _e === void 0 ? void 0 : _e.query(query, [code, sym, nat, name_2]))];
                                     case 4:
                                         _f.sent();
                                         _f.label = 5;

@@ -12,6 +12,7 @@ import { DateComparisonOperator } from "../../../../types/common";
  *   - (query) title {string} The title of collections to return.
  *   - (query) handle {string} The handle of collections to return.
  *   - (query) q {string} a search term to search titles and handles.
+ *   - (query) discount_condition_id {string} The discount condition id on which to filter the product collections.
  *   - in: query
  *     name: created_at
  *     description: Date comparison for when resulting collections were created.
@@ -78,6 +79,9 @@ import { DateComparisonOperator } from "../../../../types/common";
  *            type: string
  *            description: filter by dates greater than or equal to this date
  *            format: date
+ * x-codegen:
+ *   method: list
+ *   queryParams: AdminGetCollectionsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -105,20 +109,7 @@ import { DateComparisonOperator } from "../../../../types/common";
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            collections:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/product_collection"
- *            count:
- *               type: integer
- *               description: The total number of items available
- *            offset:
- *               type: integer
- *               description: The number of items skipped before these items
- *            limit:
- *               type: integer
- *               description: The number of items per page
+ *          $ref: "#/components/schemas/AdminCollectionsListRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":
@@ -145,4 +136,5 @@ export declare class AdminGetCollectionsParams extends AdminGetCollectionsPagina
     updated_at?: DateComparisonOperator;
     deleted_at?: DateComparisonOperator;
     q?: string;
+    discount_condition_id?: string;
 }

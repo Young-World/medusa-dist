@@ -63,14 +63,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminPostDiscountsParams = exports.AdminCreateCondition = exports.AdminPostDiscountsDiscountRule = exports.AdminPostDiscountsReq = void 0;
 var models_1 = require("../../../../models");
 var class_validator_1 = require("class-validator");
-var _1 = require(".");
-var update_discount_1 = require("./update-discount");
 var discount_1 = require("../../../../types/discount");
 var greater_than_1 = require("../../../../utils/validators/greater-than");
 var iso8601_duration_1 = require("../../../../utils/validators/iso8601-duration");
 var class_transformer_1 = require("class-transformer");
-var get_query_config_1 = require("../../../../utils/get-query-config");
-var validator_1 = require("../../../../utils/validator");
+var common_1 = require("../../../../types/common");
 /**
  * @oas [post] /discounts
  * operationId: "PostDiscounts"
@@ -78,109 +75,16 @@ var validator_1 = require("../../../../utils/validator");
  * x-authenticated: true
  * description: "Creates a Discount with a given set of rules that define how the Discount behaves."
  * parameters:
- *   - (query) expand {string} (Comma separated) Which fields should be expanded in each customer.
- *   - (query) fields {string} (Comma separated) Which fields should be retrieved in each customer.
+ *   - (query) expand {string} (Comma separated) Which fields should be expanded in the results.
+ *   - (query) fields {string} (Comma separated) Which fields should be retrieved in the results.
  * requestBody:
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - code
- *           - rule
- *         properties:
- *           code:
- *             type: string
- *             description: A unique code that will be used to redeem the Discount
- *           is_dynamic:
- *             type: boolean
- *             description: Whether the Discount should have multiple instances of itself, each with a different code. This can be useful for automatically generated codes that all have to follow a common set of rules.
- *             default: false
- *           rule:
- *             description: The Discount Rule that defines how Discounts are calculated
- *             type: object
- *             required:
- *                - type
- *                - value
- *                - allocation
- *             properties:
- *               description:
- *                 type: string
- *                 description: "A short description of the discount"
- *               type:
- *                 type: string
- *                 description: "The type of the Discount, can be `fixed` for discounts that reduce the price by a fixed amount, `percentage` for percentage reductions or `free_shipping` for shipping vouchers."
- *                 enum: [fixed, percentage, free_shipping]
- *               value:
- *                 type: number
- *                 description: "The value that the discount represents; this will depend on the type of the discount"
- *               allocation:
- *                 type: string
- *                 description: "The scope that the discount should apply to."
- *                 enum: [total, item]
- *               conditions:
- *                 type: array
- *                 description: "A set of conditions that can be used to limit when  the discount can be used. Only one of `products`, `product_types`, `product_collections`, `product_tags`, and `customer_groups` should be provided."
- *                 items:
- *                   type: object
- *                   required:
- *                      - operator
- *                   properties:
- *                     operator:
- *                       type: string
- *                       description: Operator of the condition
- *                       enum: [in, not_in]
- *                     products:
- *                       type: array
- *                       description: list of product IDs if the condition is applied on products.
- *                       items:
- *                         type: string
- *                     product_types:
- *                       type: array
- *                       description: list of product type IDs if the condition is applied on product types.
- *                       items:
- *                         type: string
- *                     product_collections:
- *                       type: array
- *                       description: list of product collection IDs if the condition is applied on product collections.
- *                       items:
- *                         type: string
- *                     product_tags:
- *                       type: array
- *                       description: list of product tag IDs if the condition is applied on product tags.
- *                       items:
- *                         type: string
- *                     customer_groups:
- *                       type: array
- *                       description: list of customer group IDs if the condition is applied on customer groups.
- *                       items:
- *                         type: string
- *           is_disabled:
- *             type: boolean
- *             description: Whether the Discount code is disabled on creation. You will have to enable it later to make it available to Customers.
- *             default: false
- *           starts_at:
- *             type: string
- *             format: date-time
- *             description: The time at which the Discount should be available.
- *           ends_at:
- *             type: string
- *             format: date-time
- *             description: The time at which the Discount should no longer be available.
- *           valid_duration:
- *             type: string
- *             description: Duration the discount runs between
- *             example: P3Y6M4DT12H30M5S
- *           regions:
- *             description: A list of Region ids representing the Regions in which the Discount can be used.
- *             type: array
- *             items:
- *               type: string
- *           usage_limit:
- *             type: number
- *             description: Maximum times the discount can be used
- *           metadata:
- *             description: An optional set of key-value pairs to hold additional information.
- *             type: object
+ *         $ref: "#/components/schemas/AdminPostDiscountsReq"
+ * x-codegen:
+ *   method: create
+ *   queryParams: AdminPostDiscountsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -196,6 +100,7 @@ var validator_1 = require("../../../../utils/validator");
  *           value: 10,
  *           allocation: AllocationType.ITEM
  *         },
+ *         regions: ["reg_XXXXXXXX"],
  *         is_dynamic: false,
  *         is_disabled: false
  *       })
@@ -214,7 +119,8 @@ var validator_1 = require("../../../../utils/validator");
  *              "type": "fixed",
  *              "value": 10,
  *              "allocation": "item"
- *           }
+ *           },
+ *           "regions": ["reg_XXXXXXXX"]
  *       }'
  * security:
  *   - api_token: []
@@ -227,9 +133,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             discount:
- *               $ref: "#/components/schemas/discount"
+ *           $ref: "#/components/schemas/AdminDiscountsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -244,16 +148,10 @@ var validator_1 = require("../../../../utils/validator");
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var validated, validatedParams, discountService, manager, created, config, discount;
-    var _a, _b;
-    return __generator(this, function (_c) {
-        switch (_c.label) {
-            case 0: return [4 /*yield*/, (0, validator_1.validator)(AdminPostDiscountsReq, req.body)];
-            case 1:
-                validated = _c.sent();
-                return [4 /*yield*/, (0, validator_1.validator)(update_discount_1.AdminPostDiscountsDiscountParams, req.query)];
-            case 2:
-                validatedParams = _c.sent();
+    var discountService, manager, created, discount;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
                 discountService = req.scope.resolve("discountService");
                 manager = req.scope.resolve("manager");
                 return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
@@ -261,22 +159,123 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                             switch (_a.label) {
                                 case 0: return [4 /*yield*/, discountService
                                         .withTransaction(transactionManager)
-                                        .create(validated)];
+                                        .create(req.validatedBody)];
                                 case 1: return [2 /*return*/, _a.sent()];
                             }
                         });
                     }); })];
-            case 3:
-                created = _c.sent();
-                config = (0, get_query_config_1.getRetrieveConfig)(_1.defaultAdminDiscountsFields, _1.defaultAdminDiscountsRelations, (_a = validatedParams === null || validatedParams === void 0 ? void 0 : validatedParams.fields) === null || _a === void 0 ? void 0 : _a.split(","), (_b = validatedParams === null || validatedParams === void 0 ? void 0 : validatedParams.expand) === null || _b === void 0 ? void 0 : _b.split(","));
-                return [4 /*yield*/, discountService.retrieve(created.id, config)];
-            case 4:
-                discount = _c.sent();
+            case 1:
+                created = _a.sent();
+                return [4 /*yield*/, discountService.retrieve(created.id, req.retrieveConfig)];
+            case 2:
+                discount = _a.sent();
                 res.status(200).json({ discount: discount });
                 return [2 /*return*/];
         }
     });
 }); });
+/**
+ * @schema AdminPostDiscountsReq
+ * type: object
+ * required:
+ *   - code
+ *   - rule
+ *   - regions
+ * properties:
+ *   code:
+ *     type: string
+ *     description: A unique code that will be used to redeem the Discount
+ *   is_dynamic:
+ *     type: boolean
+ *     description: Whether the Discount should have multiple instances of itself, each with a different code. This can be useful for automatically generated codes that all have to follow a common set of rules.
+ *     default: false
+ *   rule:
+ *     description: The Discount Rule that defines how Discounts are calculated
+ *     type: object
+ *     required:
+ *        - type
+ *        - value
+ *        - allocation
+ *     properties:
+ *       description:
+ *         type: string
+ *         description: "A short description of the discount"
+ *       type:
+ *         type: string
+ *         description: "The type of the Discount, can be `fixed` for discounts that reduce the price by a fixed amount, `percentage` for percentage reductions or `free_shipping` for shipping vouchers."
+ *         enum: [fixed, percentage, free_shipping]
+ *       value:
+ *         type: number
+ *         description: "The value that the discount represents; this will depend on the type of the discount"
+ *       allocation:
+ *         type: string
+ *         description: "The scope that the discount should apply to."
+ *         enum: [total, item]
+ *       conditions:
+ *         type: array
+ *         description: "A set of conditions that can be used to limit when  the discount can be used. Only one of `products`, `product_types`, `product_collections`, `product_tags`, and `customer_groups` should be provided."
+ *         items:
+ *           type: object
+ *           required:
+ *              - operator
+ *           properties:
+ *             operator:
+ *               type: string
+ *               description: Operator of the condition
+ *               enum: [in, not_in]
+ *             products:
+ *               type: array
+ *               description: list of product IDs if the condition is applied on products.
+ *               items:
+ *                 type: string
+ *             product_types:
+ *               type: array
+ *               description: list of product type IDs if the condition is applied on product types.
+ *               items:
+ *                 type: string
+ *             product_collections:
+ *               type: array
+ *               description: list of product collection IDs if the condition is applied on product collections.
+ *               items:
+ *                 type: string
+ *             product_tags:
+ *               type: array
+ *               description: list of product tag IDs if the condition is applied on product tags.
+ *               items:
+ *                 type: string
+ *             customer_groups:
+ *               type: array
+ *               description: list of customer group IDs if the condition is applied on customer groups.
+ *               items:
+ *                 type: string
+ *   is_disabled:
+ *     type: boolean
+ *     description: Whether the Discount code is disabled on creation. You will have to enable it later to make it available to Customers.
+ *     default: false
+ *   starts_at:
+ *     type: string
+ *     format: date-time
+ *     description: The time at which the Discount should be available.
+ *   ends_at:
+ *     type: string
+ *     format: date-time
+ *     description: The time at which the Discount should no longer be available.
+ *   valid_duration:
+ *     type: string
+ *     description: Duration the discount runs between
+ *     example: P3Y6M4DT12H30M5S
+ *   regions:
+ *     description: A list of Region ids representing the Regions in which the Discount can be used.
+ *     type: array
+ *     items:
+ *       type: string
+ *   usage_limit:
+ *     type: number
+ *     description: Maximum times the discount can be used
+ *   metadata:
+ *     description: An optional set of key-value pairs to hold additional information.
+ *     type: object
+ */
 var AdminPostDiscountsReq = /** @class */ (function () {
     function AdminPostDiscountsReq() {
         this.is_dynamic = false;
@@ -329,7 +328,6 @@ var AdminPostDiscountsReq = /** @class */ (function () {
     ], AdminPostDiscountsReq.prototype, "usage_limit", void 0);
     __decorate([
         (0, class_validator_1.IsArray)(),
-        (0, class_validator_1.IsOptional)(),
         (0, class_validator_1.IsString)({ each: true }),
         __metadata("design:type", Array)
     ], AdminPostDiscountsReq.prototype, "regions", void 0);
@@ -387,20 +385,12 @@ var AdminCreateCondition = /** @class */ (function (_super) {
     return AdminCreateCondition;
 }(discount_1.AdminUpsertConditionsReq));
 exports.AdminCreateCondition = AdminCreateCondition;
-var AdminPostDiscountsParams = /** @class */ (function () {
+var AdminPostDiscountsParams = /** @class */ (function (_super) {
+    __extends(AdminPostDiscountsParams, _super);
     function AdminPostDiscountsParams() {
+        return _super !== null && _super.apply(this, arguments) || this;
     }
-    __decorate([
-        (0, class_validator_1.IsArray)(),
-        (0, class_validator_1.IsOptional)(),
-        __metadata("design:type", Array)
-    ], AdminPostDiscountsParams.prototype, "expand", void 0);
-    __decorate([
-        (0, class_validator_1.IsArray)(),
-        (0, class_validator_1.IsOptional)(),
-        __metadata("design:type", Array)
-    ], AdminPostDiscountsParams.prototype, "fields", void 0);
     return AdminPostDiscountsParams;
-}());
+}(common_1.FindParams));
 exports.AdminPostDiscountsParams = AdminPostDiscountsParams;
 //# sourceMappingURL=create-discount.js.map

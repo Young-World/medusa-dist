@@ -6,14 +6,7 @@ import { ReturnItemRepository } from "../repositories/return-item";
 import { FindConfig, Selector } from "../types/common";
 import { OrdersReturnItem } from "../types/orders";
 import { CreateReturnInput, UpdateReturnInput } from "../types/return";
-import FulfillmentProviderService from "./fulfillment-provider";
-import InventoryService from "./inventory";
-import LineItemService from "./line-item";
-import OrderService from "./order";
-import ReturnReasonService from "./return-reason";
-import ShippingOptionService from "./shipping-option";
-import TaxProviderService from "./tax-provider";
-import TotalsService from "./totals";
+import { FulfillmentProviderService, LineItemService, OrderService, ProductVariantInventoryService, ReturnReasonService, ShippingOptionService, TaxProviderService, TotalsService } from ".";
 declare type InjectedDependencies = {
     manager: EntityManager;
     totalsService: TotalsService;
@@ -24,8 +17,8 @@ declare type InjectedDependencies = {
     returnReasonService: ReturnReasonService;
     taxProviderService: TaxProviderService;
     fulfillmentProviderService: FulfillmentProviderService;
-    inventoryService: InventoryService;
     orderService: OrderService;
+    productVariantInventoryService: ProductVariantInventoryService;
 };
 declare type Transformer = (item?: LineItem, quantity?: number, additional?: OrdersReturnItem) => Promise<DeepPartial<LineItem>> | DeepPartial<LineItem>;
 declare class ReturnService extends TransactionBaseService {
@@ -39,9 +32,9 @@ declare class ReturnService extends TransactionBaseService {
     protected readonly shippingOptionService_: ShippingOptionService;
     protected readonly fulfillmentProviderService_: FulfillmentProviderService;
     protected readonly returnReasonService_: ReturnReasonService;
-    protected readonly inventoryService_: InventoryService;
     protected readonly orderService_: OrderService;
-    constructor({ manager, totalsService, lineItemService, returnRepository, returnItemRepository, shippingOptionService, returnReasonService, taxProviderService, fulfillmentProviderService, inventoryService, orderService, }: InjectedDependencies);
+    protected readonly productVariantInventoryService_: ProductVariantInventoryService;
+    constructor({ manager, totalsService, lineItemService, returnRepository, returnItemRepository, shippingOptionService, returnReasonService, taxProviderService, fulfillmentProviderService, orderService, productVariantInventoryService, }: InjectedDependencies);
     /**
      * Retrieves the order line items, given an array of items
      * @param order - the order to get line items from
@@ -93,11 +86,11 @@ declare class ReturnService extends TransactionBaseService {
     }): DeepPartial<LineItem>;
     /**
      * Retrieves a return by its id.
-     * @param id - the id of the return to retrieve
+     * @param returnId - the id of the return to retrieve
      * @param config - the config object
      * @return the return
      */
-    retrieve(id: string, config?: FindConfig<Return>): Promise<Return | never>;
+    retrieve(returnId: string, config?: FindConfig<Return>): Promise<Return | never>;
     retrieveBySwap(swapId: string, relations?: string[]): Promise<Return | never>;
     update(returnId: string, update: UpdateReturnInput): Promise<Return>;
     /**
@@ -125,6 +118,8 @@ declare class ReturnService extends TransactionBaseService {
      * product mismatch
      * @return the result of the update operation
      */
-    receive(returnId: string, receivedItems: OrdersReturnItem[], refundAmount?: number, allowMismatch?: boolean): Promise<Return | never>;
+    receive(returnId: string, receivedItems: OrdersReturnItem[], refundAmount?: number, allowMismatch?: boolean, context?: {
+        locationId?: string;
+    }): Promise<Return | never>;
 }
 export default ReturnService;

@@ -46,6 +46,8 @@ var _1 = require(".");
  * parameters:
  *   - (path) id=* {string} The ID of the Region.
  *   - (path) provider_id=* {string} The ID of the Payment Provider.
+ * x-codegen:
+ *   method: deletePaymentProvider
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -73,9 +75,7 @@ var _1 = require(".");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             region:
- *               $ref: "#/components/schemas/region"
+ *           $ref: "#/components/schemas/AdminRegionsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

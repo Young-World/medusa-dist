@@ -7,6 +7,8 @@
  * parameters:
  *   - (path) id=* {string} The ID of the Draft Order.
  *   - (path) line_id=* {string} The ID of the Draft Order.
+ * x-codegen:
+ *   method: removeLineItem
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -34,9 +36,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             draft_order:
- *               $ref: "#/components/schemas/draft-order"
+ *           $ref: "#/components/schemas/AdminDraftOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

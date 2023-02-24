@@ -8,11 +8,13 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AdminUpsertConditionsReq = exports.AdminGetDiscountsDiscountRuleParams = exports.FilterableDiscountProps = void 0;
+exports.DiscountConditionMapTypeToProperty = exports.AdminUpsertConditionsReq = exports.AdminGetDiscountsDiscountRuleParams = exports.FilterableDiscountProps = void 0;
 var class_transformer_1 = require("class-transformer");
 var class_validator_1 = require("class-validator");
-var discount_rule_1 = require("../models/discount-rule");
+var models_1 = require("../models");
+var is_boolean_1 = require("../utils/validators/is-boolean");
 var exactly_one_1 = require("./validators/exactly-one");
 var FilterableDiscountProps = /** @class */ (function () {
     function FilterableDiscountProps() {
@@ -27,7 +29,7 @@ var FilterableDiscountProps = /** @class */ (function () {
         (0, class_validator_1.IsOptional)(),
         (0, class_transformer_1.Transform)(function (_a) {
             var value = _a.value;
-            return value === "true";
+            return is_boolean_1.optionalBooleanMapper.get(value);
         }),
         __metadata("design:type", Boolean)
     ], FilterableDiscountProps.prototype, "is_dynamic", void 0);
@@ -36,7 +38,7 @@ var FilterableDiscountProps = /** @class */ (function () {
         (0, class_validator_1.IsOptional)(),
         (0, class_transformer_1.Transform)(function (_a) {
             var value = _a.value;
-            return value === "true";
+            return is_boolean_1.optionalBooleanMapper.get(value);
         }),
         __metadata("design:type", Boolean)
     ], FilterableDiscountProps.prototype, "is_disabled", void 0);
@@ -54,12 +56,12 @@ var AdminGetDiscountsDiscountRuleParams = /** @class */ (function () {
     }
     __decorate([
         (0, class_validator_1.IsOptional)(),
-        (0, class_validator_1.IsEnum)(discount_rule_1.DiscountRuleType),
+        (0, class_validator_1.IsEnum)(models_1.DiscountRuleType),
         __metadata("design:type", String)
     ], AdminGetDiscountsDiscountRuleParams.prototype, "type", void 0);
     __decorate([
         (0, class_validator_1.IsOptional)(),
-        (0, class_validator_1.IsEnum)(discount_rule_1.AllocationType),
+        (0, class_validator_1.IsEnum)(models_1.AllocationType),
         __metadata("design:type", String)
     ], AdminGetDiscountsDiscountRuleParams.prototype, "allocation", void 0);
     return AdminGetDiscountsDiscountRuleParams;
@@ -131,4 +133,11 @@ var AdminUpsertConditionsReq = /** @class */ (function () {
     return AdminUpsertConditionsReq;
 }());
 exports.AdminUpsertConditionsReq = AdminUpsertConditionsReq;
+exports.DiscountConditionMapTypeToProperty = (_a = {},
+    _a[models_1.DiscountConditionType.PRODUCTS] = "products",
+    _a[models_1.DiscountConditionType.PRODUCT_TYPES] = "product_types",
+    _a[models_1.DiscountConditionType.PRODUCT_COLLECTIONS] = "product_collections",
+    _a[models_1.DiscountConditionType.PRODUCT_TAGS] = "product_tags",
+    _a[models_1.DiscountConditionType.CUSTOMER_GROUPS] = "customer_groups",
+    _a);
 //# sourceMappingURL=discount.js.map

@@ -45,6 +45,8 @@ var _1 = require("./");
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {string} The ID of the Gift Card.
+ * x-codegen:
+ *   method: retrieve
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -72,9 +74,7 @@ var _1 = require("./");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             gift_card:
- *               $ref: "#/components/schemas/gift_card"
+ *           $ref: "#/components/schemas/AdminGiftCardsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

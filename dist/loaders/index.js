@@ -64,6 +64,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var awilix_1 = require("awilix");
 var medusa_telemetry_1 = require("medusa-telemetry");
+var os_1 = require("os");
 require("reflect-metadata");
 var request_ip_1 = __importDefault(require("request-ip"));
 var typeorm_1 = require("typeorm");
@@ -75,6 +76,7 @@ var express_1 = __importDefault(require("./express"));
 var feature_flags_1 = __importDefault(require("./feature-flags"));
 var logger_1 = __importDefault(require("./logger"));
 var models_1 = __importDefault(require("./models"));
+var module_1 = __importDefault(require("./module"));
 var passport_1 = __importDefault(require("./passport"));
 var plugins_1 = __importStar(require("./plugins"));
 var redis_1 = __importDefault(require("./redis"));
@@ -86,7 +88,7 @@ var subscribers_1 = __importDefault(require("./subscribers"));
 exports.default = (function (_a) {
     var rootDirectory = _a.directory, expressApp = _a.expressApp, isTest = _a.isTest;
     return __awaiter(void 0, void 0, void 0, function () {
-        var configModule, container, featureFlagRouter, modelsActivity, mAct, pmActivity, pmAct, repoActivity, rAct, dbActivity, dbConnection, dbAct, stratActivity, stratAct, servicesActivity, servAct, expActivity, exAct, pluginsActivity, pAct, subActivity, subAct, apiActivity, apiAct, defaultsActivity, dAct, searchActivity, searchAct;
+        var configModule, container, featureFlagRouter, modelsActivity, mAct, pmActivity, pmAct, repoActivity, rAct, stratActivity, stratAct, modulesActivity, modAct, dbActivity, dbConnection, dbAct, servicesActivity, servAct, expActivity, exAct, pluginsActivity, pAct, subActivity, subAct, apiActivity, apiAct, defaultsActivity, dAct, searchActivity, searchAct;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
@@ -122,12 +124,12 @@ exports.default = (function (_a) {
                     return [4 /*yield*/, (0, redis_1.default)({ container: container, configModule: configModule, logger: logger_1.default })];
                 case 1:
                     _b.sent();
-                    modelsActivity = logger_1.default.activity("Initializing models");
+                    modelsActivity = logger_1.default.activity("Initializing models".concat(os_1.EOL));
                     (0, medusa_telemetry_1.track)("MODELS_INIT_STARTED");
                     (0, models_1.default)({ container: container });
                     mAct = logger_1.default.success(modelsActivity, "Models initialized") || {};
                     (0, medusa_telemetry_1.track)("MODELS_INIT_COMPLETED", { duration: mAct.duration });
-                    pmActivity = logger_1.default.activity("Initializing plugin models");
+                    pmActivity = logger_1.default.activity("Initializing plugin models".concat(os_1.EOL));
                     (0, medusa_telemetry_1.track)("PLUGIN_MODELS_INIT_STARTED");
                     return [4 /*yield*/, (0, plugins_1.registerPluginModels)({
                             rootDirectory: rootDirectory,
@@ -138,36 +140,46 @@ exports.default = (function (_a) {
                     _b.sent();
                     pmAct = logger_1.default.success(pmActivity, "Plugin models initialized") || {};
                     (0, medusa_telemetry_1.track)("PLUGIN_MODELS_INIT_COMPLETED", { duration: pmAct.duration });
-                    repoActivity = logger_1.default.activity("Initializing repositories");
+                    repoActivity = logger_1.default.activity("Initializing repositories".concat(os_1.EOL));
                     (0, medusa_telemetry_1.track)("REPOSITORIES_INIT_STARTED");
                     (0, repositories_1.default)({ container: container });
                     rAct = logger_1.default.success(repoActivity, "Repositories initialized") || {};
                     (0, medusa_telemetry_1.track)("REPOSITORIES_INIT_COMPLETED", { duration: rAct.duration });
-                    dbActivity = logger_1.default.activity("Initializing database");
-                    (0, medusa_telemetry_1.track)("DATABASE_INIT_STARTED");
-                    return [4 /*yield*/, (0, database_1.default)({ container: container, configModule: configModule })];
-                case 3:
-                    dbConnection = _b.sent();
-                    dbAct = logger_1.default.success(dbActivity, "Database initialized") || {};
-                    (0, medusa_telemetry_1.track)("DATABASE_INIT_COMPLETED", { duration: dbAct.duration });
-                    container.register({ manager: (0, awilix_1.asValue)(dbConnection.manager) });
-                    stratActivity = logger_1.default.activity("Initializing strategies");
+                    stratActivity = logger_1.default.activity("Initializing strategies".concat(os_1.EOL));
                     (0, medusa_telemetry_1.track)("STRATEGIES_INIT_STARTED");
                     (0, strategies_1.default)({ container: container, configModule: configModule, isTest: isTest });
                     stratAct = logger_1.default.success(stratActivity, "Strategies initialized") || {};
                     (0, medusa_telemetry_1.track)("STRATEGIES_INIT_COMPLETED", { duration: stratAct.duration });
-                    servicesActivity = logger_1.default.activity("Initializing services");
+                    modulesActivity = logger_1.default.activity("Initializing modules".concat(os_1.EOL));
+                    (0, medusa_telemetry_1.track)("MODULES_INIT_STARTED");
+                    return [4 /*yield*/, (0, module_1.default)({ container: container, configModule: configModule, logger: logger_1.default })];
+                case 3:
+                    _b.sent();
+                    modAct = logger_1.default.success(modulesActivity, "Modules initialized") || {};
+                    (0, medusa_telemetry_1.track)("MODULES_INIT_COMPLETED", { duration: modAct.duration });
+                    dbActivity = logger_1.default.activity("Initializing database".concat(os_1.EOL));
+                    (0, medusa_telemetry_1.track)("DATABASE_INIT_STARTED");
+                    return [4 /*yield*/, (0, database_1.default)({
+                            container: container,
+                            configModule: configModule,
+                        })];
+                case 4:
+                    dbConnection = _b.sent();
+                    dbAct = logger_1.default.success(dbActivity, "Database initialized") || {};
+                    (0, medusa_telemetry_1.track)("DATABASE_INIT_COMPLETED", { duration: dbAct.duration });
+                    container.register({ manager: (0, awilix_1.asValue)(dbConnection.manager) });
+                    servicesActivity = logger_1.default.activity("Initializing services".concat(os_1.EOL));
                     (0, medusa_telemetry_1.track)("SERVICES_INIT_STARTED");
                     (0, services_1.default)({ container: container, configModule: configModule, isTest: isTest });
                     servAct = logger_1.default.success(servicesActivity, "Services initialized") || {};
                     (0, medusa_telemetry_1.track)("SERVICES_INIT_COMPLETED", { duration: servAct.duration });
-                    expActivity = logger_1.default.activity("Initializing express");
+                    expActivity = logger_1.default.activity("Initializing express".concat(os_1.EOL));
                     (0, medusa_telemetry_1.track)("EXPRESS_INIT_STARTED");
                     return [4 /*yield*/, (0, express_1.default)({ app: expressApp, configModule: configModule })];
-                case 4:
+                case 5:
                     _b.sent();
                     return [4 /*yield*/, (0, passport_1.default)({ app: expressApp, container: container, configModule: configModule })];
-                case 5:
+                case 6:
                     _b.sent();
                     exAct = logger_1.default.success(expActivity, "Express intialized") || {};
                     (0, medusa_telemetry_1.track)("EXPRESS_INIT_COMPLETED", { duration: exAct.duration });
@@ -177,7 +189,7 @@ exports.default = (function (_a) {
                         req.scope = container.createScope();
                         next();
                     });
-                    pluginsActivity = logger_1.default.activity("Initializing plugins");
+                    pluginsActivity = logger_1.default.activity("Initializing plugins".concat(os_1.EOL));
                     (0, medusa_telemetry_1.track)("PLUGINS_INIT_STARTED");
                     return [4 /*yield*/, (0, plugins_1.default)({
                             container: container,
@@ -186,33 +198,33 @@ exports.default = (function (_a) {
                             app: expressApp,
                             activityId: pluginsActivity,
                         })];
-                case 6:
+                case 7:
                     _b.sent();
                     pAct = logger_1.default.success(pluginsActivity, "Plugins intialized") || {};
                     (0, medusa_telemetry_1.track)("PLUGINS_INIT_COMPLETED", { duration: pAct.duration });
-                    subActivity = logger_1.default.activity("Initializing subscribers");
+                    subActivity = logger_1.default.activity("Initializing subscribers".concat(os_1.EOL));
                     (0, medusa_telemetry_1.track)("SUBSCRIBERS_INIT_STARTED");
                     (0, subscribers_1.default)({ container: container });
                     subAct = logger_1.default.success(subActivity, "Subscribers initialized") || {};
                     (0, medusa_telemetry_1.track)("SUBSCRIBERS_INIT_COMPLETED", { duration: subAct.duration });
-                    apiActivity = logger_1.default.activity("Initializing API");
+                    apiActivity = logger_1.default.activity("Initializing API".concat(os_1.EOL));
                     (0, medusa_telemetry_1.track)("API_INIT_STARTED");
                     return [4 /*yield*/, (0, api_1.default)({ container: container, app: expressApp, configModule: configModule })];
-                case 7:
+                case 8:
                     _b.sent();
                     apiAct = logger_1.default.success(apiActivity, "API initialized") || {};
                     (0, medusa_telemetry_1.track)("API_INIT_COMPLETED", { duration: apiAct.duration });
-                    defaultsActivity = logger_1.default.activity("Initializing defaults");
+                    defaultsActivity = logger_1.default.activity("Initializing defaults".concat(os_1.EOL));
                     (0, medusa_telemetry_1.track)("DEFAULTS_INIT_STARTED");
                     return [4 /*yield*/, (0, defaults_1.default)({ container: container })];
-                case 8:
+                case 9:
                     _b.sent();
                     dAct = logger_1.default.success(defaultsActivity, "Defaults initialized") || {};
                     (0, medusa_telemetry_1.track)("DEFAULTS_INIT_COMPLETED", { duration: dAct.duration });
-                    searchActivity = logger_1.default.activity("Initializing search engine indexing");
+                    searchActivity = logger_1.default.activity("Initializing search engine indexing".concat(os_1.EOL));
                     (0, medusa_telemetry_1.track)("SEARCH_ENGINE_INDEXING_STARTED");
                     return [4 /*yield*/, (0, search_index_1.default)({ container: container })];
-                case 9:
+                case 10:
                     _b.sent();
                     searchAct = logger_1.default.success(searchActivity, "Indexing event emitted") || {};
                     (0, medusa_telemetry_1.track)("SEARCH_ENGINE_INDEXING_COMPLETED", { duration: searchAct.duration });

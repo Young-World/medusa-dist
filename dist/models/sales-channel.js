@@ -29,6 +29,7 @@ var typeorm_1 = require("typeorm");
 var feature_flag_decorators_1 = require("../utils/feature-flag-decorators");
 var interfaces_1 = require("../interfaces");
 var utils_1 = require("../utils");
+var sales_channel_location_1 = require("./sales-channel-location");
 var SalesChannel = /** @class */ (function (_super) {
     __extends(SalesChannel, _super);
     function SalesChannel() {
@@ -50,6 +51,12 @@ var SalesChannel = /** @class */ (function (_super) {
         __metadata("design:type", Boolean)
     ], SalesChannel.prototype, "is_disabled", void 0);
     __decorate([
+        (0, typeorm_1.OneToMany)(function () { return sales_channel_location_1.SalesChannelLocation; }, function (scLocation) { return scLocation.sales_channel; }, {
+            cascade: ["soft-remove", "remove"],
+        }),
+        __metadata("design:type", Array)
+    ], SalesChannel.prototype, "locations", void 0);
+    __decorate([
         (0, typeorm_1.BeforeInsert)(),
         __metadata("design:type", Function),
         __metadata("design:paramtypes", []),
@@ -62,40 +69,53 @@ var SalesChannel = /** @class */ (function (_super) {
 }(interfaces_1.SoftDeletableEntity));
 exports.SalesChannel = SalesChannel;
 /**
- * @schema sales_channel
+ * @schema SalesChannel
  * title: "Sales Channel"
  * description: "A Sales Channel"
- * x-resourceId: sales_channel
+ * type: object
  * required:
+ *   - created_at
+ *   - deleted_at
+ *   - description
+ *   - id
+ *   - is_disabled
  *   - name
+ *   - updated_at
  * properties:
  *  id:
- *    type: string
  *    description: The sales channel's ID
+ *    type: string
  *    example: sc_01G8X9A7ESKAJXG2H0E6F1MW7A
  *  name:
- *    description: "The name of the sales channel."
+ *    description: The name of the sales channel.
  *    type: string
  *    example: Market
  *  description:
- *    description: "The description of the sales channel."
+ *    description: The description of the sales channel.
+ *    nullable: true
  *    type: string
  *    example: Multi-vendor market
  *  is_disabled:
- *    description: "Specify if the sales channel is enabled or disabled."
+ *    description: Specify if the sales channel is enabled or disabled.
  *    type: boolean
  *    default: false
+ *  locations:
+ *    description: The Stock Locations related to the sales channel. Available if the relation `locations` is expanded.
+ *    type: array
+ *    items:
+ *      $ref: "#/components/schemas/SalesChannelLocation"
  *  created_at:
+ *    description: The date with timezone at which the resource was created.
  *    type: string
- *    description: "The date with timezone at which the resource was created."
  *    format: date-time
  *  updated_at:
+ *    description: The date with timezone at which the resource was updated.
  *    type: string
- *    description: "The date with timezone at which the resource was updated."
  *    format: date-time
  *  deleted_at:
+ *    description: The date with timezone at which the resource was deleted.
+ *    nullable: true
  *    type: string
- *    description: "The date with timezone at which the resource was deleted."
  *    format: date-time
- */ 
+ */
 //# sourceMappingURL=sales-channel.js.map

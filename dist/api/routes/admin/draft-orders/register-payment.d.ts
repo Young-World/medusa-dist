@@ -1,3 +1,5 @@
+import { ProductVariantInventoryService } from "../../../../services";
+import { Order } from "../../../../models";
 /**
  * @oas [post] /draft-orders/{id}/pay
  * summary: "Registers a Payment"
@@ -6,6 +8,8 @@
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {String} The Draft Order id.
+ * x-codegen:
+ *   method: markPaid
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -33,9 +37,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/draft-order"
+ *           $ref: "#/components/schemas/AdminPostDraftOrdersDraftOrderRegisterPaymentRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -51,3 +53,7 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+export declare const reserveQuantityForDraftOrder: (order: Order, context: {
+    productVariantInventoryService: ProductVariantInventoryService;
+    locationId?: string | undefined;
+}) => Promise<void>;

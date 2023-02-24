@@ -26,7 +26,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.allowedAdminProductRelations = exports.allowedAdminProductFields = exports.defaultAdminGetProductsVariantsFields = exports.defaultAdminProductFields = exports.defaultAdminProductRelations = void 0;
+exports.defaultAdminGetProductsVariantsFields = exports.defaultAdminProductFields = exports.defaultAdminProductRelations = void 0;
 var express_1 = require("express");
 require("reflect-metadata");
 var common_1 = require("../../../../types/common");
@@ -55,13 +55,11 @@ exports.default = (function (app, featureFlagRouter) {
     route.get("/:id", (0, middlewares_1.transformQuery)(common_1.FindParams, {
         defaultRelations: exports.defaultAdminProductRelations,
         defaultFields: exports.defaultAdminProductFields,
-        allowedFields: exports.allowedAdminProductFields,
         isList: false,
     }), middlewares_1.default.wrap(require("./get-product").default));
     route.get("/", (0, middlewares_1.transformQuery)(list_products_1.AdminGetProductsParams, {
         defaultRelations: exports.defaultAdminProductRelations,
         defaultFields: exports.defaultAdminProductFields,
-        allowedFields: exports.allowedAdminProductFields,
         isList: true,
     }), middlewares_1.default.wrap(require("./list-products").default));
     return app;
@@ -75,6 +73,7 @@ exports.defaultAdminProductRelations = [
     "tags",
     "type",
     "collection",
+    "categories",
 ];
 exports.defaultAdminProductFields = [
     "id",
@@ -104,43 +103,6 @@ exports.defaultAdminProductFields = [
     "metadata",
 ];
 exports.defaultAdminGetProductsVariantsFields = ["id", "product_id"];
-exports.allowedAdminProductFields = [
-    "id",
-    "title",
-    "subtitle",
-    "status",
-    "external_id",
-    "description",
-    "handle",
-    "is_giftcard",
-    "discountable",
-    "thumbnail",
-    "profile_id",
-    "collection_id",
-    "type_id",
-    "weight",
-    "length",
-    "height",
-    "width",
-    "hs_code",
-    "origin_country",
-    "mid_code",
-    "material",
-    "created_at",
-    "updated_at",
-    "deleted_at",
-    "metadata",
-];
-exports.allowedAdminProductRelations = [
-    "variants",
-    "variants.prices",
-    "images",
-    "options",
-    "tags",
-    "type",
-    "collection",
-    "sales_channels",
-];
 __exportStar(require("./add-option"), exports);
 __exportStar(require("./create-product"), exports);
 __exportStar(require("./create-variant"), exports);

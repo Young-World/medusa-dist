@@ -27,38 +27,10 @@
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - code
- *           - name
- *           - region_id
- *         properties:
- *           code:
- *             type: string
- *             description: "A code to identify the tax type by"
- *           name:
- *             type: string
- *             description: "A human friendly name for the tax"
- *           region_id:
- *             type: string
- *             description: "The ID of the Region that the rate belongs to"
- *           rate:
- *             type: number
- *             description: "The numeric rate to charge"
- *           products:
- *             type: array
- *             description: "The IDs of the products associated with this tax rate"
- *             items:
- *               type: string
- *           shipping_options:
- *             type: array
- *             description: "The IDs of the shipping options associated with this tax rate"
- *             items:
- *               type: string
- *           product_types:
- *             type: array
- *             description: "The IDs of the types of products associated with this tax rate"
- *             items:
- *               type: string
+ *         $ref: "#/components/schemas/AdminPostTaxRatesReq"
+ * x-codegen:
+ *   method: create
+ *   queryParams: AdminPostTaxRatesParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -96,9 +68,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             tax_rate:
- *               $ref: "#/components/schemas/tax_rate"
+ *           $ref: "#/components/schemas/AdminTaxRatesRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -114,6 +84,42 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostTaxRatesReq
+ * type: object
+ * required:
+ *   - code
+ *   - name
+ *   - region_id
+ * properties:
+ *   code:
+ *     type: string
+ *     description: "A code to identify the tax type by"
+ *   name:
+ *     type: string
+ *     description: "A human friendly name for the tax"
+ *   region_id:
+ *     type: string
+ *     description: "The ID of the Region that the rate belongs to"
+ *   rate:
+ *     type: number
+ *     description: "The numeric rate to charge"
+ *   products:
+ *     type: array
+ *     description: "The IDs of the products associated with this tax rate"
+ *     items:
+ *       type: string
+ *   shipping_options:
+ *     type: array
+ *     description: "The IDs of the shipping options associated with this tax rate"
+ *     items:
+ *       type: string
+ *   product_types:
+ *     type: array
+ *     description: "The IDs of the types of products associated with this tax rate"
+ *     items:
+ *       type: string
+ */
 export declare class AdminPostTaxRatesReq {
     code: string;
     name: string;

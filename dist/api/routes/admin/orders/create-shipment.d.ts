@@ -1,3 +1,4 @@
+import { FindParams } from "../../../../types/common";
 /**
  * @oas [post] /orders/{id}/shipment
  * operationId: "PostOrdersOrderShipment"
@@ -6,24 +7,16 @@
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {string} The ID of the Order.
+ *   - (query) expand {string} Comma separated list of relations to include in the result.
+ *   - (query) fields {string} Comma separated list of fields to include in the result.
  * requestBody:
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - fulfillment_id
- *         properties:
- *           fulfillment_id:
- *             description: The ID of the Fulfillment.
- *             type: string
- *           tracking_numbers:
- *             description: The tracking numbers for the shipment.
- *             type: array
- *             items:
- *               type: string
- *           no_notification:
- *             description: If set to true no notification will be send related to this Shipment.
- *             type: boolean
+ *         $ref: "#/components/schemas/AdminPostOrdersOrderShipmentReq"
+ * x-codegen:
+ *   method: createShipment
+ *   params: AdminPostOrdersOrderShipmentParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -57,9 +50,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/order"
+ *           $ref: "#/components/schemas/AdminOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -75,8 +66,28 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostOrdersOrderShipmentReq
+ * type: object
+ * required:
+ *   - fulfillment_id
+ * properties:
+ *   fulfillment_id:
+ *     description: The ID of the Fulfillment.
+ *     type: string
+ *   tracking_numbers:
+ *     description: The tracking numbers for the shipment.
+ *     type: array
+ *     items:
+ *       type: string
+ *   no_notification:
+ *     description: If set to true no notification will be send related to this Shipment.
+ *     type: boolean
+ */
 export declare class AdminPostOrdersOrderShipmentReq {
     fulfillment_id: string;
     tracking_numbers?: string[];
     no_notification?: boolean;
+}
+export declare class AdminPostOrdersOrderShipmentParams extends FindParams {
 }

@@ -1,4 +1,6 @@
+import { Request, Response } from "express";
 import { AdminUpsertConditionsReq } from "../../../../types/discount";
+import { FindParams } from "../../../../types/common";
 /**
  * @oas [post] /discounts/{discount_id}/conditions/{condition_id}
  * operationId: "PostDiscountsDiscountConditionsCondition"
@@ -14,32 +16,10 @@ import { AdminUpsertConditionsReq } from "../../../../types/discount";
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           products:
- *              type: array
- *              description: list of product IDs if the condition is applied on products.
- *              items:
- *                type: string
- *           product_types:
- *              type: array
- *              description: list of product type IDs if the condition is applied on product types.
- *              items:
- *                type: string
- *           product_collections:
- *              type: array
- *              description: list of product collection IDs if the condition is applied on product collections.
- *              items:
- *                type: string
- *           product_tags:
- *              type: array
- *              description: list of product tag IDs if the condition is applied on product tags.
- *              items:
- *                type: string
- *           customer_groups:
- *              type: array
- *              description: list of customer group IDs if the condition is applied on customer groups.
- *              items:
- *                type: string
+ *         $ref: "#/components/schemas/AdminPostDiscountsDiscountConditionsCondition"
+ * x-codegen:
+ *   method: updateCondition
+ *   queryParams: AdminPostDiscountsDiscountConditionsConditionParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -77,9 +57,7 @@ import { AdminUpsertConditionsReq } from "../../../../types/discount";
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             discount:
- *               $ref: "#/components/schemas/discount"
+ *           $ref: "#/components/schemas/AdminDiscountsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -93,11 +71,39 @@ import { AdminUpsertConditionsReq } from "../../../../types/discount";
  *   "500":
  *     $ref: "#/components/responses/500_error"
  */
-declare const _default: (req: any, res: any) => Promise<void>;
+declare const _default: (req: Request, res: Response) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostDiscountsDiscountConditionsCondition
+ * type: object
+ * properties:
+ *   products:
+ *      type: array
+ *      description: list of product IDs if the condition is applied on products.
+ *      items:
+ *        type: string
+ *   product_types:
+ *      type: array
+ *      description: list of product type IDs if the condition is applied on product types.
+ *      items:
+ *        type: string
+ *   product_collections:
+ *      type: array
+ *      description: list of product collection IDs if the condition is applied on product collections.
+ *      items:
+ *        type: string
+ *   product_tags:
+ *      type: array
+ *      description: list of product tag IDs if the condition is applied on product tags.
+ *      items:
+ *        type: string
+ *   customer_groups:
+ *      type: array
+ *      description: list of customer group IDs if the condition is applied on customer groups.
+ *      items:
+ *        type: string
+ */
 export declare class AdminPostDiscountsDiscountConditionsCondition extends AdminUpsertConditionsReq {
 }
-export declare class AdminPostDiscountsDiscountConditionsConditionParams {
-    expand?: string;
-    fields?: string;
+export declare class AdminPostDiscountsDiscountConditionsConditionParams extends FindParams {
 }

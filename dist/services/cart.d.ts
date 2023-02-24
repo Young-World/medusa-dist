@@ -6,26 +6,10 @@ import { CartRepository } from "../repositories/cart";
 import { LineItemRepository } from "../repositories/line-item";
 import { PaymentSessionRepository } from "../repositories/payment-session";
 import { ShippingMethodRepository } from "../repositories/shipping-method";
-import { CartCreateProps, CartUpdateProps, FilterableCartProps, LineItemUpdate } from "../types/cart";
-import { AddressPayload, FindConfig, TotalField } from "../types/common";
+import { CartCreateProps, CartUpdateProps, FilterableCartProps, LineItemUpdate, LineItemValidateData } from "../types/cart";
+import { AddressPayload, FindConfig, TotalField, WithRequiredProperty } from "../types/common";
 import { FlagRouter } from "../utils/flag-router";
-import CustomShippingOptionService from "./custom-shipping-option";
-import CustomerService from "./customer";
-import DiscountService from "./discount";
-import EventBusService from "./event-bus";
-import GiftCardService from "./gift-card";
-import InventoryService from "./inventory";
-import LineItemService from "./line-item";
-import LineItemAdjustmentService from "./line-item-adjustment";
-import PaymentProviderService from "./payment-provider";
-import ProductService from "./product";
-import ProductVariantService from "./product-variant";
-import RegionService from "./region";
-import ShippingOptionService from "./shipping-option";
-import TaxProviderService from "./tax-provider";
-import TotalsService from "./totals";
-import StoreService from "./store";
-import { SalesChannelService } from "./index";
+import { CustomerService, CustomShippingOptionService, DiscountService, EventBusService, GiftCardService, LineItemAdjustmentService, LineItemService, NewTotalsService, PaymentProviderService, ProductService, ProductVariantInventoryService, ProductVariantService, RegionService, SalesChannelService, ShippingOptionService, StoreService, TaxProviderService, TotalsService } from ".";
 declare type InjectedDependencies = {
     manager: EntityManager;
     cartRepository: typeof CartRepository;
@@ -48,10 +32,11 @@ declare type InjectedDependencies = {
     discountService: DiscountService;
     giftCardService: GiftCardService;
     totalsService: TotalsService;
-    inventoryService: InventoryService;
+    newTotalsService: NewTotalsService;
     customShippingOptionService: CustomShippingOptionService;
     lineItemAdjustmentService: LineItemAdjustmentService;
     priceSelectionStrategy: IPriceSelectionStrategy;
+    productVariantInventoryService: ProductVariantInventoryService;
 };
 declare type TotalsConfig = {
     force_taxes?: boolean;
@@ -83,17 +68,13 @@ declare class CartService extends TransactionBaseService {
     protected readonly giftCardService_: GiftCardService;
     protected readonly taxProviderService_: TaxProviderService;
     protected readonly totalsService_: TotalsService;
-    protected readonly inventoryService_: InventoryService;
+    protected readonly newTotalsService_: NewTotalsService;
     protected readonly customShippingOptionService_: CustomShippingOptionService;
     protected readonly priceSelectionStrategy_: IPriceSelectionStrategy;
     protected readonly lineItemAdjustmentService_: LineItemAdjustmentService;
     protected readonly featureFlagRouter_: FlagRouter;
-    constructor({ manager, cartRepository, shippingMethodRepository, lineItemRepository, eventBusService, paymentProviderService, productService, productVariantService, taxProviderService, regionService, lineItemService, shippingOptionService, customerService, discountService, giftCardService, totalsService, addressRepository, paymentSessionRepository, inventoryService, customShippingOptionService, lineItemAdjustmentService, priceSelectionStrategy, salesChannelService, featureFlagRouter, storeService, }: InjectedDependencies);
-    private getTotalsRelations;
-    protected transformQueryForTotals_(config: FindConfig<Cart>): FindConfig<Cart> & {
-        totalsToSelect: TotalField[];
-    };
-    protected decorateTotals_(cart: Cart, totalsToSelect: TotalField[], options?: TotalsConfig): Promise<Cart>;
+    protected readonly productVariantInventoryService_: ProductVariantInventoryService;
+    constructor({ manager, cartRepository, shippingMethodRepository, lineItemRepository, eventBusService, paymentProviderService, productService, productVariantService, taxProviderService, regionService, lineItemService, shippingOptionService, customerService, discountService, giftCardService, totalsService, newTotalsService, addressRepository, paymentSessionRepository, customShippingOptionService, lineItemAdjustmentService, priceSelectionStrategy, salesChannelService, featureFlagRouter, storeService, productVariantInventoryService, }: InjectedDependencies);
     /**
      * @param selector - the query object for find
      * @param config - config object
@@ -104,11 +85,19 @@ declare class CartService extends TransactionBaseService {
      * Gets a cart by id.
      * @param cartId - the id of the cart to get.
      * @param options - the options to get a cart
+     * @param totalsConfig
      * @return the cart document.
      */
     retrieve(cartId: string, options?: FindConfig<Cart>, totalsConfig?: TotalsConfig): Promise<Cart>;
-    private retrieveNew;
-    retrieveWithTotals(cartId: string, options?: FindConfig<Cart>, totalsConfig?: TotalsConfig): Promise<Cart>;
+    /**
+     * @deprecated
+     * @param cartId
+     * @param options
+     * @param totalsConfig
+     * @protected
+     */
+    protected retrieveLegacy(cartId: string, options?: FindConfig<Cart>, totalsConfig?: TotalsConfig): Promise<Cart>;
+    retrieveWithTotals(cartId: string, options?: FindConfig<Cart>, totalsConfig?: TotalsConfig): Promise<WithRequiredProperty<Cart, "total">>;
     /**
      * Creates a cart.
      * @param data - the data to create the cart with
@@ -135,11 +124,13 @@ declare class CartService extends TransactionBaseService {
     /**
      * Check if line item's variant belongs to the cart's sales channel.
      *
-     * @param cart - the cart for the line item
+     * @param sales_channel_id - the cart for the line item
      * @param lineItem - the line item being added
      * @return a boolean indicating validation result
      */
-    protected validateLineItem(cart: Cart, lineItem: LineItem): Promise<boolean>;
+    protected validateLineItem({ sales_channel_id }: {
+        sales_channel_id: string | null;
+    }, lineItem: LineItemValidateData): Promise<boolean>;
     /**
      * Adds a line item to the cart.
      * @param cartId - the id of the cart that we will add to
@@ -148,10 +139,24 @@ declare class CartService extends TransactionBaseService {
      *    validateSalesChannels - should check if product belongs to the same sales chanel as cart
      *                            (if cart has associated sales channel)
      * @return the result of the update operation
+     * @deprecated Use {@link addOrUpdateLineItems} instead.
      */
     addLineItem(cartId: string, lineItem: LineItem, config?: {
         validateSalesChannels: boolean;
-    }): Promise<Cart>;
+    }): Promise<void>;
+    /**
+     * Adds or update one or multiple line items to the cart. It also update all existing items in the cart
+     * to have has_shipping to false. Finally, the adjustments will be updated.
+     * @param cartId - the id of the cart that we will add to
+     * @param lineItems - the line items to add.
+     * @param config
+     *    validateSalesChannels - should check if product belongs to the same sales chanel as cart
+     *                            (if cart has associated sales channel)
+     * @return the result of the update operation
+     */
+    addOrUpdateLineItems(cartId: string, lineItems: LineItem | LineItem[], config?: {
+        validateSalesChannels: boolean;
+    }): Promise<void>;
     /**
      * Updates a cart's existing line item.
      * @param cartId - the id of the cart to update
@@ -192,7 +197,7 @@ declare class CartService extends TransactionBaseService {
      * @param email - the email to use
      * @return the resultign customer object
      */
-    protected createOrFetchUserFromEmail_(email: string): Promise<Customer>;
+    protected createOrFetchGuestCustomerFromEmail_(email: string): Promise<Customer>;
     /**
      * Updates the cart's billing address.
      * @param cart - the cart to update
@@ -217,9 +222,17 @@ declare class CartService extends TransactionBaseService {
      * Throws if discount regions does not include the cart region
      * @param cart - the cart to update
      * @param discountCode - the discount code
-     * @return the result of the update operation
      */
     applyDiscount(cart: Cart, discountCode: string): Promise<void>;
+    /**
+     * Updates the cart's discounts.
+     * If discount besides free shipping is already applied, this
+     * will be overwritten
+     * Throws if discount regions does not include the cart region
+     * @param cart - the cart to update
+     * @param discountCodes - the discount code(s) to apply
+     */
+    applyDiscounts(cart: Cart, discountCodes: string[]): Promise<void>;
     /**
      * Removes a discount based on a discount code.
      * @param cartId - the id of the cart to remove from
@@ -246,14 +259,15 @@ declare class CartService extends TransactionBaseService {
      *    this could be IP address or similar for fraud handling.
      * @return the resulting cart
      */
-    authorizePayment(cartId: string, context?: Record<string, unknown>): Promise<Cart>;
+    authorizePayment(cartId: string, context?: Record<string, unknown> & {
+        cart_id: string;
+    }): Promise<Cart>;
     /**
-     * Sets a payment method for a cart.
+     * Selects a payment session for a cart and creates a payment object in the external provider system
      * @param cartId - the id of the cart to add payment method to
      * @param providerId - the id of the provider to be set to the cart
-     * @return result of update operation
      */
-    setPaymentSession(cartId: string, providerId: string): Promise<Cart>;
+    setPaymentSession(cartId: string, providerId: string): Promise<void>;
     /**
      * Creates, updates and sets payment sessions associated with the cart. The
      * first time the method is called payment sessions will be created for each
@@ -271,15 +285,15 @@ declare class CartService extends TransactionBaseService {
      *    should be removed.
      * @return the resulting cart.
      */
-    deletePaymentSession(cartId: string, providerId: string): Promise<Cart>;
+    deletePaymentSession(cartId: string, providerId: string): Promise<void>;
     /**
      * Refreshes a payment session on a cart
      * @param cartId - the id of the cart to remove from
      * @param providerId - the id of the provider whoose payment session
      *    should be removed.
-     * @return {Promise<Cart>} the resulting cart.
+     * @return {Promise<void>} the resulting cart.
      */
-    refreshPaymentSession(cartId: string, providerId: string): Promise<Cart>;
+    refreshPaymentSession(cartId: string, providerId: string): Promise<void>;
     /**
      * Adds the shipping method to the list of shipping methods associated with
      * the cart. Shipping Methods are the ways that an order is shipped, whereas a
@@ -325,9 +339,21 @@ declare class CartService extends TransactionBaseService {
      * @return resolves to the updated result.
      */
     setMetadata(cartId: string, key: string, value: string | number): Promise<Cart>;
-    createTaxLines(id: string): Promise<Cart>;
+    createTaxLines(cartOrId: string | Cart): Promise<void>;
     deleteTaxLines(id: string): Promise<void>;
-    decorateTotals(cart: Cart, totalsConfig?: TotalsConfig): Promise<Cart>;
+    decorateTotals(cart: Cart, totalsConfig?: TotalsConfig): Promise<WithRequiredProperty<Cart, "total">>;
     protected refreshAdjustments_(cart: Cart): Promise<void>;
+    protected transformQueryForTotals_(config: FindConfig<Cart>): FindConfig<Cart> & {
+        totalsToSelect: TotalField[];
+    };
+    /**
+     * @deprecated Use decorateTotals instead
+     * @param cart
+     * @param totalsToSelect
+     * @param options
+     * @protected
+     */
+    protected decorateTotals_(cart: Cart, totalsToSelect: TotalField[], options?: TotalsConfig): Promise<Cart>;
+    private getTotalsRelations;
 }
 export default CartService;

@@ -9,13 +9,9 @@ import { AddressCreatePayload } from "../../../../types/common";
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - address
- *         properties:
- *           address:
- *             description: "The Address to add to the Customer."
- *             anyOf:
- *               - $ref: "#/components/schemas/address"
+ *         $ref: "#/components/schemas/StorePostCustomersCustomerAddressesReq"
+ * x-codegen:
+ *   method: addAddress
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -67,9 +63,7 @@ import { AddressCreatePayload } from "../../../../types/common";
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            customer:
- *              $ref: "#/components/schemas/customer"
+ *          $ref: "#/components/schemas/StoreCustomersRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":
@@ -85,6 +79,25 @@ import { AddressCreatePayload } from "../../../../types/common";
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema StorePostCustomersCustomerAddressesReq
+ * type: object
+ * required:
+ *   - address
+ * properties:
+ *   address:
+ *     description: "The Address to add to the Customer."
+ *     allOf:
+ *       - $ref: "#/components/schemas/AddressFields"
+ *       - type: object
+ *         required:
+ *           - first_name
+ *           - last_name
+ *           - address_1
+ *           - city
+ *           - country_code
+ *           - postal_code
+ */
 export declare class StorePostCustomersCustomerAddressesReq {
     address: AddressCreatePayload;
 }

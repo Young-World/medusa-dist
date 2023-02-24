@@ -8,13 +8,9 @@
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - email
- *         properties:
- *           email:
- *             description: "The Users email."
- *             type: string
- *             format: email
+ *         $ref: "#/components/schemas/AdminResetPasswordTokenRequest"
+ * x-codegen:
+ *   method: sendResetPasswordToken
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -63,6 +59,17 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminResetPasswordTokenRequest
+ * type: object
+ * required:
+ *   - email
+ * properties:
+ *   email:
+ *     description: "The Users email."
+ *     type: string
+ *     format: email
+ */
 export declare class AdminResetPasswordTokenRequest {
     email: string;
 }

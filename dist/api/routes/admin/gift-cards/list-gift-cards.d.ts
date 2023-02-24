@@ -8,6 +8,9 @@
  *   - (query) offset=0 {number} The number of items to skip before the results.
  *   - (query) limit=50 {number} Limit the number of items returned.
  *   - (query) q {string} a search term to search by code or display ID
+ * x-codegen:
+ *   method: list
+ *   queryParams: AdminGetGiftCardsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -35,20 +38,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             gift_cards:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/gift_card"
- *             count:
- *               type: integer
- *               description: The total number of items available
- *             offset:
- *               type: integer
- *               description: The number of items skipped before these items
- *             limit:
- *               type: integer
- *               description: The number of items per page
+ *           $ref: "#/components/schemas/AdminGiftCardsListRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

@@ -1,4 +1,19 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -45,10 +60,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AdminPostOrdersOrderClaimsClaimFulfillmentsReq = void 0;
+exports.AdminPostOrdersOrderClaimsClaimFulfillmentsParams = exports.AdminPostOrdersOrderClaimsClaimFulfillmentsReq = void 0;
 var class_validator_1 = require("class-validator");
-var _1 = require(".");
-var validator_1 = require("../../../../utils/validator");
+var common_1 = require("../../../../types/common");
 /**
  * @oas [post] /orders/{id}/claims/{claim_id}/fulfillments
  * operationId: "PostOrdersOrderClaimsClaimFulfillments"
@@ -58,17 +72,16 @@ var validator_1 = require("../../../../utils/validator");
  * parameters:
  *   - (path) id=* {string} The ID of the Order.
  *   - (path) claim_id=* {string} The ID of the Claim.
+ *   - (query) expand {string} Comma separated list of relations to include in the result.
+ *   - (query) fields {string} Comma separated list of fields to include in the result.
  * requestBody:
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           metadata:
- *             description: An optional set of key-value pairs to hold additional information.
- *             type: object
- *           no_notification:
- *             description: If set to true no notification will be send related to this Claim.
- *             type: boolean
+ *         $ref: "#/components/schemas/AdminPostOrdersOrderClaimsClaimFulfillmentsReq"
+ * x-codegen:
+ *   method: fulfillClaim
+ *   params: AdminPostOrdersOrderClaimsClaimFulfillmentsReq
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -96,9 +109,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/order"
+ *           $ref: "#/components/schemas/AdminOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -118,9 +129,7 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         switch (_b.label) {
             case 0:
                 _a = req.params, id = _a.id, claim_id = _a.claim_id;
-                return [4 /*yield*/, (0, validator_1.validator)(AdminPostOrdersOrderClaimsClaimFulfillmentsReq, req.body)];
-            case 1:
-                validated = _b.sent();
+                validated = req.validatedBody;
                 orderService = req.scope.resolve("orderService");
                 claimService = req.scope.resolve("claimService");
                 entityManager = req.scope.resolve("manager");
@@ -137,19 +146,29 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                             }
                         });
                     }); })];
-            case 2:
+            case 1:
                 _b.sent();
-                return [4 /*yield*/, orderService.retrieve(id, {
-                        select: _1.defaultAdminOrdersFields,
-                        relations: _1.defaultAdminOrdersRelations,
+                return [4 /*yield*/, orderService.retrieveWithTotals(id, req.retrieveConfig, {
+                        includes: req.includes,
                     })];
-            case 3:
+            case 2:
                 order = _b.sent();
                 res.status(200).json({ order: order });
                 return [2 /*return*/];
         }
     });
 }); });
+/**
+ * @schema AdminPostOrdersOrderClaimsClaimFulfillmentsReq
+ * type: object
+ * properties:
+ *   metadata:
+ *     description: An optional set of key-value pairs to hold additional information.
+ *     type: object
+ *   no_notification:
+ *     description: If set to true no notification will be send related to this Claim.
+ *     type: boolean
+ */
 var AdminPostOrdersOrderClaimsClaimFulfillmentsReq = /** @class */ (function () {
     function AdminPostOrdersOrderClaimsClaimFulfillmentsReq() {
     }
@@ -166,4 +185,13 @@ var AdminPostOrdersOrderClaimsClaimFulfillmentsReq = /** @class */ (function () 
     return AdminPostOrdersOrderClaimsClaimFulfillmentsReq;
 }());
 exports.AdminPostOrdersOrderClaimsClaimFulfillmentsReq = AdminPostOrdersOrderClaimsClaimFulfillmentsReq;
+// eslint-disable-next-line max-len
+var AdminPostOrdersOrderClaimsClaimFulfillmentsParams = /** @class */ (function (_super) {
+    __extends(AdminPostOrdersOrderClaimsClaimFulfillmentsParams, _super);
+    function AdminPostOrdersOrderClaimsClaimFulfillmentsParams() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return AdminPostOrdersOrderClaimsClaimFulfillmentsParams;
+}(common_1.FindParams));
+exports.AdminPostOrdersOrderClaimsClaimFulfillmentsParams = AdminPostOrdersOrderClaimsClaimFulfillmentsParams;
 //# sourceMappingURL=fulfill-claim.js.map

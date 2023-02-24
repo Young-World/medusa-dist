@@ -49,6 +49,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *       format: email
  *     required: true
  *     description: The email to check if exists.
+ * x-codegen:
+ *   method: exists
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -69,10 +71,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            exists:
- *              type: boolean
- *              description: Whether email exists or not.
+ *          $ref: "#/components/schemas/StoreGetAuthEmailRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "404":
@@ -94,8 +93,8 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
             case 1:
                 _a.trys.push([1, 3, , 4]);
                 customerService = req.scope.resolve("customerService");
-                return [4 /*yield*/, customerService.retrieveByEmail(email, {
-                        select: ["has_account"],
+                return [4 /*yield*/, customerService.retrieveRegisteredByEmail(email, {
+                        select: ["id", "has_account"],
                     })];
             case 2:
                 customer = _a.sent();

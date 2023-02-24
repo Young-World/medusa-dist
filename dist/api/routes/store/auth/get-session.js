@@ -42,6 +42,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * summary: "Get Current Customer"
  * description: "Gets the currently logged in Customer."
  * x-authenticated: true
+ * x-codegen:
+ *   method: getSession
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -68,9 +70,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            customer:
- *              $ref: "#/components/schemas/customer"
+ *          $ref: "#/components/schemas/StoreAuthRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":
@@ -89,7 +89,6 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
-                if (!(req.user && req.user.customer_id)) return [3 /*break*/, 2];
                 customerService = req.scope.resolve("customerService");
                 return [4 /*yield*/, customerService.retrieve(req.user.customer_id, {
                         relations: ["shipping_addresses", "orders", "orders.items"],
@@ -97,11 +96,7 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
             case 1:
                 customer = _a.sent();
                 res.json({ customer: customer });
-                return [3 /*break*/, 3];
-            case 2:
-                res.sendStatus(401);
-                _a.label = 3;
-            case 3: return [2 /*return*/];
+                return [2 /*return*/];
         }
     });
 }); });

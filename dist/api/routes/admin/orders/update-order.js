@@ -1,4 +1,19 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -45,12 +60,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AdminPostOrdersOrderReq = void 0;
+exports.AdminPostOrdersOrderParams = exports.AdminPostOrdersOrderReq = void 0;
 var class_validator_1 = require("class-validator");
-var _1 = require(".");
 var common_1 = require("../../../../types/common");
 var class_transformer_1 = require("class-transformer");
-var validator_1 = require("../../../../utils/validator");
 /**
  * @oas [post] /orders/{id}
  * operationId: "PostOrdersOrder"
@@ -59,72 +72,16 @@ var validator_1 = require("../../../../utils/validator");
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {string} The ID of the Order.
+ *   - (query) expand {string} Comma separated list of relations to include in the result.
+ *   - (query) fields {string} Comma separated list of fields to include in the result.
  * requestBody:
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           email:
- *             description: the email for the order
- *             type: string
- *           billing_address:
- *             description: Billing address
- *             anyOf:
- *               - $ref: "#/components/schemas/address"
- *           shipping_address:
- *             description: Shipping address
- *             anyOf:
- *               - $ref: "#/components/schemas/address"
- *           items:
- *             description: The Line Items for the order
- *             type: array
- *             items:
- *               $ref: "#/components/schemas/line_item"
- *           region:
- *             description: ID of the region where the order belongs
- *             type: string
- *           discounts:
- *             description: Discounts applied to the order
- *             type: array
- *             items:
- *               $ref: "#/components/schemas/discount"
- *           customer_id:
- *             description: ID of the customer
- *             type: string
- *           payment_method:
- *             description: payment method chosen for the order
- *             type: object
- *             properties:
- *               provider_id:
- *                 type: string
- *                 description: ID of the payment provider
- *               data:
- *                 description: Data relevant for the given payment method
- *                 type: object
- *           shipping_method:
- *             description: The Shipping Method used for shipping the order.
- *             type: object
- *             properties:
- *               provider_id:
- *                 type: string
- *                 description: The ID of the shipping provider.
- *               profile_id:
- *                 type: string
- *                 description: The ID of the shipping profile.
- *               price:
- *                 type: integer
- *                 description: The price of the shipping.
- *               data:
- *                 type: object
- *                 description: Data relevant to the specific shipping method.
- *               items:
- *                 type: array
- *                 items:
- *                   $ref: "#/components/schemas/line_item"
- *                 description: Items to ship
- *           no_notification:
- *             description: A flag to indicate if no notifications should be emitted related to the updated order.
- *             type: boolean
+ *         $ref: "#/components/schemas/AdminPostOrdersOrderReq"
+ * x-codegen:
+ *   method: update
+ *   params: AdminPostOrdersOrderParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -158,9 +115,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/order"
+ *           $ref: "#/components/schemas/AdminOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -175,14 +130,11 @@ var validator_1 = require("../../../../utils/validator");
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var id, value, orderService, manager, order;
+    var id, orderService, manager, order;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
                 id = req.params.id;
-                return [4 /*yield*/, (0, validator_1.validator)(AdminPostOrdersOrderReq, req.body)];
-            case 1:
-                value = _a.sent();
                 orderService = req.scope.resolve("orderService");
                 manager = req.scope.resolve("manager");
                 return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
@@ -190,24 +142,89 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                             switch (_a.label) {
                                 case 0: return [4 /*yield*/, orderService
                                         .withTransaction(transactionManager)
-                                        .update(id, value)];
+                                        .update(id, req.validatedBody)];
                                 case 1: return [2 /*return*/, _a.sent()];
                             }
                         });
                     }); })];
-            case 2:
+            case 1:
                 _a.sent();
-                return [4 /*yield*/, orderService.retrieve(id, {
-                        select: _1.defaultAdminOrdersFields,
-                        relations: _1.defaultAdminOrdersRelations,
+                return [4 /*yield*/, orderService.retrieveWithTotals(id, req.retrieveConfig, {
+                        includes: req.includes,
                     })];
-            case 3:
+            case 2:
                 order = _a.sent();
                 res.status(200).json({ order: order });
                 return [2 /*return*/];
         }
     });
 }); });
+/**
+ * @schema AdminPostOrdersOrderReq
+ * type: object
+ * properties:
+ *   email:
+ *     description: the email for the order
+ *     type: string
+ *   billing_address:
+ *     description: Billing address
+ *     anyOf:
+ *       - $ref: "#/components/schemas/AddressFields"
+ *   shipping_address:
+ *     description: Shipping address
+ *     anyOf:
+ *       - $ref: "#/components/schemas/AddressFields"
+ *   items:
+ *     description: The Line Items for the order
+ *     type: array
+ *     items:
+ *       $ref: "#/components/schemas/LineItem"
+ *   region:
+ *     description: ID of the region where the order belongs
+ *     type: string
+ *   discounts:
+ *     description: Discounts applied to the order
+ *     type: array
+ *     items:
+ *       $ref: "#/components/schemas/Discount"
+ *   customer_id:
+ *     description: ID of the customer
+ *     type: string
+ *   payment_method:
+ *     description: payment method chosen for the order
+ *     type: object
+ *     properties:
+ *       provider_id:
+ *         type: string
+ *         description: ID of the payment provider
+ *       data:
+ *         description: Data relevant for the given payment method
+ *         type: object
+ *   shipping_method:
+ *     description: The Shipping Method used for shipping the order.
+ *     type: object
+ *     properties:
+ *       provider_id:
+ *         type: string
+ *         description: The ID of the shipping provider.
+ *       profile_id:
+ *         type: string
+ *         description: The ID of the shipping profile.
+ *       price:
+ *         type: integer
+ *         description: The price of the shipping.
+ *       data:
+ *         type: object
+ *         description: Data relevant to the specific shipping method.
+ *       items:
+ *         type: array
+ *         items:
+ *           $ref: "#/components/schemas/LineItem"
+ *         description: Items to ship
+ *   no_notification:
+ *     description: A flag to indicate if no notifications should be emitted related to the updated order.
+ *     type: boolean
+ */
 var AdminPostOrdersOrderReq = /** @class */ (function () {
     function AdminPostOrdersOrderReq() {
     }
@@ -313,4 +330,12 @@ var ShippingMethod = /** @class */ (function () {
     ], ShippingMethod.prototype, "items", void 0);
     return ShippingMethod;
 }());
+var AdminPostOrdersOrderParams = /** @class */ (function (_super) {
+    __extends(AdminPostOrdersOrderParams, _super);
+    function AdminPostOrdersOrderParams() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return AdminPostOrdersOrderParams;
+}(common_1.FindParams));
+exports.AdminPostOrdersOrderParams = AdminPostOrdersOrderParams;
 //# sourceMappingURL=update-order.js.map

@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var passport_1 = __importDefault(require("passport"));
 exports.default = (function () {
     return function (req, res, next) {
-        passport_1.default.authenticate(["jwt", "bearer"], { session: false })(req, res, next);
+        passport_1.default.authenticate(["admin-jwt", "bearer"], { session: false })(req, res, next);
     };
 });
 //# sourceMappingURL=authenticate.js.map

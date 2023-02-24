@@ -29,7 +29,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.allowedAdminPriceListFields = exports.defaultAdminPriceListRelations = exports.defaultAdminPriceListFields = void 0;
+exports.defaultAdminPriceListRelations = exports.defaultAdminPriceListFields = void 0;
 var express_1 = require("express");
 require("reflect-metadata");
 var middlewares_1 = __importStar(require("../../../middlewares"));
@@ -47,7 +47,6 @@ exports.default = (function (app, featureFlagRouter) {
     route.get("/:id", middlewares_1.default.wrap(require("./get-price-list").default));
     route.get("/", (0, middlewares_1.transformQuery)(list_price_lists_1.AdminGetPriceListPaginationParams, { isList: true }), middlewares_1.default.wrap(require("./list-price-lists").default));
     route.get("/:id/products", (0, middlewares_1.transformQuery)(list_price_list_products_1.AdminGetPriceListsPriceListProductsParams, {
-        allowedFields: products_1.allowedAdminProductFields,
         defaultFields: products_1.defaultAdminProductFields,
         defaultRelations: products_1.defaultAdminProductRelations.filter(function (r) { return r !== "variants.prices"; }),
         defaultLimit: 50,
@@ -75,7 +74,6 @@ exports.defaultAdminPriceListFields = [
     "deleted_at",
 ];
 exports.defaultAdminPriceListRelations = ["prices", "customer_groups"];
-exports.allowedAdminPriceListFields = ["prices", "customer_groups"];
 __exportStar(require("./add-prices-batch"), exports);
 __exportStar(require("./create-price-list"), exports);
 __exportStar(require("./delete-price-list"), exports);

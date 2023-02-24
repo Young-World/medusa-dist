@@ -57,7 +57,13 @@ var validator_1 = require("../../../../utils/validator");
  * parameters:
  *   - (path) id=* {string} The id of the Cart.
  *   - (path) provider_id=* {string} The id of the payment provider.
- *   - (body) data=* {object} The data to update the payment session with.
+ * requestBody:
+ *   content:
+ *     application/json:
+ *       schema:
+ *         $ref: "#/components/schemas/StorePostCartsCartPaymentSessionUpdateReq"
+ * x-codegen:
+ *   method: updatePaymentSession
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -88,9 +94,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             cart:
- *               $ref: "#/components/schemas/cart"
+ *           $ref: "#/components/schemas/StoreCartsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":
@@ -143,6 +147,16 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema StorePostCartsCartPaymentSessionUpdateReq
+ * type: object
+ * required:
+ *   - data
+ * properties:
+ *   data:
+ *     type: object
+ *     description: The data to update the payment session with.
+ */
 var StorePostCartsCartPaymentSessionUpdateReq = /** @class */ (function () {
     function StorePostCartsCartPaymentSessionUpdateReq() {
     }

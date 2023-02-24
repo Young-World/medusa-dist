@@ -112,16 +112,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ORDER_CART_ALREADY_EXISTS_ERROR = void 0;
 var medusa_core_utils_1 = require("medusa-core-utils");
 var typeorm_1 = require("typeorm");
 var interfaces_1 = require("../interfaces");
 var sales_channels_1 = __importDefault(require("../loaders/feature-flags/sales-channels"));
 var models_1 = require("../models");
 var utils_1 = require("../utils");
+exports.ORDER_CART_ALREADY_EXISTS_ERROR = "Order from cart already exists";
 var OrderService = /** @class */ (function (_super) {
     __extends(OrderService, _super);
     function OrderService(_a) {
-        var manager = _a.manager, orderRepository = _a.orderRepository, customerService = _a.customerService, paymentProviderService = _a.paymentProviderService, shippingOptionService = _a.shippingOptionService, shippingProfileService = _a.shippingProfileService, discountService = _a.discountService, fulfillmentProviderService = _a.fulfillmentProviderService, fulfillmentService = _a.fulfillmentService, lineItemService = _a.lineItemService, totalsService = _a.totalsService, regionService = _a.regionService, cartService = _a.cartService, addressRepository = _a.addressRepository, giftCardService = _a.giftCardService, draftOrderService = _a.draftOrderService, inventoryService = _a.inventoryService, eventBusService = _a.eventBusService, featureFlagRouter = _a.featureFlagRouter;
+        var manager = _a.manager, orderRepository = _a.orderRepository, customerService = _a.customerService, paymentProviderService = _a.paymentProviderService, shippingOptionService = _a.shippingOptionService, shippingProfileService = _a.shippingProfileService, discountService = _a.discountService, fulfillmentProviderService = _a.fulfillmentProviderService, fulfillmentService = _a.fulfillmentService, lineItemService = _a.lineItemService, totalsService = _a.totalsService, newTotalsService = _a.newTotalsService, taxProviderService = _a.taxProviderService, regionService = _a.regionService, cartService = _a.cartService, addressRepository = _a.addressRepository, giftCardService = _a.giftCardService, draftOrderService = _a.draftOrderService, eventBusService = _a.eventBusService, featureFlagRouter = _a.featureFlagRouter, productVariantInventoryService = _a.productVariantInventoryService;
         var _this = 
         // eslint-disable-next-line prefer-rest-params
         _super.call(this, arguments[0]) || this;
@@ -133,6 +135,8 @@ var OrderService = /** @class */ (function (_super) {
         _this.fulfillmentProviderService_ = fulfillmentProviderService;
         _this.lineItemService_ = lineItemService;
         _this.totalsService_ = totalsService;
+        _this.newTotalsService_ = newTotalsService;
+        _this.taxProviderService_ = taxProviderService;
         _this.regionService_ = regionService;
         _this.fulfillmentService_ = fulfillmentService;
         _this.discountService_ = discountService;
@@ -142,8 +146,8 @@ var OrderService = /** @class */ (function (_super) {
         _this.cartService_ = cartService;
         _this.addressRepository_ = addressRepository;
         _this.draftOrderService_ = draftOrderService;
-        _this.inventoryService_ = inventoryService;
         _this.featureFlagRouter_ = featureFlagRouter;
+        _this.productVariantInventoryService_ = productVariantInventoryService;
         return _this;
     }
     /**
@@ -158,30 +162,13 @@ var OrderService = /** @class */ (function (_super) {
             order: { created_at: "DESC" },
         }; }
         return __awaiter(this, void 0, void 0, function () {
-            var orderRepo, query, _a, select, relations, totalsToSelect, raw;
-            var _this = this;
+            var _a, orders;
             return __generator(this, function (_b) {
                 switch (_b.label) {
-                    case 0:
-                        orderRepo = this.manager_.getCustomRepository(this.orderRepository_);
-                        query = (0, utils_1.buildQuery)(selector, config);
-                        _a = this.transformQueryForTotals(config), select = _a.select, relations = _a.relations, totalsToSelect = _a.totalsToSelect;
-                        if (select && select.length) {
-                            query.select = select;
-                        }
-                        if (relations && relations.length) {
-                            query.relations = relations;
-                        }
-                        return [4 /*yield*/, orderRepo.find(query)];
+                    case 0: return [4 /*yield*/, this.listAndCount(selector, config)];
                     case 1:
-                        raw = _b.sent();
-                        return [4 /*yield*/, Promise.all(raw.map(function (r) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.decorateTotals(r, totalsToSelect)];
-                                    case 1: return [2 /*return*/, _a.sent()];
-                                }
-                            }); }); }))];
-                    case 2: return [2 /*return*/, _b.sent()];
+                        _a = __read.apply(void 0, [_b.sent(), 1]), orders = _a[0];
+                        return [2 /*return*/, orders];
                 }
             });
         });
@@ -217,6 +204,7 @@ var OrderService = /** @class */ (function (_super) {
                                 alias: "order",
                                 innerJoin: {
                                     shipping_address: "order.shipping_address",
+                                    customer: "order.customer",
                                 },
                             };
                             query.where = function (qb) {
@@ -226,15 +214,16 @@ var OrderService = /** @class */ (function (_super) {
                                         qfn: "%".concat(q, "%"),
                                     })
                                         .orWhere("order.email ILIKE :q", { q: "%".concat(q, "%") })
-                                        .orWhere("display_id::varchar(255) ILIKE :dId", { dId: "".concat(q) });
+                                        .orWhere("display_id::varchar(255) ILIKE :dId", { dId: "".concat(q) })
+                                        .orWhere("customer.first_name ILIKE :q", { q: "%".concat(q, "%") })
+                                        .orWhere("customer.last_name ILIKE :q", { q: "%".concat(q, "%") })
+                                        .orWhere("customer.phone ILIKE :q", { q: "%".concat(q, "%") });
                                 }));
                             };
                         }
                         _a = this.transformQueryForTotals(config), select = _a.select, relations = _a.relations, totalsToSelect = _a.totalsToSelect;
-                        if (select && select.length) {
-                            query.select = select;
-                        }
-                        rels = relations;
+                        query.select = select;
+                        rels = this.getTotalsRelations({ relations: relations });
                         delete query.relations;
                         return [4 /*yield*/, orderRepo.findWithRelations(rels, query)];
                     case 1:
@@ -296,6 +285,7 @@ var OrderService = /** @class */ (function (_super) {
             relationSet.add("discounts.rule");
             relationSet.add("gift_cards");
             relationSet.add("gift_card_transactions");
+            relationSet.add("gift_card_transactions.gift_card");
             relationSet.add("refunds");
             relationSet.add("shipping_methods");
             relationSet.add("shipping_methods.tax_lines");
@@ -309,44 +299,98 @@ var OrderService = /** @class */ (function (_super) {
         }
         return {
             relations: relations,
-            select: toSelect,
+            select: toSelect.length ? toSelect : undefined,
             totalsToSelect: totalsToSelect,
         };
     };
     /**
      * Gets an order by id.
-     * @param orderId - id of order to retrieve
+     * @param orderId - id or selector of order to retrieve
      * @param config - config of order to retrieve
      * @return the order document
      */
     OrderService.prototype.retrieve = function (orderId, config) {
         if (config === void 0) { config = {}; }
         return __awaiter(this, void 0, void 0, function () {
-            var orderRepo, _a, select, relations, totalsToSelect, query, rels, raw;
+            var totalsToSelect, manager, orderRepo, query, queryRelations, raw;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(orderId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"orderId\" must be defined");
+                        }
+                        totalsToSelect = this.transformQueryForTotals(config).totalsToSelect;
+                        if (!(totalsToSelect === null || totalsToSelect === void 0 ? void 0 : totalsToSelect.length)) return [3 /*break*/, 2];
+                        return [4 /*yield*/, this.retrieveLegacy(orderId, config)];
+                    case 1: return [2 /*return*/, _a.sent()];
+                    case 2:
+                        manager = this.manager_;
+                        orderRepo = manager.getCustomRepository(this.orderRepository_);
+                        query = (0, utils_1.buildQuery)({ id: orderId }, config);
+                        if (!(config.select || []).length) {
+                            query.select = undefined;
+                        }
+                        queryRelations = query.relations;
+                        query.relations = undefined;
+                        return [4 /*yield*/, orderRepo.findOneWithRelations(queryRelations, query)];
+                    case 3:
+                        raw = _a.sent();
+                        if (!raw) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Order with id ".concat(orderId, " was not found"));
+                        }
+                        return [2 /*return*/, raw];
+                }
+            });
+        });
+    };
+    OrderService.prototype.retrieveLegacy = function (orderIdOrSelector, config) {
+        if (config === void 0) { config = {}; }
+        return __awaiter(this, void 0, void 0, function () {
+            var orderRepo, _a, select, relations, totalsToSelect, selector, query, rels, raw, selectorConstraints;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
                         orderRepo = this.manager_.getCustomRepository(this.orderRepository_);
                         _a = this.transformQueryForTotals(config), select = _a.select, relations = _a.relations, totalsToSelect = _a.totalsToSelect;
-                        query = {
-                            where: { id: orderId },
-                        };
+                        selector = (0, utils_1.isString)(orderIdOrSelector)
+                            ? { id: orderIdOrSelector }
+                            : orderIdOrSelector;
+                        query = (0, utils_1.buildQuery)(selector, config);
                         if (relations && relations.length > 0) {
                             query.relations = relations;
                         }
-                        if (select && select.length > 0) {
-                            query.select = select;
-                        }
+                        query.select = (select === null || select === void 0 ? void 0 : select.length) ? select : undefined;
                         rels = query.relations;
                         delete query.relations;
                         return [4 /*yield*/, orderRepo.findOneWithRelations(rels, query)];
                     case 1:
                         raw = _b.sent();
                         if (!raw) {
-                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Order with ".concat(orderId, " was not found"));
+                            selectorConstraints = Object.entries(selector)
+                                .map(function (key, value) { return "".concat(key, ": ").concat(value); })
+                                .join(", ");
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Order with ".concat(selectorConstraints, " was not found"));
                         }
                         return [4 /*yield*/, this.decorateTotals(raw, totalsToSelect)];
                     case 2: return [2 /*return*/, _b.sent()];
+                }
+            });
+        });
+    };
+    OrderService.prototype.retrieveWithTotals = function (orderId, options, context) {
+        if (options === void 0) { options = {}; }
+        if (context === void 0) { context = {}; }
+        return __awaiter(this, void 0, void 0, function () {
+            var relations, order;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        relations = this.getTotalsRelations(options);
+                        return [4 /*yield*/, this.retrieve(orderId, __assign(__assign({}, options), { relations: relations }))];
+                    case 1:
+                        order = _a.sent();
+                        return [4 /*yield*/, this.decorateTotals(order, context)];
+                    case 2: return [2 /*return*/, _a.sent()];
                 }
             });
         });
@@ -372,14 +416,15 @@ var OrderService = /** @class */ (function (_super) {
                         if (relations && relations.length > 0) {
                             query.relations = relations;
                         }
-                        if (select && select.length > 0) {
-                            query.select = select;
-                        }
+                        query.select = (select === null || select === void 0 ? void 0 : select.length) ? select : undefined;
                         return [4 /*yield*/, orderRepo.findOne(query)];
                     case 1:
                         raw = _b.sent();
                         if (!raw) {
                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Order with cart id: ".concat(cartId, " was not found"));
+                        }
+                        if (!(totalsToSelect === null || totalsToSelect === void 0 ? void 0 : totalsToSelect.length)) {
+                            return [2 /*return*/, raw];
                         }
                         return [4 /*yield*/, this.decorateTotals(raw, totalsToSelect)];
                     case 2: return [2 /*return*/, _b.sent()];
@@ -408,9 +453,8 @@ var OrderService = /** @class */ (function (_super) {
                         if (relations && relations.length > 0) {
                             query.relations = relations;
                         }
-                        if (select && select.length > 0) {
-                            query.select = select;
-                        }
+                        query.relations = this.getTotalsRelations({ relations: query.relations });
+                        query.select = (select === null || select === void 0 ? void 0 : select.length) ? select : undefined;
                         rels = query.relations;
                         delete query.relations;
                         return [4 /*yield*/, orderRepo.findOneWithRelations(rels, query)];
@@ -421,24 +465,6 @@ var OrderService = /** @class */ (function (_super) {
                         }
                         return [4 /*yield*/, this.decorateTotals(raw, totalsToSelect)];
                     case 2: return [2 /*return*/, _b.sent()];
-                }
-            });
-        });
-    };
-    /**
-     * Checks the existence of an order by cart id.
-     * @param cartId - cart id to find order
-     * @return the order document
-     */
-    OrderService.prototype.existsByCartId = function (cartId) {
-        return __awaiter(this, void 0, void 0, function () {
-            var order;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.retrieveByCartId(cartId).catch(function () { return undefined; })];
-                    case 1:
-                        order = _a.sent();
-                        return [2 /*return*/, !!order];
                 }
             });
         });
@@ -481,109 +507,72 @@ var OrderService = /** @class */ (function (_super) {
     };
     /**
      * Creates an order from a cart
-     * @param cartId - id of the cart to create an order from
      * @return resolves to the creation result.
+     * @param cartOrId
      */
-    OrderService.prototype.createFromCart = function (cartId) {
+    OrderService.prototype.createFromCart = function (cartOrId) {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var cartServiceTx, inventoryServiceTx, cart, payment, region, total, _a, _b, item, err_1, e_1_1, exists, paymentStatus, orderRepo, toCreate, draft, o, result, gcBalance, gcService, _c, _d, g, newBalance, usage, e_2_1, _e, _f, method, e_3_1, lineItemServiceTx, _g, _h, item, e_4_1, _j, _k, item, e_5_1;
-                            var e_1, _l, e_2, _m, e_3, _o, e_4, _p, e_5, _q;
-                            return __generator(this, function (_r) {
-                                switch (_r.label) {
+                            var cartServiceTx, exists, cart, _a, payment, region, total, paymentStatus, orderRepo, shippingMethods, toCreate, draft, rawOrder, order, giftCardableAmount, giftCardableAmountBalance, giftCardService, _b, _c, giftCard, newGiftCardBalance, giftCardBalanceUsed, e_1_1, shippingOptionServiceTx, lineItemServiceTx;
+                            var e_1, _d;
+                            var _this = this;
+                            var _e;
+                            return __generator(this, function (_f) {
+                                switch (_f.label) {
                                     case 0:
                                         cartServiceTx = this.cartService_.withTransaction(manager);
-                                        inventoryServiceTx = this.inventoryService_.withTransaction(manager);
-                                        return [4 /*yield*/, cartServiceTx.retrieveWithTotals(cartId, {
-                                                relations: [
-                                                    "region",
-                                                    "payment",
-                                                    "items",
-                                                    "discounts",
-                                                    "discounts.rule",
-                                                    "gift_cards",
-                                                    "shipping_methods",
-                                                    "items",
-                                                    "items.adjustments",
-                                                ],
-                                            })];
+                                        return [4 /*yield*/, this.retrieveByCartId((0, utils_1.isString)(cartOrId) ? cartOrId : cartOrId === null || cartOrId === void 0 ? void 0 : cartOrId.id, {
+                                                select: ["id"],
+                                            }).catch(function () { return void 0; })];
                                     case 1:
-                                        cart = _r.sent();
+                                        exists = !!(_f.sent());
+                                        if (exists) {
+                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.DUPLICATE_ERROR, exports.ORDER_CART_ALREADY_EXISTS_ERROR);
+                                        }
+                                        if (!(0, utils_1.isString)(cartOrId)) return [3 /*break*/, 3];
+                                        return [4 /*yield*/, cartServiceTx.retrieveWithTotals(cartOrId, {
+                                                relations: ["region", "payment", "items"],
+                                            })];
+                                    case 2:
+                                        _a = _f.sent();
+                                        return [3 /*break*/, 4];
+                                    case 3:
+                                        _a = cartOrId;
+                                        _f.label = 4;
+                                    case 4:
+                                        cart = _a;
                                         if (cart.items.length === 0) {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Cannot create order from empty cart");
                                         }
                                         payment = cart.payment, region = cart.region, total = cart.total;
-                                        _r.label = 2;
-                                    case 2:
-                                        _r.trys.push([2, 12, 13, 14]);
-                                        _a = __values(cart.items), _b = _a.next();
-                                        _r.label = 3;
-                                    case 3:
-                                        if (!!_b.done) return [3 /*break*/, 11];
-                                        item = _b.value;
-                                        _r.label = 4;
-                                    case 4:
-                                        _r.trys.push([4, 6, , 10]);
-                                        return [4 /*yield*/, inventoryServiceTx.confirmInventory(item.variant_id, item.quantity)];
-                                    case 5:
-                                        _r.sent();
-                                        return [3 /*break*/, 10];
-                                    case 6:
-                                        err_1 = _r.sent();
-                                        if (!payment) return [3 /*break*/, 8];
-                                        return [4 /*yield*/, this.paymentProviderService_
-                                                .withTransaction(manager)
-                                                .cancelPayment(payment)];
-                                    case 7:
-                                        _r.sent();
-                                        _r.label = 8;
-                                    case 8: return [4 /*yield*/, cartServiceTx.update(cart.id, { payment_authorized_at: null })];
-                                    case 9:
-                                        _r.sent();
-                                        throw err_1;
-                                    case 10:
-                                        _b = _a.next();
-                                        return [3 /*break*/, 3];
-                                    case 11: return [3 /*break*/, 14];
-                                    case 12:
-                                        e_1_1 = _r.sent();
-                                        e_1 = { error: e_1_1 };
-                                        return [3 /*break*/, 14];
-                                    case 13:
-                                        try {
-                                            if (_b && !_b.done && (_l = _a.return)) _l.call(_a);
-                                        }
-                                        finally { if (e_1) throw e_1.error; }
-                                        return [7 /*endfinally*/];
-                                    case 14: return [4 /*yield*/, this.existsByCartId(cart.id)];
-                                    case 15:
-                                        exists = _r.sent();
-                                        if (exists) {
-                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.DUPLICATE_ERROR, "Order from cart already exists");
-                                        }
-                                        if (!(total !== 0)) return [3 /*break*/, 17];
+                                        if (!(total !== 0)) return [3 /*break*/, 6];
                                         if (!payment) {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_ARGUMENT, "Cart does not contain a payment method");
                                         }
                                         return [4 /*yield*/, this.paymentProviderService_
                                                 .withTransaction(manager)
                                                 .getStatus(payment)];
-                                    case 16:
-                                        paymentStatus = _r.sent();
+                                    case 5:
+                                        paymentStatus = _f.sent();
                                         if (paymentStatus !== "authorized") {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_ARGUMENT, "Payment method is not authorized");
                                         }
-                                        _r.label = 17;
-                                    case 17:
+                                        _f.label = 6;
+                                    case 6:
                                         orderRepo = manager.getCustomRepository(this.orderRepository_);
+                                        shippingMethods = cart.shipping_methods.map(function (method) {
+                                            ;
+                                            method.tax_lines = undefined;
+                                            return method;
+                                        });
                                         toCreate = {
                                             payment_status: "awaiting",
                                             discounts: cart.discounts,
                                             gift_cards: cart.gift_cards,
-                                            shipping_methods: cart.shipping_methods,
+                                            shipping_methods: shippingMethods,
                                             shipping_address_id: cart.shipping_address_id,
                                             billing_address_id: cart.billing_address_id,
                                             region_id: cart.region_id,
@@ -597,168 +586,121 @@ var OrderService = /** @class */ (function (_super) {
                                             this.featureFlagRouter_.isFeatureEnabled(sales_channels_1.default.key)) {
                                             toCreate.sales_channel_id = cart.sales_channel_id;
                                         }
-                                        if (!(cart.type === "draft_order")) return [3 /*break*/, 19];
+                                        if (!(cart.type === "draft_order")) return [3 /*break*/, 8];
                                         return [4 /*yield*/, this.draftOrderService_
                                                 .withTransaction(manager)
                                                 .retrieveByCartId(cart.id)];
-                                    case 18:
-                                        draft = _r.sent();
+                                    case 7:
+                                        draft = _f.sent();
                                         toCreate.draft_order_id = draft.id;
                                         toCreate.no_notification = draft.no_notification_order;
-                                        _r.label = 19;
-                                    case 19:
-                                        o = orderRepo.create(toCreate);
-                                        return [4 /*yield*/, orderRepo.save(o)];
-                                    case 20:
-                                        result = _r.sent();
-                                        if (!(total !== 0 && payment)) return [3 /*break*/, 22];
+                                        _f.label = 8;
+                                    case 8:
+                                        rawOrder = orderRepo.create(toCreate);
+                                        return [4 /*yield*/, orderRepo.save(rawOrder)];
+                                    case 9:
+                                        order = _f.sent();
+                                        if (!(total !== 0 && payment)) return [3 /*break*/, 11];
                                         return [4 /*yield*/, this.paymentProviderService_
                                                 .withTransaction(manager)
                                                 .updatePayment(payment.id, {
-                                                order_id: result.id,
+                                                order_id: order.id,
                                             })];
-                                    case 21:
-                                        _r.sent();
-                                        _r.label = 22;
-                                    case 22: return [4 /*yield*/, this.totalsService_.getGiftCardableAmount(cart)];
-                                    case 23:
-                                        gcBalance = _r.sent();
-                                        gcService = this.giftCardService_.withTransaction(manager);
-                                        _r.label = 24;
-                                    case 24:
-                                        _r.trys.push([24, 30, 31, 32]);
-                                        _c = __values(cart.gift_cards), _d = _c.next();
-                                        _r.label = 25;
-                                    case 25:
-                                        if (!!_d.done) return [3 /*break*/, 29];
-                                        g = _d.value;
-                                        newBalance = Math.max(0, g.balance - gcBalance);
-                                        usage = g.balance - newBalance;
-                                        return [4 /*yield*/, gcService.update(g.id, {
-                                                balance: newBalance,
-                                                is_disabled: newBalance === 0,
-                                            })];
-                                    case 26:
-                                        _r.sent();
-                                        return [4 /*yield*/, gcService.createTransaction({
-                                                gift_card_id: g.id,
-                                                order_id: result.id,
-                                                amount: usage,
-                                                is_taxable: cart.region.gift_cards_taxable,
-                                                tax_rate: cart.region.gift_cards_taxable
-                                                    ? cart.region.tax_rate
-                                                    : null,
-                                            })];
-                                    case 27:
-                                        _r.sent();
-                                        gcBalance = gcBalance - usage;
-                                        _r.label = 28;
-                                    case 28:
-                                        _d = _c.next();
-                                        return [3 /*break*/, 25];
-                                    case 29: return [3 /*break*/, 32];
-                                    case 30:
-                                        e_2_1 = _r.sent();
-                                        e_2 = { error: e_2_1 };
-                                        return [3 /*break*/, 32];
-                                    case 31:
-                                        try {
-                                            if (_d && !_d.done && (_m = _c.return)) _m.call(_c);
+                                    case 10:
+                                        _f.sent();
+                                        _f.label = 11;
+                                    case 11:
+                                        if (!(0, medusa_core_utils_1.isDefined)(cart.subtotal) || !(0, medusa_core_utils_1.isDefined)(cart.discount_total)) {
+                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.UNEXPECTED_STATE, "Unable to compute gift cardable amount during order creation from cart. The cart is missing the subtotal and/or discount_total");
                                         }
-                                        finally { if (e_2) throw e_2.error; }
-                                        return [7 /*endfinally*/];
-                                    case 32:
-                                        _r.trys.push([32, 37, 38, 39]);
-                                        _e = __values(cart.shipping_methods), _f = _e.next();
-                                        _r.label = 33;
-                                    case 33:
-                                        if (!!_f.done) return [3 /*break*/, 36];
-                                        method = _f.value;
-                                        return [4 /*yield*/, this.shippingOptionService_
-                                                .withTransaction(manager)
-                                                .updateShippingMethod(method.id, { order_id: result.id })];
-                                    case 34:
-                                        _r.sent();
-                                        _r.label = 35;
-                                    case 35:
-                                        _f = _e.next();
-                                        return [3 /*break*/, 33];
-                                    case 36: return [3 /*break*/, 39];
-                                    case 37:
-                                        e_3_1 = _r.sent();
-                                        e_3 = { error: e_3_1 };
-                                        return [3 /*break*/, 39];
-                                    case 38:
+                                        giftCardableAmount = (((_e = cart.region) === null || _e === void 0 ? void 0 : _e.gift_cards_taxable)
+                                            ? cart.subtotal - cart.discount_total
+                                            : cart.total + cart.gift_card_total) || 0 // we re add the gift card total to compensate the fact that the decorate total already removed this amount from the total
+                                        ;
+                                        giftCardableAmountBalance = giftCardableAmount;
+                                        giftCardService = this.giftCardService_.withTransaction(manager);
+                                        _f.label = 12;
+                                    case 12:
+                                        _f.trys.push([12, 18, 19, 20]);
+                                        _b = __values(cart.gift_cards), _c = _b.next();
+                                        _f.label = 13;
+                                    case 13:
+                                        if (!!_c.done) return [3 /*break*/, 17];
+                                        giftCard = _c.value;
+                                        newGiftCardBalance = Math.max(0, giftCard.balance - giftCardableAmountBalance);
+                                        giftCardBalanceUsed = giftCard.balance - newGiftCardBalance;
+                                        return [4 /*yield*/, giftCardService.update(giftCard.id, {
+                                                balance: newGiftCardBalance,
+                                                is_disabled: newGiftCardBalance === 0,
+                                            })];
+                                    case 14:
+                                        _f.sent();
+                                        return [4 /*yield*/, giftCardService.createTransaction({
+                                                gift_card_id: giftCard.id,
+                                                order_id: order.id,
+                                                amount: giftCardBalanceUsed,
+                                                is_taxable: !!giftCard.tax_rate,
+                                                tax_rate: giftCard.tax_rate,
+                                            })];
+                                    case 15:
+                                        _f.sent();
+                                        giftCardableAmountBalance =
+                                            giftCardableAmountBalance - giftCardBalanceUsed;
+                                        _f.label = 16;
+                                    case 16:
+                                        _c = _b.next();
+                                        return [3 /*break*/, 13];
+                                    case 17: return [3 /*break*/, 20];
+                                    case 18:
+                                        e_1_1 = _f.sent();
+                                        e_1 = { error: e_1_1 };
+                                        return [3 /*break*/, 20];
+                                    case 19:
                                         try {
-                                            if (_f && !_f.done && (_o = _e.return)) _o.call(_e);
+                                            if (_c && !_c.done && (_d = _b.return)) _d.call(_b);
                                         }
-                                        finally { if (e_3) throw e_3.error; }
+                                        finally { if (e_1) throw e_1.error; }
                                         return [7 /*endfinally*/];
-                                    case 39:
+                                    case 20:
+                                        shippingOptionServiceTx = this.shippingOptionService_.withTransaction(manager);
                                         lineItemServiceTx = this.lineItemService_.withTransaction(manager);
-                                        _r.label = 40;
-                                    case 40:
-                                        _r.trys.push([40, 45, 46, 47]);
-                                        _g = __values(cart.items), _h = _g.next();
-                                        _r.label = 41;
-                                    case 41:
-                                        if (!!_h.done) return [3 /*break*/, 44];
-                                        item = _h.value;
-                                        return [4 /*yield*/, lineItemServiceTx.update(item.id, { order_id: result.id })];
-                                    case 42:
-                                        _r.sent();
-                                        _r.label = 43;
-                                    case 43:
-                                        _h = _g.next();
-                                        return [3 /*break*/, 41];
-                                    case 44: return [3 /*break*/, 47];
-                                    case 45:
-                                        e_4_1 = _r.sent();
-                                        e_4 = { error: e_4_1 };
-                                        return [3 /*break*/, 47];
-                                    case 46:
-                                        try {
-                                            if (_h && !_h.done && (_p = _g.return)) _p.call(_g);
-                                        }
-                                        finally { if (e_4) throw e_4.error; }
-                                        return [7 /*endfinally*/];
-                                    case 47:
-                                        _r.trys.push([47, 52, 53, 54]);
-                                        _j = __values(cart.items), _k = _j.next();
-                                        _r.label = 48;
-                                    case 48:
-                                        if (!!_k.done) return [3 /*break*/, 51];
-                                        item = _k.value;
-                                        return [4 /*yield*/, inventoryServiceTx.adjustInventory(item.variant_id, -item.quantity)];
-                                    case 49:
-                                        _r.sent();
-                                        _r.label = 50;
-                                    case 50:
-                                        _k = _j.next();
-                                        return [3 /*break*/, 48];
-                                    case 51: return [3 /*break*/, 54];
-                                    case 52:
-                                        e_5_1 = _r.sent();
-                                        e_5 = { error: e_5_1 };
-                                        return [3 /*break*/, 54];
-                                    case 53:
-                                        try {
-                                            if (_k && !_k.done && (_q = _j.return)) _q.call(_j);
-                                        }
-                                        finally { if (e_5) throw e_5.error; }
-                                        return [7 /*endfinally*/];
-                                    case 54: return [4 /*yield*/, this.eventBus_
-                                            .withTransaction(manager)
-                                            .emit(OrderService.Events.PLACED, {
-                                            id: result.id,
-                                            no_notification: result.no_notification,
-                                        })];
-                                    case 55:
-                                        _r.sent();
+                                        return [4 /*yield*/, Promise.all([
+                                                cart.items.map(function (lineItem) {
+                                                    var toReturn = [
+                                                        lineItemServiceTx.update(lineItem.id, { order_id: order.id }),
+                                                    ];
+                                                    if (lineItem.is_giftcard) {
+                                                        toReturn.push(_this.createGiftCardsFromLineItem_(order, lineItem, manager));
+                                                    }
+                                                    return toReturn;
+                                                }),
+                                                cart.shipping_methods.map(function (method) { return __awaiter(_this, void 0, void 0, function () {
+                                                    return __generator(this, function (_a) {
+                                                        // TODO: Due to cascade insert we have to remove the tax_lines that have been added by the cart decorate totals.
+                                                        // Is the cascade insert really used? Also, is it really necessary to pass the entire entities when creating or updating?
+                                                        // We normally should only pass what is needed?
+                                                        ;
+                                                        method.tax_lines = undefined;
+                                                        return [2 /*return*/, shippingOptionServiceTx.updateShippingMethod(method.id, {
+                                                                order_id: order.id,
+                                                            })];
+                                                    });
+                                                }); }),
+                                            ].flat(Infinity))];
+                                    case 21:
+                                        _f.sent();
+                                        return [4 /*yield*/, this.eventBus_
+                                                .withTransaction(manager)
+                                                .emit(OrderService.Events.PLACED, {
+                                                id: order.id,
+                                                no_notification: order.no_notification,
+                                            })];
+                                    case 22:
+                                        _f.sent();
                                         return [4 /*yield*/, cartServiceTx.update(cart.id, { completed_at: new Date() })];
-                                    case 56:
-                                        _r.sent();
-                                        return [2 /*return*/, result];
+                                    case 23:
+                                        _f.sent();
+                                        return [2 /*return*/, order];
                                 }
                             });
                         }); })];
@@ -766,6 +708,35 @@ var OrderService = /** @class */ (function (_super) {
                 }
             });
         });
+    };
+    OrderService.prototype.createGiftCardsFromLineItem_ = function (order, lineItem, manager) {
+        var createGiftCardPromises = [];
+        // LineItem type doesn't promise either the subtotal or quantity. Adding a check here provides
+        // additional type safety/strictness
+        if (!lineItem.subtotal || !lineItem.quantity) {
+            return createGiftCardPromises;
+        }
+        // Subtotal is the pure value of the product/variant excluding tax, discounts, etc.
+        // We divide here by quantity to get the value of the product/variant as a lineItem
+        // contains quantity. The subtotal is multiplicative of pure price per product and quantity
+        var taxExclusivePrice = lineItem.subtotal / lineItem.quantity;
+        // The tax_lines contains all the taxes that is applicable on the purchase of the gift card
+        // On utilizing the gift card, the same set of taxRate will apply to gift card
+        // We calculate the summation of all taxes and add that as a snapshot in the giftcard.tax_rate column
+        var giftCardTaxRate = lineItem.tax_lines.reduce(function (sum, taxLine) { return sum + taxLine.rate; }, 0);
+        var giftCardTxnService = this.giftCardService_.withTransaction(manager);
+        for (var qty = 0; qty < lineItem.quantity; qty++) {
+            var createGiftCardPromise = giftCardTxnService.create({
+                region_id: order.region_id,
+                order_id: order.id,
+                value: taxExclusivePrice,
+                balance: taxExclusivePrice,
+                metadata: lineItem.metadata,
+                tax_rate: giftCardTaxRate || null,
+            });
+            createGiftCardPromises.push(createGiftCardPromise);
+        }
+        return createGiftCardPromises;
     };
     /**
      * Adds a shipment to the order to indicate that an order has left the
@@ -791,8 +762,8 @@ var OrderService = /** @class */ (function (_super) {
                     case 0:
                         metadata = config.metadata, no_notification = config.no_notification;
                         return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                                var order, shipment, evaluatedNoNotification, shipmentRes, lineItemServiceTx, _loop_1, _a, _b, item, e_6_1, orderRepo, result;
-                                var e_6, _c;
+                                var order, shipment, evaluatedNoNotification, shipmentRes, lineItemServiceTx, _loop_1, _a, _b, item, e_2_1, orderRepo, result;
+                                var e_2, _c;
                                 return __generator(this, function (_d) {
                                     switch (_d.label) {
                                         case 0: return [4 /*yield*/, this.retrieve(orderId, { relations: ["items"] })];
@@ -865,14 +836,14 @@ var OrderService = /** @class */ (function (_super) {
                                             return [3 /*break*/, 5];
                                         case 8: return [3 /*break*/, 11];
                                         case 9:
-                                            e_6_1 = _d.sent();
-                                            e_6 = { error: e_6_1 };
+                                            e_2_1 = _d.sent();
+                                            e_2 = { error: e_2_1 };
                                             return [3 /*break*/, 11];
                                         case 10:
                                             try {
                                                 if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                                             }
-                                            finally { if (e_6) throw e_6.error; }
+                                            finally { if (e_2) throw e_2.error; }
                                             return [7 /*endfinally*/];
                                         case 11:
                                             orderRepo = manager.getCustomRepository(this.orderRepository_);
@@ -906,7 +877,7 @@ var OrderService = /** @class */ (function (_super) {
     OrderService.prototype.updateBillingAddress = function (order, address) {
         var _a, _b, _c, _d;
         return __awaiter(this, void 0, void 0, function () {
-            var addrRepo, region, addr, created;
+            var addrRepo, region, addr;
             return __generator(this, function (_e) {
                 switch (_e.label) {
                     case 0:
@@ -935,14 +906,11 @@ var OrderService = /** @class */ (function (_super) {
                         return [4 /*yield*/, addrRepo.save(__assign(__assign({}, addr), address))];
                     case 3:
                         _e.sent();
-                        return [3 /*break*/, 6];
+                        return [3 /*break*/, 5];
                     case 4:
-                        created = addrRepo.create(__assign({}, address));
-                        return [4 /*yield*/, addrRepo.save(created)];
-                    case 5:
-                        _e.sent();
-                        _e.label = 6;
-                    case 6: return [2 /*return*/];
+                        order.billing_address = addrRepo.create(__assign({}, address));
+                        _e.label = 5;
+                    case 5: return [2 /*return*/];
                 }
             });
         });
@@ -956,7 +924,7 @@ var OrderService = /** @class */ (function (_super) {
     OrderService.prototype.updateShippingAddress = function (order, address) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function () {
-            var addrRepo, region, addr, created;
+            var addrRepo, region, addr;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
@@ -984,14 +952,11 @@ var OrderService = /** @class */ (function (_super) {
                         return [4 /*yield*/, addrRepo.save(__assign(__assign({}, addr), address))];
                     case 3:
                         _c.sent();
-                        return [3 /*break*/, 6];
+                        return [3 /*break*/, 5];
                     case 4:
-                        created = addrRepo.create(__assign({}, address));
-                        return [4 /*yield*/, addrRepo.save(created)];
-                    case 5:
-                        _c.sent();
-                        _c.label = 6;
-                    case 6: return [2 /*return*/];
+                        order.shipping_address = addrRepo.create(__assign({}, address));
+                        _c.label = 5;
+                    case 5: return [2 /*return*/];
                 }
             });
         });
@@ -1003,12 +968,11 @@ var OrderService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var order, shipping_methods, newMethod, shippingOptionServiceTx, methods, shipping_methods_1, shipping_methods_1_1, sm, e_7_1, result;
-                            var e_7, _a;
+                            var order, shipping_methods, newMethod, shippingOptionServiceTx, methods, shipping_methods_1, shipping_methods_1_1, sm, e_3_1, result;
+                            var e_3, _a;
                             return __generator(this, function (_b) {
                                 switch (_b.label) {
-                                    case 0: return [4 /*yield*/, this.retrieve(orderId, {
-                                            select: ["subtotal"],
+                                    case 0: return [4 /*yield*/, this.retrieveWithTotals(orderId, {
                                             relations: [
                                                 "shipping_methods",
                                                 "shipping_methods.shipping_option",
@@ -1053,14 +1017,14 @@ var OrderService = /** @class */ (function (_super) {
                                         return [3 /*break*/, 4];
                                     case 8: return [3 /*break*/, 11];
                                     case 9:
-                                        e_7_1 = _b.sent();
-                                        e_7 = { error: e_7_1 };
+                                        e_3_1 = _b.sent();
+                                        e_3 = { error: e_3_1 };
                                         return [3 /*break*/, 11];
                                     case 10:
                                         try {
                                             if (shipping_methods_1_1 && !shipping_methods_1_1.done && (_a = shipping_methods_1.return)) _a.call(shipping_methods_1);
                                         }
-                                        finally { if (e_7) throw e_7.error; }
+                                        finally { if (e_3) throw e_3.error; }
                                         return [7 /*endfinally*/];
                                     case 11: return [4 /*yield*/, this.retrieve(orderId)];
                                     case 12:
@@ -1094,8 +1058,8 @@ var OrderService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var order, metadata, shipping_address, billing_address, no_notification, items, rest, lineItemServiceTx, _a, _b, item, e_8_1, _c, _d, _e, key, value, orderRepo, result;
-                            var e_8, _f, e_9, _g;
+                            var order, metadata, shipping_address, billing_address, no_notification, items, rest, lineItemServiceTx, _a, _b, item, e_4_1, _c, _d, _e, key, value, orderRepo, result;
+                            var e_4, _f, e_5, _g;
                             return __generator(this, function (_h) {
                                 switch (_h.label) {
                                     case 0: return [4 /*yield*/, this.retrieve(orderId)];
@@ -1151,14 +1115,14 @@ var OrderService = /** @class */ (function (_super) {
                                         return [3 /*break*/, 7];
                                     case 10: return [3 /*break*/, 13];
                                     case 11:
-                                        e_8_1 = _h.sent();
-                                        e_8 = { error: e_8_1 };
+                                        e_4_1 = _h.sent();
+                                        e_4 = { error: e_4_1 };
                                         return [3 /*break*/, 13];
                                     case 12:
                                         try {
                                             if (_b && !_b.done && (_f = _a.return)) _f.call(_a);
                                         }
-                                        finally { if (e_8) throw e_8.error; }
+                                        finally { if (e_4) throw e_4.error; }
                                         return [7 /*endfinally*/];
                                     case 13:
                                         try {
@@ -1167,12 +1131,12 @@ var OrderService = /** @class */ (function (_super) {
                                                 order[key] = value;
                                             }
                                         }
-                                        catch (e_9_1) { e_9 = { error: e_9_1 }; }
+                                        catch (e_5_1) { e_5 = { error: e_5_1 }; }
                                         finally {
                                             try {
                                                 if (_d && !_d.done && (_g = _c.return)) _g.call(_c);
                                             }
-                                            finally { if (e_9) throw e_9.error; }
+                                            finally { if (e_5) throw e_5.error; }
                                         }
                                         orderRepo = manager.getCustomRepository(this.orderRepository_);
                                         return [4 /*yield*/, orderRepo.save(order)];
@@ -1208,13 +1172,15 @@ var OrderService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var order, throwErrorIf, notCanceled, inventoryServiceTx, _a, _b, item, e_10_1, paymentProviderServiceTx, _c, _d, p, e_11_1, orderRepo, result;
-                            var e_10, _e, e_11, _f;
-                            var _g;
-                            return __generator(this, function (_h) {
-                                switch (_h.label) {
+                            var order, throwErrorIf, notCanceled, inventoryServiceTx, paymentProviderServiceTx, _a, _b, p, e_6_1, orderRepo, result;
+                            var e_6, _c;
+                            var _this = this;
+                            var _d;
+                            return __generator(this, function (_e) {
+                                switch (_e.label) {
                                     case 0: return [4 /*yield*/, this.retrieve(orderId, {
                                             relations: [
+                                                "refunds",
                                                 "fulfillments",
                                                 "payments",
                                                 "returns",
@@ -1224,8 +1190,8 @@ var OrderService = /** @class */ (function (_super) {
                                             ],
                                         })];
                                     case 1:
-                                        order = _h.sent();
-                                        if (((_g = order.refunds) === null || _g === void 0 ? void 0 : _g.length) > 0) {
+                                        order = _e.sent();
+                                        if (((_d = order.refunds) === null || _d === void 0 ? void 0 : _d.length) > 0) {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Order with refund(s) cannot be canceled");
                                         }
                                         throwErrorIf = function (arr, pred, type) {
@@ -1238,78 +1204,64 @@ var OrderService = /** @class */ (function (_super) {
                                         throwErrorIf(order.returns, function (r) { return r.status !== "canceled"; }, "returns");
                                         throwErrorIf(order.swaps, notCanceled, "swaps");
                                         throwErrorIf(order.claims, notCanceled, "claims");
-                                        inventoryServiceTx = this.inventoryService_.withTransaction(manager);
-                                        _h.label = 2;
+                                        inventoryServiceTx = this.productVariantInventoryService_.withTransaction(manager);
+                                        return [4 /*yield*/, Promise.all(order.items.map(function (item) { return __awaiter(_this, void 0, void 0, function () {
+                                                return __generator(this, function (_a) {
+                                                    switch (_a.label) {
+                                                        case 0:
+                                                            if (!item.variant_id) return [3 /*break*/, 2];
+                                                            return [4 /*yield*/, inventoryServiceTx.deleteReservationsByLineItem(item.id, item.variant_id, item.quantity)];
+                                                        case 1: return [2 /*return*/, _a.sent()];
+                                                        case 2: return [2 /*return*/];
+                                                    }
+                                                });
+                                            }); }))];
                                     case 2:
-                                        _h.trys.push([2, 7, 8, 9]);
-                                        _a = __values(order.items), _b = _a.next();
-                                        _h.label = 3;
-                                    case 3:
-                                        if (!!_b.done) return [3 /*break*/, 6];
-                                        item = _b.value;
-                                        return [4 /*yield*/, inventoryServiceTx.adjustInventory(item.variant_id, item.quantity)];
-                                    case 4:
-                                        _h.sent();
-                                        _h.label = 5;
-                                    case 5:
-                                        _b = _a.next();
-                                        return [3 /*break*/, 3];
-                                    case 6: return [3 /*break*/, 9];
-                                    case 7:
-                                        e_10_1 = _h.sent();
-                                        e_10 = { error: e_10_1 };
-                                        return [3 /*break*/, 9];
-                                    case 8:
-                                        try {
-                                            if (_b && !_b.done && (_e = _a.return)) _e.call(_a);
-                                        }
-                                        finally { if (e_10) throw e_10.error; }
-                                        return [7 /*endfinally*/];
-                                    case 9:
+                                        _e.sent();
                                         paymentProviderServiceTx = this.paymentProviderService_.withTransaction(manager);
-                                        _h.label = 10;
-                                    case 10:
-                                        _h.trys.push([10, 15, 16, 17]);
-                                        _c = __values(order.payments), _d = _c.next();
-                                        _h.label = 11;
-                                    case 11:
-                                        if (!!_d.done) return [3 /*break*/, 14];
-                                        p = _d.value;
+                                        _e.label = 3;
+                                    case 3:
+                                        _e.trys.push([3, 8, 9, 10]);
+                                        _a = __values(order.payments), _b = _a.next();
+                                        _e.label = 4;
+                                    case 4:
+                                        if (!!_b.done) return [3 /*break*/, 7];
+                                        p = _b.value;
                                         return [4 /*yield*/, paymentProviderServiceTx.cancelPayment(p)];
-                                    case 12:
-                                        _h.sent();
-                                        _h.label = 13;
-                                    case 13:
-                                        _d = _c.next();
-                                        return [3 /*break*/, 11];
-                                    case 14: return [3 /*break*/, 17];
-                                    case 15:
-                                        e_11_1 = _h.sent();
-                                        e_11 = { error: e_11_1 };
-                                        return [3 /*break*/, 17];
-                                    case 16:
+                                    case 5:
+                                        _e.sent();
+                                        _e.label = 6;
+                                    case 6:
+                                        _b = _a.next();
+                                        return [3 /*break*/, 4];
+                                    case 7: return [3 /*break*/, 10];
+                                    case 8:
+                                        e_6_1 = _e.sent();
+                                        e_6 = { error: e_6_1 };
+                                        return [3 /*break*/, 10];
+                                    case 9:
                                         try {
-                                            if (_d && !_d.done && (_f = _c.return)) _f.call(_c);
+                                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                                         }
-                                        finally { if (e_11) throw e_11.error; }
+                                        finally { if (e_6) throw e_6.error; }
                                         return [7 /*endfinally*/];
-                                    case 17:
+                                    case 10:
                                         order.status = models_1.OrderStatus.CANCELED;
                                         order.fulfillment_status = models_1.FulfillmentStatus.CANCELED;
                                         order.payment_status = models_1.PaymentStatus.CANCELED;
                                         order.canceled_at = new Date();
                                         orderRepo = manager.getCustomRepository(this.orderRepository_);
                                         return [4 /*yield*/, orderRepo.save(order)];
-                                    case 18:
-                                        result = _h.sent();
+                                    case 11:
+                                        result = _e.sent();
                                         return [4 /*yield*/, this.eventBus_
                                                 .withTransaction(manager)
                                                 .emit(OrderService.Events.CANCELED, {
                                                 id: order.id,
                                                 no_notification: order.no_notification,
                                             })];
-                                    case 19:
-                                        _h.sent();
+                                    case 12:
+                                        _e.sent();
                                         return [2 /*return*/, result];
                                 }
                             });
@@ -1330,8 +1282,8 @@ var OrderService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var orderRepo, order, paymentProviderServiceTx, payments, _loop_2, _a, _b, p, e_12_1, result;
-                            var e_12, _c;
+                            var orderRepo, order, paymentProviderServiceTx, payments, _loop_2, _a, _b, p, e_7_1, result;
+                            var e_7, _c;
                             var _this = this;
                             return __generator(this, function (_d) {
                                 switch (_d.label) {
@@ -1403,14 +1355,14 @@ var OrderService = /** @class */ (function (_super) {
                                         return [3 /*break*/, 3];
                                     case 6: return [3 /*break*/, 9];
                                     case 7:
-                                        e_12_1 = _d.sent();
-                                        e_12 = { error: e_12_1 };
+                                        e_7_1 = _d.sent();
+                                        e_7 = { error: e_7_1 };
                                         return [3 /*break*/, 9];
                                     case 8:
                                         try {
                                             if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                                         }
-                                        finally { if (e_12) throw e_12.error; }
+                                        finally { if (e_7) throw e_7.error; }
                                         return [7 /*endfinally*/];
                                     case 9:
                                         order.payments = payments;
@@ -1473,20 +1425,17 @@ var OrderService = /** @class */ (function (_super) {
      * @return result of the update operation.
      */
     OrderService.prototype.createFulfillment = function (orderId, itemsToFulfill, config) {
-        if (config === void 0) { config = {
-            no_notification: undefined,
-            metadata: {},
-        }; }
+        if (config === void 0) { config = {}; }
         return __awaiter(this, void 0, void 0, function () {
-            var metadata, no_notification;
+            var metadata, no_notification, location_id;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        metadata = config.metadata, no_notification = config.no_notification;
+                        metadata = config.metadata, no_notification = config.no_notification, location_id = config.location_id;
                         return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                                var order, fulfillments, successfullyFulfilled, fulfillments_1, fulfillments_1_1, f, _loop_3, this_1, _a, _b, item, e_13_1, orderRepo, result, evaluatedNoNotification, eventBusTx, fulfillments_2, fulfillments_2_1, fulfillment, e_14_1;
-                                var e_15, _c, e_13, _d, e_14, _e;
+                                var order, fulfillments, successfullyFulfilled, fulfillments_1, fulfillments_1_1, f, _loop_3, this_1, _a, _b, item, e_8_1, orderRepo, result, evaluatedNoNotification, eventBusTx, fulfillments_2, fulfillments_2_1, fulfillment, e_9_1;
+                                var e_10, _c, e_8, _d, e_9, _e;
                                 var _f;
                                 return __generator(this, function (_g) {
                                     switch (_g.label) {
@@ -1526,9 +1475,11 @@ var OrderService = /** @class */ (function (_super) {
                                             return [4 /*yield*/, this.fulfillmentService_
                                                     .withTransaction(manager)
                                                     .createFulfillment(order, itemsToFulfill, {
-                                                    metadata: metadata,
+                                                    metadata: metadata !== null && metadata !== void 0 ? metadata : {},
                                                     no_notification: no_notification,
                                                     order_id: orderId,
+                                                }, {
+                                                    locationId: location_id,
                                                 })];
                                         case 2:
                                             fulfillments = _g.sent();
@@ -1539,12 +1490,12 @@ var OrderService = /** @class */ (function (_super) {
                                                     successfullyFulfilled = __spreadArray(__spreadArray([], __read(successfullyFulfilled), false), __read(f.items), false);
                                                 }
                                             }
-                                            catch (e_15_1) { e_15 = { error: e_15_1 }; }
+                                            catch (e_10_1) { e_10 = { error: e_10_1 }; }
                                             finally {
                                                 try {
                                                     if (fulfillments_1_1 && !fulfillments_1_1.done && (_c = fulfillments_1.return)) _c.call(fulfillments_1);
                                                 }
-                                                finally { if (e_15) throw e_15.error; }
+                                                finally { if (e_10) throw e_10.error; }
                                             }
                                             order.fulfillment_status = models_1.FulfillmentStatus.FULFILLED;
                                             _loop_3 = function (item) {
@@ -1593,14 +1544,14 @@ var OrderService = /** @class */ (function (_super) {
                                             return [3 /*break*/, 4];
                                         case 7: return [3 /*break*/, 10];
                                         case 8:
-                                            e_13_1 = _g.sent();
-                                            e_13 = { error: e_13_1 };
+                                            e_8_1 = _g.sent();
+                                            e_8 = { error: e_8_1 };
                                             return [3 /*break*/, 10];
                                         case 9:
                                             try {
                                                 if (_b && !_b.done && (_d = _a.return)) _d.call(_a);
                                             }
-                                            finally { if (e_13) throw e_13.error; }
+                                            finally { if (e_8) throw e_8.error; }
                                             return [7 /*endfinally*/];
                                         case 10:
                                             orderRepo = manager.getCustomRepository(this.orderRepository_);
@@ -1631,14 +1582,14 @@ var OrderService = /** @class */ (function (_super) {
                                             return [3 /*break*/, 13];
                                         case 16: return [3 /*break*/, 19];
                                         case 17:
-                                            e_14_1 = _g.sent();
-                                            e_14 = { error: e_14_1 };
+                                            e_9_1 = _g.sent();
+                                            e_9 = { error: e_9_1 };
                                             return [3 /*break*/, 19];
                                         case 18:
                                             try {
                                                 if (fulfillments_2_1 && !fulfillments_2_1.done && (_e = fulfillments_2.return)) _e.call(fulfillments_2);
                                             }
-                                            finally { if (e_14) throw e_14.error; }
+                                            finally { if (e_9) throw e_9.error; }
                                             return [7 /*endfinally*/];
                                         case 19: return [2 /*return*/, result];
                                     }
@@ -1781,13 +1732,15 @@ var OrderService = /** @class */ (function (_super) {
                     case 0:
                         no_notification = config.no_notification;
                         return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                                var order, refund, result, evaluatedNoNotification;
+                                var orderRepo, order, refund, result, evaluatedNoNotification;
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
-                                        case 0: return [4 /*yield*/, this.retrieve(orderId, {
-                                                select: ["refundable_amount", "total", "refunded_total"],
-                                                relations: ["payments"],
-                                            })];
+                                        case 0:
+                                            orderRepo = manager.getCustomRepository(this.orderRepository_);
+                                            return [4 /*yield*/, this.retrieve(orderId, {
+                                                    select: ["refundable_amount", "total", "refunded_total"],
+                                                    relations: ["payments"],
+                                                })];
                                         case 1:
                                             order = _a.sent();
                                             if (order.status === "canceled") {
@@ -1801,16 +1754,33 @@ var OrderService = /** @class */ (function (_super) {
                                                     .refundPayment(order.payments, refundAmount, reason, note)];
                                         case 2:
                                             refund = _a.sent();
-                                            return [4 /*yield*/, this.retrieve(orderId)];
+                                            return [4 /*yield*/, this.retrieveWithTotals(orderId, {
+                                                    relations: ["payments"],
+                                                })];
                                         case 3:
                                             result = _a.sent();
+                                            if (!(result.refunded_total > 0 && result.refundable_amount > 0)) return [3 /*break*/, 5];
+                                            result.payment_status = models_1.PaymentStatus.PARTIALLY_REFUNDED;
+                                            return [4 /*yield*/, orderRepo.save(result)];
+                                        case 4:
+                                            result = _a.sent();
+                                            _a.label = 5;
+                                        case 5:
+                                            if (!(result.paid_total > 0 &&
+                                                result.refunded_total === result.paid_total)) return [3 /*break*/, 7];
+                                            result.payment_status = models_1.PaymentStatus.REFUNDED;
+                                            return [4 /*yield*/, orderRepo.save(result)];
+                                        case 6:
+                                            result = _a.sent();
+                                            _a.label = 7;
+                                        case 7:
                                             evaluatedNoNotification = no_notification !== undefined ? no_notification : order.no_notification;
                                             return [4 /*yield*/, this.eventBus_.emit(OrderService.Events.REFUND_CREATED, {
                                                     id: result.id,
                                                     refund_id: refund.id,
                                                     no_notification: evaluatedNoNotification,
                                                 })];
-                                        case 4:
+                                        case 8:
                                             _a.sent();
                                             return [2 /*return*/, result];
                                     }
@@ -1821,258 +1791,447 @@ var OrderService = /** @class */ (function (_super) {
             });
         });
     };
-    OrderService.prototype.decorateTotals = function (order, totalsFields) {
+    OrderService.prototype.decorateTotalsLegacy = function (order, totalsFields) {
         if (totalsFields === void 0) { totalsFields = []; }
         return __awaiter(this, void 0, void 0, function () {
-            var totalsFields_1, totalsFields_1_1, totalField, _a, _b, giftCardBreakdown, _c, _d, _e, _f, paid_total, refunded_total, items, _g, _h, item, _j, _k, _l, e_16_1, _m, _o, s, items, _p, _q, item, _r, _s, _t, e_17_1, e_18_1, _u, _v, c, items, _w, _x, item, _y, _z, _0, e_19_1, e_20_1, e_21_1;
-            var e_21, _1, e_16, _2, _3, e_18, _4, e_17, _5, _6, e_20, _7, e_19, _8, _9;
-            return __generator(this, function (_10) {
-                switch (_10.label) {
+            var calculationContext_1, _a, totalsFields_1, totalsFields_1_1, totalField, _b, _c, giftCardBreakdown, _d, _e, _f, _g, paid_total, refunded_total, items, _h, _j, item, _k, _l, _m, e_11_1, _o, _p, s, items, _q, _r, item, _s, _t, _u, e_12_1, e_13_1, _v, _w, c, items, _x, _y, item, _z, _0, _1, e_14_1, e_15_1, e_16_1;
+            var e_16, _2, e_11, _3, _4, e_13, _5, e_12, _6, _7, e_15, _8, e_14, _9, _10;
+            var _this = this;
+            return __generator(this, function (_11) {
+                switch (_11.label) {
                     case 0:
-                        _10.trys.push([0, 59, 60, 61]);
-                        totalsFields_1 = __values(totalsFields), totalsFields_1_1 = totalsFields_1.next();
-                        _10.label = 1;
+                        if (!totalsFields.some(function (field) { return ["subtotal", "total"].includes(field); })) return [3 /*break*/, 3];
+                        return [4 /*yield*/, this.totalsService_.getCalculationContext(order, {
+                                exclude_shipping: true,
+                            })];
                     case 1:
-                        if (!!totalsFields_1_1.done) return [3 /*break*/, 58];
-                        totalField = totalsFields_1_1.value;
-                        _a = totalField;
-                        switch (_a) {
-                            case "shipping_total": return [3 /*break*/, 2];
-                            case "gift_card_total": return [3 /*break*/, 4];
-                            case "discount_total": return [3 /*break*/, 6];
-                            case "tax_total": return [3 /*break*/, 8];
-                            case "subtotal": return [3 /*break*/, 10];
-                            case "total": return [3 /*break*/, 12];
-                            case "refunded_total": return [3 /*break*/, 14];
-                            case "paid_total": return [3 /*break*/, 15];
-                            case "refundable_amount": return [3 /*break*/, 16];
-                            case "items.refundable": return [3 /*break*/, 17];
-                            case "swaps.additional_items.refundable": return [3 /*break*/, 26];
-                            case "claims.additional_items.refundable": return [3 /*break*/, 41];
-                        }
-                        return [3 /*break*/, 56];
+                        calculationContext_1 = _11.sent();
+                        _a = order;
+                        return [4 /*yield*/, Promise.all((order.items || []).map(function (item) { return __awaiter(_this, void 0, void 0, function () {
+                                var itemTotals;
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
+                                        case 0: return [4 /*yield*/, this.totalsService_.getLineItemTotals(item, order, {
+                                                include_tax: true,
+                                                calculation_context: calculationContext_1,
+                                            })];
+                                        case 1:
+                                            itemTotals = _a.sent();
+                                            return [2 /*return*/, Object.assign(item, itemTotals)];
+                                    }
+                                });
+                            }); }))];
                     case 2:
-                        _b = order;
-                        return [4 /*yield*/, this.totalsService_.getShippingTotal(order)];
+                        _a.items = _11.sent();
+                        _11.label = 3;
                     case 3:
-                        _b.shipping_total = _10.sent();
-                        return [3 /*break*/, 57];
-                    case 4: return [4 /*yield*/, this.totalsService_.getGiftCardTotal(order)];
+                        _11.trys.push([3, 62, 63, 64]);
+                        totalsFields_1 = __values(totalsFields), totalsFields_1_1 = totalsFields_1.next();
+                        _11.label = 4;
+                    case 4:
+                        if (!!totalsFields_1_1.done) return [3 /*break*/, 61];
+                        totalField = totalsFields_1_1.value;
+                        _b = totalField;
+                        switch (_b) {
+                            case "shipping_total": return [3 /*break*/, 5];
+                            case "gift_card_total": return [3 /*break*/, 7];
+                            case "discount_total": return [3 /*break*/, 9];
+                            case "tax_total": return [3 /*break*/, 11];
+                            case "subtotal": return [3 /*break*/, 13];
+                            case "total": return [3 /*break*/, 15];
+                            case "refunded_total": return [3 /*break*/, 17];
+                            case "paid_total": return [3 /*break*/, 18];
+                            case "refundable_amount": return [3 /*break*/, 19];
+                            case "items.refundable": return [3 /*break*/, 20];
+                            case "swaps.additional_items.refundable": return [3 /*break*/, 29];
+                            case "claims.additional_items.refundable": return [3 /*break*/, 44];
+                        }
+                        return [3 /*break*/, 59];
                     case 5:
-                        giftCardBreakdown = _10.sent();
+                        _c = order;
+                        return [4 /*yield*/, this.totalsService_.getShippingTotal(order)];
+                    case 6:
+                        _c.shipping_total = _11.sent();
+                        return [3 /*break*/, 60];
+                    case 7: return [4 /*yield*/, this.totalsService_.getGiftCardTotal(order)];
+                    case 8:
+                        giftCardBreakdown = _11.sent();
                         order.gift_card_total = giftCardBreakdown.total;
                         order.gift_card_tax_total = giftCardBreakdown.tax_total;
-                        return [3 /*break*/, 57];
-                    case 6:
-                        _c = order;
-                        return [4 /*yield*/, this.totalsService_.getDiscountTotal(order)];
-                    case 7:
-                        _c.discount_total = _10.sent();
-                        return [3 /*break*/, 57];
-                    case 8:
-                        _d = order;
-                        return [4 /*yield*/, this.totalsService_.getTaxTotal(order)];
+                        return [3 /*break*/, 60];
                     case 9:
-                        _d.tax_total = _10.sent();
-                        return [3 /*break*/, 57];
+                        _d = order;
+                        return [4 /*yield*/, this.totalsService_.getDiscountTotal(order)];
                     case 10:
-                        _e = order;
-                        return [4 /*yield*/, this.totalsService_.getSubtotal(order)];
+                        _d.discount_total = _11.sent();
+                        return [3 /*break*/, 60];
                     case 11:
-                        _e.subtotal = _10.sent();
-                        return [3 /*break*/, 57];
+                        _e = order;
+                        return [4 /*yield*/, this.totalsService_.getTaxTotal(order)];
                     case 12:
+                        _e.tax_total = _11.sent();
+                        return [3 /*break*/, 60];
+                    case 13:
                         _f = order;
+                        return [4 /*yield*/, this.totalsService_.getSubtotal(order)];
+                    case 14:
+                        _f.subtotal = _11.sent();
+                        return [3 /*break*/, 60];
+                    case 15:
+                        _g = order;
                         return [4 /*yield*/, this.totalsService_
                                 .withTransaction(this.manager_)
                                 .getTotal(order)];
-                    case 13:
-                        _f.total = _10.sent();
-                        return [3 /*break*/, 57];
-                    case 14:
+                    case 16:
+                        _g.total = _11.sent();
+                        return [3 /*break*/, 60];
+                    case 17:
                         {
                             order.refunded_total = this.totalsService_.getRefundedTotal(order);
-                            return [3 /*break*/, 57];
+                            return [3 /*break*/, 60];
                         }
-                        _10.label = 15;
-                    case 15:
+                        _11.label = 18;
+                    case 18:
                         {
                             order.paid_total = this.totalsService_.getPaidTotal(order);
-                            return [3 /*break*/, 57];
+                            return [3 /*break*/, 60];
                         }
-                        _10.label = 16;
-                    case 16:
+                        _11.label = 19;
+                    case 19:
                         {
                             paid_total = this.totalsService_.getPaidTotal(order);
                             refunded_total = this.totalsService_.getRefundedTotal(order);
                             order.refundable_amount = paid_total - refunded_total;
-                            return [3 /*break*/, 57];
+                            return [3 /*break*/, 60];
                         }
-                        _10.label = 17;
-                    case 17:
-                        items = [];
-                        _10.label = 18;
-                    case 18:
-                        _10.trys.push([18, 23, 24, 25]);
-                        _g = (e_16 = void 0, __values(order.items)), _h = _g.next();
-                        _10.label = 19;
-                    case 19:
-                        if (!!_h.done) return [3 /*break*/, 22];
-                        item = _h.value;
-                        _k = (_j = items).push;
-                        _l = [__assign({}, item)];
-                        _3 = {};
-                        return [4 /*yield*/, this.totalsService_.getLineItemRefund(order, __assign(__assign({}, item), { quantity: item.quantity - (item.returned_quantity || 0) }))];
+                        _11.label = 20;
                     case 20:
-                        _k.apply(_j, [__assign.apply(void 0, _l.concat([(_3.refundable = _10.sent(), _3)]))]);
-                        _10.label = 21;
+                        items = [];
+                        _11.label = 21;
                     case 21:
-                        _h = _g.next();
-                        return [3 /*break*/, 19];
-                    case 22: return [3 /*break*/, 25];
+                        _11.trys.push([21, 26, 27, 28]);
+                        _h = (e_11 = void 0, __values(order.items)), _j = _h.next();
+                        _11.label = 22;
+                    case 22:
+                        if (!!_j.done) return [3 /*break*/, 25];
+                        item = _j.value;
+                        _l = (_k = items).push;
+                        _m = [__assign({}, item)];
+                        _4 = {};
+                        return [4 /*yield*/, this.totalsService_.getLineItemRefund(order, __assign(__assign({}, item), { quantity: item.quantity - (item.returned_quantity || 0) }))];
                     case 23:
-                        e_16_1 = _10.sent();
-                        e_16 = { error: e_16_1 };
-                        return [3 /*break*/, 25];
+                        _l.apply(_k, [__assign.apply(void 0, _m.concat([(_4.refundable = _11.sent(), _4)]))]);
+                        _11.label = 24;
                     case 24:
+                        _j = _h.next();
+                        return [3 /*break*/, 22];
+                    case 25: return [3 /*break*/, 28];
+                    case 26:
+                        e_11_1 = _11.sent();
+                        e_11 = { error: e_11_1 };
+                        return [3 /*break*/, 28];
+                    case 27:
                         try {
-                            if (_h && !_h.done && (_2 = _g.return)) _2.call(_g);
+                            if (_j && !_j.done && (_3 = _h.return)) _3.call(_h);
+                        }
+                        finally { if (e_11) throw e_11.error; }
+                        return [7 /*endfinally*/];
+                    case 28:
+                        order.items = items;
+                        return [3 /*break*/, 60];
+                    case 29:
+                        _11.trys.push([29, 41, 42, 43]);
+                        _o = (e_13 = void 0, __values(order.swaps)), _p = _o.next();
+                        _11.label = 30;
+                    case 30:
+                        if (!!_p.done) return [3 /*break*/, 40];
+                        s = _p.value;
+                        items = [];
+                        _11.label = 31;
+                    case 31:
+                        _11.trys.push([31, 36, 37, 38]);
+                        _q = (e_12 = void 0, __values(s.additional_items)), _r = _q.next();
+                        _11.label = 32;
+                    case 32:
+                        if (!!_r.done) return [3 /*break*/, 35];
+                        item = _r.value;
+                        _t = (_s = items).push;
+                        _u = [__assign({}, item)];
+                        _7 = {};
+                        return [4 /*yield*/, this.totalsService_.getLineItemRefund(order, __assign(__assign({}, item), { quantity: item.quantity - (item.returned_quantity || 0) }))];
+                    case 33:
+                        _t.apply(_s, [__assign.apply(void 0, _u.concat([(_7.refundable = _11.sent(), _7)]))]);
+                        _11.label = 34;
+                    case 34:
+                        _r = _q.next();
+                        return [3 /*break*/, 32];
+                    case 35: return [3 /*break*/, 38];
+                    case 36:
+                        e_12_1 = _11.sent();
+                        e_12 = { error: e_12_1 };
+                        return [3 /*break*/, 38];
+                    case 37:
+                        try {
+                            if (_r && !_r.done && (_6 = _q.return)) _6.call(_q);
+                        }
+                        finally { if (e_12) throw e_12.error; }
+                        return [7 /*endfinally*/];
+                    case 38:
+                        s.additional_items = items;
+                        _11.label = 39;
+                    case 39:
+                        _p = _o.next();
+                        return [3 /*break*/, 30];
+                    case 40: return [3 /*break*/, 43];
+                    case 41:
+                        e_13_1 = _11.sent();
+                        e_13 = { error: e_13_1 };
+                        return [3 /*break*/, 43];
+                    case 42:
+                        try {
+                            if (_p && !_p.done && (_5 = _o.return)) _5.call(_o);
+                        }
+                        finally { if (e_13) throw e_13.error; }
+                        return [7 /*endfinally*/];
+                    case 43: return [3 /*break*/, 60];
+                    case 44:
+                        _11.trys.push([44, 56, 57, 58]);
+                        _v = (e_15 = void 0, __values(order.claims)), _w = _v.next();
+                        _11.label = 45;
+                    case 45:
+                        if (!!_w.done) return [3 /*break*/, 55];
+                        c = _w.value;
+                        items = [];
+                        _11.label = 46;
+                    case 46:
+                        _11.trys.push([46, 51, 52, 53]);
+                        _x = (e_14 = void 0, __values(c.additional_items)), _y = _x.next();
+                        _11.label = 47;
+                    case 47:
+                        if (!!_y.done) return [3 /*break*/, 50];
+                        item = _y.value;
+                        _0 = (_z = items).push;
+                        _1 = [__assign({}, item)];
+                        _10 = {};
+                        return [4 /*yield*/, this.totalsService_.getLineItemRefund(order, __assign(__assign({}, item), { quantity: item.quantity - (item.returned_quantity || 0) }))];
+                    case 48:
+                        _0.apply(_z, [__assign.apply(void 0, _1.concat([(_10.refundable = _11.sent(), _10)]))]);
+                        _11.label = 49;
+                    case 49:
+                        _y = _x.next();
+                        return [3 /*break*/, 47];
+                    case 50: return [3 /*break*/, 53];
+                    case 51:
+                        e_14_1 = _11.sent();
+                        e_14 = { error: e_14_1 };
+                        return [3 /*break*/, 53];
+                    case 52:
+                        try {
+                            if (_y && !_y.done && (_9 = _x.return)) _9.call(_x);
+                        }
+                        finally { if (e_14) throw e_14.error; }
+                        return [7 /*endfinally*/];
+                    case 53:
+                        c.additional_items = items;
+                        _11.label = 54;
+                    case 54:
+                        _w = _v.next();
+                        return [3 /*break*/, 45];
+                    case 55: return [3 /*break*/, 58];
+                    case 56:
+                        e_15_1 = _11.sent();
+                        e_15 = { error: e_15_1 };
+                        return [3 /*break*/, 58];
+                    case 57:
+                        try {
+                            if (_w && !_w.done && (_8 = _v.return)) _8.call(_v);
+                        }
+                        finally { if (e_15) throw e_15.error; }
+                        return [7 /*endfinally*/];
+                    case 58: return [3 /*break*/, 60];
+                    case 59:
+                        {
+                            return [3 /*break*/, 60];
+                        }
+                        _11.label = 60;
+                    case 60:
+                        totalsFields_1_1 = totalsFields_1.next();
+                        return [3 /*break*/, 4];
+                    case 61: return [3 /*break*/, 64];
+                    case 62:
+                        e_16_1 = _11.sent();
+                        e_16 = { error: e_16_1 };
+                        return [3 /*break*/, 64];
+                    case 63:
+                        try {
+                            if (totalsFields_1_1 && !totalsFields_1_1.done && (_2 = totalsFields_1.return)) _2.call(totalsFields_1);
                         }
                         finally { if (e_16) throw e_16.error; }
                         return [7 /*endfinally*/];
-                    case 25:
-                        order.items = items;
-                        return [3 /*break*/, 57];
-                    case 26:
-                        _10.trys.push([26, 38, 39, 40]);
-                        _m = (e_18 = void 0, __values(order.swaps)), _o = _m.next();
-                        _10.label = 27;
-                    case 27:
-                        if (!!_o.done) return [3 /*break*/, 37];
-                        s = _o.value;
-                        items = [];
-                        _10.label = 28;
-                    case 28:
-                        _10.trys.push([28, 33, 34, 35]);
-                        _p = (e_17 = void 0, __values(s.additional_items)), _q = _p.next();
-                        _10.label = 29;
-                    case 29:
-                        if (!!_q.done) return [3 /*break*/, 32];
-                        item = _q.value;
-                        _s = (_r = items).push;
-                        _t = [__assign({}, item)];
-                        _6 = {};
-                        return [4 /*yield*/, this.totalsService_.getLineItemRefund(order, __assign(__assign({}, item), { quantity: item.quantity - (item.returned_quantity || 0) }))];
-                    case 30:
-                        _s.apply(_r, [__assign.apply(void 0, _t.concat([(_6.refundable = _10.sent(), _6)]))]);
-                        _10.label = 31;
-                    case 31:
-                        _q = _p.next();
-                        return [3 /*break*/, 29];
-                    case 32: return [3 /*break*/, 35];
-                    case 33:
-                        e_17_1 = _10.sent();
-                        e_17 = { error: e_17_1 };
-                        return [3 /*break*/, 35];
-                    case 34:
+                    case 64: return [2 /*return*/, order];
+                }
+            });
+        });
+    };
+    /**
+     * Calculate and attach the different total fields on the object
+     * @param order
+     * @param totalsFieldsOrContext
+     */
+    OrderService.prototype.decorateTotals = function (order, totalsFieldsOrContext) {
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
+        return __awaiter(this, void 0, void 0, function () {
+            var manager, newTotalsServiceTx, calculationContext, returnable_items, returnableItems, isReturnableItem, allItems, orderShippingMethods, itemsTotals, shippingTotals, item_tax_total, shipping_tax_total, giftCardTotal, _p, _q, swap, _r, _s, claim;
+            var e_17, _t, e_18, _u;
+            return __generator(this, function (_v) {
+                switch (_v.label) {
+                    case 0:
+                        if (!Array.isArray(totalsFieldsOrContext)) return [3 /*break*/, 3];
+                        if (!totalsFieldsOrContext.length) return [3 /*break*/, 2];
+                        return [4 /*yield*/, this.decorateTotalsLegacy(order, totalsFieldsOrContext)];
+                    case 1: return [2 /*return*/, _v.sent()];
+                    case 2:
+                        totalsFieldsOrContext = {};
+                        _v.label = 3;
+                    case 3:
+                        manager = (_a = this.transactionManager_) !== null && _a !== void 0 ? _a : this.manager_;
+                        newTotalsServiceTx = this.newTotalsService_.withTransaction(manager);
+                        return [4 /*yield*/, this.totalsService_.getCalculationContext(order)];
+                    case 4:
+                        calculationContext = _v.sent();
+                        returnable_items = ((_b = totalsFieldsOrContext === null || totalsFieldsOrContext === void 0 ? void 0 : totalsFieldsOrContext.includes) !== null && _b !== void 0 ? _b : {}).returnable_items;
+                        returnableItems = (0, medusa_core_utils_1.isDefined)(returnable_items)
+                            ? []
+                            : undefined;
+                        isReturnableItem = function (item) {
+                            var _a, _b;
+                            return returnable_items &&
+                                ((_a = item.returned_quantity) !== null && _a !== void 0 ? _a : 0) < ((_b = item.shipped_quantity) !== null && _b !== void 0 ? _b : 0);
+                        };
+                        allItems = __spreadArray([], __read(((_c = order.items) !== null && _c !== void 0 ? _c : [])), false);
+                        if (returnable_items) {
+                            // All items must receive their totals and if some of them are returnable
+                            // They will be pushed to `returnable_items` at a later point
+                            allItems.push.apply(allItems, __spreadArray(__spreadArray([], __read(((_e = (_d = order.swaps) === null || _d === void 0 ? void 0 : _d.map(function (s) { var _a; return (_a = s.additional_items) !== null && _a !== void 0 ? _a : []; }).flat()) !== null && _e !== void 0 ? _e : [])), false), __read(((_g = (_f = order.claims) === null || _f === void 0 ? void 0 : _f.map(function (c) { var _a; return (_a = c.additional_items) !== null && _a !== void 0 ? _a : []; }).flat()) !== null && _g !== void 0 ? _g : [])), false));
+                        }
+                        orderShippingMethods = __spreadArray([], __read(((_h = order.shipping_methods) !== null && _h !== void 0 ? _h : [])), false);
+                        return [4 /*yield*/, newTotalsServiceTx.getLineItemTotals(allItems, {
+                                taxRate: order.tax_rate,
+                                includeTax: true,
+                                calculationContext: calculationContext,
+                            })];
+                    case 5:
+                        itemsTotals = _v.sent();
+                        return [4 /*yield*/, newTotalsServiceTx.getShippingMethodTotals(orderShippingMethods, {
+                                taxRate: order.tax_rate,
+                                discounts: order.discounts,
+                                includeTax: true,
+                                calculationContext: calculationContext,
+                            })];
+                    case 6:
+                        shippingTotals = _v.sent();
+                        order.subtotal = 0;
+                        order.discount_total = 0;
+                        order.shipping_total = 0;
+                        order.refunded_total =
+                            Math.round((_j = order.refunds) === null || _j === void 0 ? void 0 : _j.reduce(function (acc, next) { return acc + next.amount; }, 0)) ||
+                                0;
+                        order.paid_total =
+                            ((_k = order.payments) === null || _k === void 0 ? void 0 : _k.reduce(function (acc, next) { return (acc += next.amount); }, 0)) || 0;
+                        order.refundable_amount = order.paid_total - order.refunded_total || 0;
+                        item_tax_total = 0;
+                        shipping_tax_total = 0;
+                        order.items = (order.items || []).map(function (item) {
+                            var _a, _b, _c, _d;
+                            item.quantity = item.quantity - (item.returned_quantity || 0);
+                            var refundable = newTotalsServiceTx.getLineItemRefund(item, {
+                                calculationContext: calculationContext,
+                                taxRate: order.tax_rate,
+                            });
+                            Object.assign(item, (_a = itemsTotals[item.id]) !== null && _a !== void 0 ? _a : {}, { refundable: refundable });
+                            order.subtotal += (_b = item.subtotal) !== null && _b !== void 0 ? _b : 0;
+                            order.discount_total += (_c = item.discount_total) !== null && _c !== void 0 ? _c : 0;
+                            item_tax_total += (_d = item.tax_total) !== null && _d !== void 0 ? _d : 0;
+                            if (isReturnableItem(item)) {
+                                returnableItems === null || returnableItems === void 0 ? void 0 : returnableItems.push(item);
+                            }
+                            return item;
+                        });
+                        order.shipping_methods = (order.shipping_methods || []).map(function (shippingMethod) {
+                            var _a, _b, _c;
+                            var methodWithTotals = Object.assign(shippingMethod, (_a = shippingTotals[shippingMethod.id]) !== null && _a !== void 0 ? _a : {});
+                            order.shipping_total += (_b = methodWithTotals.subtotal) !== null && _b !== void 0 ? _b : 0;
+                            shipping_tax_total += (_c = methodWithTotals.tax_total) !== null && _c !== void 0 ? _c : 0;
+                            return methodWithTotals;
+                        });
+                        return [4 /*yield*/, this.newTotalsService_.getGiftCardTotals(order.subtotal - order.discount_total, {
+                                region: order.region,
+                                giftCards: order.gift_cards,
+                                giftCardTransactions: (_l = order.gift_card_transactions) !== null && _l !== void 0 ? _l : [],
+                            })];
+                    case 7:
+                        giftCardTotal = _v.sent();
+                        order.gift_card_total = giftCardTotal.total || 0;
+                        order.gift_card_tax_total = giftCardTotal.tax_total || 0;
+                        order.tax_total =
+                            item_tax_total + shipping_tax_total - order.gift_card_tax_total;
                         try {
-                            if (_q && !_q.done && (_5 = _p.return)) _5.call(_p);
+                            for (_p = __values((_m = order.swaps) !== null && _m !== void 0 ? _m : []), _q = _p.next(); !_q.done; _q = _p.next()) {
+                                swap = _q.value;
+                                swap.additional_items = swap.additional_items.map(function (item) {
+                                    var _a;
+                                    item.quantity = item.quantity - (item.returned_quantity || 0);
+                                    var refundable = newTotalsServiceTx.getLineItemRefund(item, {
+                                        calculationContext: calculationContext,
+                                        taxRate: order.tax_rate,
+                                    });
+                                    Object.assign(item, (_a = itemsTotals[item.id]) !== null && _a !== void 0 ? _a : {}, { refundable: refundable });
+                                    if (isReturnableItem(item)) {
+                                        returnableItems === null || returnableItems === void 0 ? void 0 : returnableItems.push(item);
+                                    }
+                                    return item;
+                                });
+                            }
                         }
-                        finally { if (e_17) throw e_17.error; }
-                        return [7 /*endfinally*/];
-                    case 35:
-                        s.additional_items = items;
-                        _10.label = 36;
-                    case 36:
-                        _o = _m.next();
-                        return [3 /*break*/, 27];
-                    case 37: return [3 /*break*/, 40];
-                    case 38:
-                        e_18_1 = _10.sent();
-                        e_18 = { error: e_18_1 };
-                        return [3 /*break*/, 40];
-                    case 39:
+                        catch (e_17_1) { e_17 = { error: e_17_1 }; }
+                        finally {
+                            try {
+                                if (_q && !_q.done && (_t = _p.return)) _t.call(_p);
+                            }
+                            finally { if (e_17) throw e_17.error; }
+                        }
                         try {
-                            if (_o && !_o.done && (_4 = _m.return)) _4.call(_m);
+                            for (_r = __values((_o = order.claims) !== null && _o !== void 0 ? _o : []), _s = _r.next(); !_s.done; _s = _r.next()) {
+                                claim = _s.value;
+                                claim.additional_items = claim.additional_items.map(function (item) {
+                                    var _a;
+                                    item.quantity = item.quantity - (item.returned_quantity || 0);
+                                    var refundable = newTotalsServiceTx.getLineItemRefund(item, {
+                                        calculationContext: calculationContext,
+                                        taxRate: order.tax_rate,
+                                    });
+                                    Object.assign(item, (_a = itemsTotals[item.id]) !== null && _a !== void 0 ? _a : {}, { refundable: refundable });
+                                    if (isReturnableItem(item)) {
+                                        returnableItems === null || returnableItems === void 0 ? void 0 : returnableItems.push(item);
+                                    }
+                                    return item;
+                                });
+                            }
                         }
-                        finally { if (e_18) throw e_18.error; }
-                        return [7 /*endfinally*/];
-                    case 40: return [3 /*break*/, 57];
-                    case 41:
-                        _10.trys.push([41, 53, 54, 55]);
-                        _u = (e_20 = void 0, __values(order.claims)), _v = _u.next();
-                        _10.label = 42;
-                    case 42:
-                        if (!!_v.done) return [3 /*break*/, 52];
-                        c = _v.value;
-                        items = [];
-                        _10.label = 43;
-                    case 43:
-                        _10.trys.push([43, 48, 49, 50]);
-                        _w = (e_19 = void 0, __values(c.additional_items)), _x = _w.next();
-                        _10.label = 44;
-                    case 44:
-                        if (!!_x.done) return [3 /*break*/, 47];
-                        item = _x.value;
-                        _z = (_y = items).push;
-                        _0 = [__assign({}, item)];
-                        _9 = {};
-                        return [4 /*yield*/, this.totalsService_.getLineItemRefund(order, __assign(__assign({}, item), { quantity: item.quantity - (item.returned_quantity || 0) }))];
-                    case 45:
-                        _z.apply(_y, [__assign.apply(void 0, _0.concat([(_9.refundable = _10.sent(), _9)]))]);
-                        _10.label = 46;
-                    case 46:
-                        _x = _w.next();
-                        return [3 /*break*/, 44];
-                    case 47: return [3 /*break*/, 50];
-                    case 48:
-                        e_19_1 = _10.sent();
-                        e_19 = { error: e_19_1 };
-                        return [3 /*break*/, 50];
-                    case 49:
-                        try {
-                            if (_x && !_x.done && (_8 = _w.return)) _8.call(_w);
+                        catch (e_18_1) { e_18 = { error: e_18_1 }; }
+                        finally {
+                            try {
+                                if (_s && !_s.done && (_u = _r.return)) _u.call(_r);
+                            }
+                            finally { if (e_18) throw e_18.error; }
                         }
-                        finally { if (e_19) throw e_19.error; }
-                        return [7 /*endfinally*/];
-                    case 50:
-                        c.additional_items = items;
-                        _10.label = 51;
-                    case 51:
-                        _v = _u.next();
-                        return [3 /*break*/, 42];
-                    case 52: return [3 /*break*/, 55];
-                    case 53:
-                        e_20_1 = _10.sent();
-                        e_20 = { error: e_20_1 };
-                        return [3 /*break*/, 55];
-                    case 54:
-                        try {
-                            if (_v && !_v.done && (_7 = _u.return)) _7.call(_u);
-                        }
-                        finally { if (e_20) throw e_20.error; }
-                        return [7 /*endfinally*/];
-                    case 55: return [3 /*break*/, 57];
-                    case 56:
-                        {
-                            return [3 /*break*/, 57];
-                        }
-                        _10.label = 57;
-                    case 57:
-                        totalsFields_1_1 = totalsFields_1.next();
-                        return [3 /*break*/, 1];
-                    case 58: return [3 /*break*/, 61];
-                    case 59:
-                        e_21_1 = _10.sent();
-                        e_21 = { error: e_21_1 };
-                        return [3 /*break*/, 61];
-                    case 60:
-                        try {
-                            if (totalsFields_1_1 && !totalsFields_1_1.done && (_1 = totalsFields_1.return)) _1.call(totalsFields_1);
-                        }
-                        finally { if (e_21) throw e_21.error; }
-                        return [7 /*endfinally*/];
-                    case 61: return [2 /*return*/, order];
+                        order.total =
+                            order.subtotal +
+                                order.shipping_total +
+                                order.tax_total -
+                                (order.gift_card_total + order.discount_total);
+                        order.returnable_items = returnableItems;
+                        return [2 /*return*/, order];
                 }
             });
         });
@@ -2097,7 +2256,7 @@ var OrderService = /** @class */ (function (_super) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
                             var order, refundAmount, orderRepo, result_2, isFullReturn, _a, _b, i, refund, result;
-                            var e_22, _c;
+                            var e_19, _c;
                             return __generator(this, function (_d) {
                                 switch (_d.label) {
                                     case 0: return [4 /*yield*/, this.retrieve(orderId, {
@@ -2112,7 +2271,7 @@ var OrderService = /** @class */ (function (_super) {
                                         if (!receivedReturn || receivedReturn.order_id !== orderId) {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Received return does not exist");
                                         }
-                                        refundAmount = customRefundAmount || receivedReturn.refund_amount;
+                                        refundAmount = customRefundAmount !== null && customRefundAmount !== void 0 ? customRefundAmount : receivedReturn.refund_amount;
                                         orderRepo = manager.getCustomRepository(this.orderRepository_);
                                         if (!(refundAmount > order.refundable_amount)) return [3 /*break*/, 4];
                                         order.fulfillment_status = models_1.FulfillmentStatus.REQUIRES_ACTION;
@@ -2139,17 +2298,17 @@ var OrderService = /** @class */ (function (_super) {
                                                 }
                                             }
                                         }
-                                        catch (e_22_1) { e_22 = { error: e_22_1 }; }
+                                        catch (e_19_1) { e_19 = { error: e_19_1 }; }
                                         finally {
                                             try {
                                                 if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                                             }
-                                            finally { if (e_22) throw e_22.error; }
+                                            finally { if (e_19) throw e_19.error; }
                                         }
-                                        if (!(receivedReturn.refund_amount > 0)) return [3 /*break*/, 6];
+                                        if (!(refundAmount > 0)) return [3 /*break*/, 6];
                                         return [4 /*yield*/, this.paymentProviderService_
                                                 .withTransaction(manager)
-                                                .refundPayment(order.payments, receivedReturn.refund_amount, "return")];
+                                                .refundPayment(order.payments, refundAmount, "return")];
                                     case 5:
                                         refund = _d.sent();
                                         order.refunds = __spreadArray(__spreadArray([], __read((order.refunds || [])), false), [refund], false);
@@ -2181,6 +2340,30 @@ var OrderService = /** @class */ (function (_super) {
                 }
             });
         });
+    };
+    OrderService.prototype.getTotalsRelations = function (config) {
+        var relationSet = new Set(config.relations);
+        relationSet.add("items");
+        relationSet.add("items.tax_lines");
+        relationSet.add("items.adjustments");
+        relationSet.add("items.variant");
+        relationSet.add("swaps");
+        relationSet.add("swaps.additional_items");
+        relationSet.add("swaps.additional_items.tax_lines");
+        relationSet.add("swaps.additional_items.adjustments");
+        relationSet.add("claims");
+        relationSet.add("claims.additional_items");
+        relationSet.add("claims.additional_items.tax_lines");
+        relationSet.add("claims.additional_items.adjustments");
+        relationSet.add("discounts");
+        relationSet.add("discounts.rule");
+        relationSet.add("gift_cards");
+        relationSet.add("gift_card_transactions");
+        relationSet.add("refunds");
+        relationSet.add("shipping_methods");
+        relationSet.add("shipping_methods.tax_lines");
+        relationSet.add("region");
+        return Array.from(relationSet.values());
     };
     OrderService.Events = {
         GIFT_CARD_CREATED: "order.gift_card_created",

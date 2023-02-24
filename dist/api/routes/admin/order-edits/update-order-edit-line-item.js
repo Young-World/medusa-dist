@@ -51,12 +51,19 @@ var order_edit_1 = require("../../../../types/order-edit");
 /**
  * @oas [post] /order-edits/{id}/items/{item_id}
  * operationId: "PostOrderEditsEditLineItemsLineItem"
- * summary: "Create or update the order edit change holding the line item changes"
+ * summary: "Upsert Line Item Change"
  * description: "Create or update the order edit change holding the line item changes"
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {string} The ID of the Order Edit to update.
  *   - (path) item_id=* {string} The ID of the order edit item to update.
+ * requestBody:
+ *   content:
+ *     application/json:
+ *       schema:
+ *         $ref: "#/components/schemas/AdminPostOrderEditsEditLineItemsLineItemReq"
+ * x-codegen:
+ *   method: updateLineItem
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -64,7 +71,9 @@ var order_edit_1 = require("../../../../types/order-edit");
  *       import Medusa from "@medusajs/medusa-js"
  *       const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
  *       // must be previously logged in or use api token
- *       medusa.admin.orderEdits.updateLineItem(order_edit_id, line_item_id)
+ *       medusa.admin.orderEdits.updateLineItem(order_edit_id, line_item_id, {
+ *           quantity: 5
+ *         })
  *         .then(({ order_edit }) => {
  *           console.log(order_edit.id)
  *         })
@@ -72,8 +81,9 @@ var order_edit_1 = require("../../../../types/order-edit");
  *     label: cURL
  *     source: |
  *       curl --location --request POST 'https://medusa-url.com/admin/order-edits/{id}/items/{item_id}' \
- *       --header 'Authorization: Bearer {api_token}'
- *       -d '{ "quantity": 5 }'
+ *       --header 'Authorization: Bearer {api_token}' \
+ *       --header 'Content-Type: application/json' \
+ *       --data-raw '{ "quantity": 5 }'
  * security:
  *   - api_token: []
  *   - cookie_auth: []
@@ -85,9 +95,7 @@ var order_edit_1 = require("../../../../types/order-edit");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order_edit:
- *               $ref: "#/components/schemas/order_edit"
+ *           $ref: "#/components/schemas/AdminOrderEditsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -102,7 +110,7 @@ var order_edit_1 = require("../../../../types/order-edit");
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, id, item_id, validatedBody, orderEditService, manager, orderEdit;
+    var _a, id, item_id, validatedBody, orderEditService, manager, decoratedEdit;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
@@ -111,35 +119,46 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                 orderEditService = req.scope.resolve("orderEditService");
                 manager = req.scope.resolve("manager");
                 return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
+                        var orderEditTx, orderEdit;
                         return __generator(this, function (_a) {
                             switch (_a.label) {
-                                case 0: return [4 /*yield*/, orderEditService
-                                        .withTransaction(transactionManager)
-                                        .updateLineItem(id, item_id, validatedBody)];
+                                case 0:
+                                    orderEditTx = orderEditService.withTransaction(transactionManager);
+                                    return [4 /*yield*/, orderEditTx.updateLineItem(id, item_id, validatedBody)];
                                 case 1:
                                     _a.sent();
-                                    return [2 /*return*/];
+                                    return [4 /*yield*/, orderEditTx.retrieve(id, {
+                                            select: order_edit_1.defaultOrderEditFields,
+                                            relations: order_edit_1.defaultOrderEditRelations,
+                                        })];
+                                case 2:
+                                    orderEdit = _a.sent();
+                                    return [4 /*yield*/, orderEditTx.decorateTotals(orderEdit)];
+                                case 3:
+                                    _a.sent();
+                                    return [2 /*return*/, orderEdit];
                             }
                         });
                     }); })];
             case 1:
-                _b.sent();
-                return [4 /*yield*/, orderEditService.retrieve(id, {
-                        select: order_edit_1.defaultOrderEditFields,
-                        relations: order_edit_1.defaultOrderEditRelations,
-                    })];
-            case 2:
-                orderEdit = _b.sent();
-                return [4 /*yield*/, orderEditService.decorateTotals(orderEdit)];
-            case 3:
-                orderEdit = _b.sent();
+                decoratedEdit = _b.sent();
                 res.status(200).send({
-                    order_edit: orderEdit,
+                    order_edit: decoratedEdit,
                 });
                 return [2 /*return*/];
         }
     });
 }); });
+/**
+ * @schema AdminPostOrderEditsEditLineItemsLineItemReq
+ * type: object
+ * required:
+ *   - quantity
+ * properties:
+ *   quantity:
+ *     description: The quantity to update
+ *     type: number
+ */
 var AdminPostOrderEditsEditLineItemsLineItemReq = /** @class */ (function () {
     function AdminPostOrderEditsEditLineItemsLineItemReq() {
     }

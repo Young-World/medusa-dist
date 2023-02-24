@@ -12,19 +12,9 @@ import { CustomerGroupsBatchCustomer } from "../../../../types/customer-groups";
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - customer_ids
- *         properties:
- *           customer_ids:
- *             description: "The ids of the customers to add"
- *             type: array
- *             items:
- *               required:
- *                 - id
- *               properties:
- *                 id:
- *                   description: ID of the customer
- *                   type: string
+ *         $ref: "#/components/schemas/AdminPostCustomerGroupsGroupCustomersBatchReq"
+ * x-codegen:
+ *   method: addCustomers
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -66,9 +56,7 @@ import { CustomerGroupsBatchCustomer } from "../../../../types/customer-groups";
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             customer_group:
- *               $ref: "#/components/schemas/customer_group"
+ *           $ref: "#/components/schemas/AdminCustomerGroupsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -84,6 +72,24 @@ import { CustomerGroupsBatchCustomer } from "../../../../types/customer-groups";
  */
 declare const _default: (req: Request, res: Response) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostCustomerGroupsGroupCustomersBatchReq
+ * type: object
+ * required:
+ *   - customer_ids
+ * properties:
+ *   customer_ids:
+ *     description: "The ids of the customers to add"
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - id
+ *       properties:
+ *         id:
+ *           description: ID of the customer
+ *           type: string
+ */
 export declare class AdminPostCustomerGroupsGroupCustomersBatchReq {
     customer_ids: CustomerGroupsBatchCustomer[];
 }

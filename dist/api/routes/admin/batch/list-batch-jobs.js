@@ -93,7 +93,7 @@ var class_transformer_1 = require("class-transformer");
 var common_1 = require("../../../../types/common");
 var is_type_1 = require("../../../../utils/validators/is-type");
 var lodash_1 = require("lodash");
-var utils_1 = require("../../../../utils");
+var medusa_core_utils_1 = require("medusa-core-utils");
 /**
  * @oas [get] /batch-jobs
  * operationId: "GetBatchJobs"
@@ -296,6 +296,9 @@ var utils_1 = require("../../../../utils");
  *            type: string
  *            description: filter by dates greater than or equal to this date
  *            format: date
+ * x-codegen:
+ *   method: list
+ *   queryParams: AdminGetBatchParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -323,20 +326,7 @@ var utils_1 = require("../../../../utils");
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            batch_jobs:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/batch_job"
- *            count:
- *               type: integer
- *               description: The total number of items available
- *            offset:
- *               type: integer
- *               description: The number of items skipped before these items
- *            limit:
- *               type: integer
- *               description: The number of items per page
+ *          $ref: "#/components/schemas/AdminBatchJobListRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":
@@ -359,7 +349,7 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                 batchService = req.scope.resolve("batchJobService");
                 created_by = ((_c = req.user) === null || _c === void 0 ? void 0 : _c.id) || ((_d = req.user) === null || _d === void 0 ? void 0 : _d.userId);
                 return [4 /*yield*/, batchService.listAndCount((0, lodash_1.pickBy)(__assign({ created_by: created_by }, ((_e = req.filterableFields) !== null && _e !== void 0 ? _e : {})), function (val) {
-                        return (0, utils_1.isDefined)(val);
+                        return (0, medusa_core_utils_1.isDefined)(val);
                     }), req.listConfig)];
             case 1:
                 _a = __read.apply(void 0, [_f.sent(), 2]), jobs = _a[0], count = _a[1];

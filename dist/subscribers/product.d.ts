@@ -1,10 +1,6 @@
 export default ProductSearchSubscriber;
 declare class ProductSearchSubscriber {
-    constructor({ eventBusService, searchService, productService }: {
-        eventBusService: any;
-        searchService: any;
-        productService: any;
-    });
+    constructor(container: any);
     eventBus_: any;
     searchService_: any;
     productService_: any;

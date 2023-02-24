@@ -291,6 +291,7 @@ var PricingService = /** @class */ (function (_super) {
      * @param variantId - the id of the variant to get prices for
      * @param context - the price selection context to use
      * @return The product variant prices
+     * @deprecated Use {@link getProductVariantsPricing} instead.
      */
     PricingService.prototype.getProductVariantPricingById = function (variantId, context) {
         return __awaiter(this, void 0, void 0, function () {
@@ -325,6 +326,85 @@ var PricingService = /** @class */ (function (_super) {
                         _a.label = 6;
                     case 6: return [4 /*yield*/, this.getProductVariantPricing_(variantId, productRates, pricingContext)];
                     case 7: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
+    /**
+     * Gets the prices for a collection of variants.
+     * @param variantIds - the id of the variants to get the prices for
+     * @param context - the price selection context to use
+     * @return The product variant prices
+     */
+    PricingService.prototype.getProductVariantsPricing = function (variantIds, context) {
+        return __awaiter(this, void 0, void 0, function () {
+            var pricingContext, ids, variants, variantsMap, pricingResult, ids_1, ids_1_1, variantId, _a, id, product_id, productRates, _b, _c, e_1_1;
+            var e_1, _d;
+            return __generator(this, function (_e) {
+                switch (_e.label) {
+                    case 0:
+                        if (!("automatic_taxes" in context)) return [3 /*break*/, 1];
+                        pricingContext = context;
+                        return [3 /*break*/, 3];
+                    case 1: return [4 /*yield*/, this.collectPricingContext(context)];
+                    case 2:
+                        pricingContext = _e.sent();
+                        _e.label = 3;
+                    case 3:
+                        ids = (Array.isArray(variantIds) ? variantIds : [variantIds]);
+                        return [4 /*yield*/, this.productVariantService
+                                .withTransaction(this.manager_)
+                                .list({ id: ids }, { select: ["id", "product_id"] })];
+                    case 4:
+                        variants = _e.sent();
+                        variantsMap = new Map(variants.map(function (variant) {
+                            return [variant.id, variant];
+                        }));
+                        pricingResult = {};
+                        _e.label = 5;
+                    case 5:
+                        _e.trys.push([5, 12, 13, 14]);
+                        ids_1 = __values(ids), ids_1_1 = ids_1.next();
+                        _e.label = 6;
+                    case 6:
+                        if (!!ids_1_1.done) return [3 /*break*/, 11];
+                        variantId = ids_1_1.value;
+                        _a = variantsMap.get(variantId), id = _a.id, product_id = _a.product_id;
+                        productRates = [];
+                        if (!pricingContext.price_selection.region_id) return [3 /*break*/, 8];
+                        return [4 /*yield*/, this.taxProviderService
+                                .withTransaction(this.manager_)
+                                .getRegionRatesForProduct(product_id, {
+                                id: pricingContext.price_selection.region_id,
+                                tax_rate: pricingContext.tax_rate,
+                            })];
+                    case 7:
+                        productRates = _e.sent();
+                        _e.label = 8;
+                    case 8:
+                        _b = pricingResult;
+                        _c = id;
+                        return [4 /*yield*/, this.getProductVariantPricing_(id, productRates, pricingContext)];
+                    case 9:
+                        _b[_c] = _e.sent();
+                        _e.label = 10;
+                    case 10:
+                        ids_1_1 = ids_1.next();
+                        return [3 /*break*/, 6];
+                    case 11: return [3 /*break*/, 14];
+                    case 12:
+                        e_1_1 = _e.sent();
+                        e_1 = { error: e_1_1 };
+                        return [3 /*break*/, 14];
+                    case 13:
+                        try {
+                            if (ids_1_1 && !ids_1_1.done && (_d = ids_1.return)) _d.call(ids_1);
+                        }
+                        finally { if (e_1) throw e_1.error; }
+                        return [7 /*endfinally*/];
+                    case 14: return [2 /*return*/, (!Array.isArray(variantIds)
+                            ? Object.values(pricingResult)[0]
+                            : pricingResult)];
                 }
             });
         });
@@ -497,32 +577,40 @@ var PricingService = /** @class */ (function (_super) {
      * @return The shipping option prices
      */
     PricingService.prototype.getShippingOptionPricing = function (shippingOption, context) {
+        var _a;
         return __awaiter(this, void 0, void 0, function () {
-            var pricingContext, shippingOptionRates, price, rate, includesTax, taxAmount, totalInclTax, result;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var pricingContext, _b, shippingOptionRates, price, rate, includesTax, taxAmount, totalInclTax;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
                     case 0:
                         if (!("automatic_taxes" in context)) return [3 /*break*/, 1];
                         pricingContext = context;
-                        return [3 /*break*/, 3];
-                    case 1: return [4 /*yield*/, this.collectPricingContext(context)];
-                    case 2:
-                        pricingContext = _a.sent();
-                        _a.label = 3;
+                        return [3 /*break*/, 5];
+                    case 1:
+                        if (!((_a = context) !== null && _a !== void 0)) return [3 /*break*/, 2];
+                        _b = _a;
+                        return [3 /*break*/, 4];
+                    case 2: return [4 /*yield*/, this.collectPricingContext(context)];
                     case 3:
+                        _b = (_c.sent());
+                        _c.label = 4;
+                    case 4:
+                        pricingContext = _b;
+                        _c.label = 5;
+                    case 5:
                         shippingOptionRates = [];
                         if (!(pricingContext.automatic_taxes &&
-                            pricingContext.price_selection.region_id)) return [3 /*break*/, 5];
+                            pricingContext.price_selection.region_id)) return [3 /*break*/, 7];
                         return [4 /*yield*/, this.taxProviderService
                                 .withTransaction(this.manager_)
                                 .getRegionRatesForShipping(shippingOption.id, {
                                 id: pricingContext.price_selection.region_id,
                                 tax_rate: pricingContext.tax_rate,
                             })];
-                    case 4:
-                        shippingOptionRates = _a.sent();
-                        _a.label = 5;
-                    case 5:
+                    case 6:
+                        shippingOptionRates = _c.sent();
+                        _c.label = 7;
+                    case 7:
                         price = shippingOption.amount || 0;
                         rate = shippingOptionRates.reduce(function (accRate, nextTaxRate) {
                             return accRate + (nextTaxRate.rate || 0) / 100;
@@ -534,8 +622,7 @@ var PricingService = /** @class */ (function (_super) {
                             includesTax: includesTax,
                         }));
                         totalInclTax = includesTax ? price : price + taxAmount;
-                        result = __assign(__assign({}, shippingOption), { price_incl_tax: totalInclTax, tax_rates: shippingOptionRates, tax_amount: taxAmount });
-                        return [2 /*return*/, result];
+                        return [2 /*return*/, __assign(__assign({}, shippingOption), { price_incl_tax: totalInclTax, tax_rates: shippingOptionRates, tax_amount: taxAmount })];
                 }
             });
         });
@@ -549,8 +636,8 @@ var PricingService = /** @class */ (function (_super) {
     PricingService.prototype.setShippingOptionPrices = function (shippingOptions, context) {
         if (context === void 0) { context = {}; }
         return __awaiter(this, void 0, void 0, function () {
-            var regions, shippingOptions_1, shippingOptions_1_1, shippingOption, contexts;
-            var e_1, _a;
+            var regions, shippingOptions_1, shippingOptions_1_1, shippingOption, contexts, shippingOptionPricingPromises;
+            var e_2, _a;
             var _this = this;
             return __generator(this, function (_b) {
                 switch (_b.label) {
@@ -562,12 +649,12 @@ var PricingService = /** @class */ (function (_super) {
                                 regions.add(shippingOption.region_id);
                             }
                         }
-                        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                        catch (e_2_1) { e_2 = { error: e_2_1 }; }
                         finally {
                             try {
                                 if (shippingOptions_1_1 && !shippingOptions_1_1.done && (_a = shippingOptions_1.return)) _a.call(shippingOptions_1);
                             }
-                            finally { if (e_1) throw e_1.error; }
+                            finally { if (e_2) throw e_2.error; }
                         }
                         return [4 /*yield*/, Promise.all(__spreadArray([], __read(regions), false).map(function (regionId) { return __awaiter(_this, void 0, void 0, function () {
                                 var _a;
@@ -584,22 +671,19 @@ var PricingService = /** @class */ (function (_super) {
                             }); }))];
                     case 1:
                         contexts = _b.sent();
-                        return [4 /*yield*/, Promise.all(shippingOptions.map(function (shippingOption) { return __awaiter(_this, void 0, void 0, function () {
-                                var pricingContext, shippingOptionPricing;
-                                return __generator(this, function (_a) {
-                                    switch (_a.label) {
-                                        case 0:
-                                            pricingContext = contexts.find(function (c) { return c.region_id === shippingOption.region_id; });
-                                            if (!pricingContext) {
-                                                throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.UNEXPECTED_STATE, "Could not find pricing context for shipping option");
-                                            }
-                                            return [4 /*yield*/, this.getShippingOptionPricing(shippingOption, pricingContext.context)];
-                                        case 1:
-                                            shippingOptionPricing = _a.sent();
-                                            return [2 /*return*/, __assign(__assign({}, shippingOption), shippingOptionPricing)];
-                                    }
-                                });
-                            }); }))];
+                        shippingOptionPricingPromises = [];
+                        shippingOptions.map(function (shippingOption) { return __awaiter(_this, void 0, void 0, function () {
+                            var pricingContext;
+                            return __generator(this, function (_a) {
+                                pricingContext = contexts.find(function (c) { return c.region_id === shippingOption.region_id; });
+                                if (!pricingContext) {
+                                    throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.UNEXPECTED_STATE, "Could not find pricing context for shipping option");
+                                }
+                                shippingOptionPricingPromises.push(this.getShippingOptionPricing(shippingOption, pricingContext.context));
+                                return [2 /*return*/];
+                            });
+                        }); });
+                        return [4 /*yield*/, Promise.all(shippingOptionPricingPromises)];
                     case 2: return [2 /*return*/, _b.sent()];
                 }
             });

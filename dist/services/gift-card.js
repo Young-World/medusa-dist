@@ -152,7 +152,7 @@ var GiftCardService = /** @class */ (function (_super) {
                     case 0:
                         manager = this.manager_;
                         giftCardRepo = manager.getCustomRepository(this.giftCardRepository_);
-                        if ((0, utils_1.isDefined)(selector.q)) {
+                        if ((0, medusa_core_utils_1.isDefined)(selector.q)) {
                             q = selector.q;
                             delete selector.q;
                         }
@@ -180,7 +180,7 @@ var GiftCardService = /** @class */ (function (_super) {
                     case 0:
                         manager = this.manager_;
                         giftCardRepo = manager.getCustomRepository(this.giftCardRepository_);
-                        if ((0, utils_1.isDefined)(selector.q)) {
+                        if ((0, medusa_core_utils_1.isDefined)(selector.q)) {
                             q = selector.q;
                             delete selector.q;
                         }
@@ -221,7 +221,7 @@ var GiftCardService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var giftCardRepo, region, code, toCreate, created, result;
+                            var giftCardRepo, region, code, taxRate, toCreate, created, result;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
@@ -232,7 +232,8 @@ var GiftCardService = /** @class */ (function (_super) {
                                     case 1:
                                         region = _a.sent();
                                         code = GiftCardService.generateCode();
-                                        toCreate = __assign(__assign({ code: code }, giftCard), { region_id: region.id });
+                                        taxRate = GiftCardService.resolveTaxRate(giftCard.tax_rate || null, region);
+                                        toCreate = __assign(__assign({ code: code }, giftCard), { region_id: region.id, tax_rate: taxRate });
                                         created = giftCardRepo.create(toCreate);
                                         return [4 /*yield*/, giftCardRepo.save(created)];
                                     case 2:
@@ -252,6 +253,25 @@ var GiftCardService = /** @class */ (function (_super) {
                 }
             });
         });
+    };
+    /**
+    * The tax_rate of the giftcard can depend on whether regions tax gift cards, an input
+    * provided by the user or the tax rate. Based on these conditions, tax_rate changes.
+    * @return the tax rate for the gift card
+    */
+    GiftCardService.resolveTaxRate = function (giftCardTaxRate, region) {
+        // A gift card is always associated with a region. If the region doesn't tax gift cards,
+        // return null
+        if (!region.gift_cards_taxable)
+            return null;
+        // If a tax rate has been provided as an input from an external input, use that
+        // This would handle cases where gift cards are created as a part of an order where taxes better defined
+        // or to handle usecases outside of the opinions of the core.
+        if (giftCardTaxRate) {
+            return giftCardTaxRate;
+        }
+        // Outside the context of the taxRate input, it picks up the tax rate directly from the region
+        return region.tax_rate || null;
     };
     GiftCardService.prototype.retrieve_ = function (selector, config) {
         if (config === void 0) { config = {}; }
@@ -288,7 +308,11 @@ var GiftCardService = /** @class */ (function (_super) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.retrieve_({ id: giftCardId }, config)];
+                    case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(giftCardId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"giftCardId\" must be defined");
+                        }
+                        return [4 /*yield*/, this.retrieve_({ id: giftCardId }, config)];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
@@ -299,7 +323,11 @@ var GiftCardService = /** @class */ (function (_super) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.retrieve_({ code: code }, config)];
+                    case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(code)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"code\" must be defined");
+                        }
+                        return [4 /*yield*/, this.retrieve_({ code: code }, config)];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
@@ -339,7 +367,7 @@ var GiftCardService = /** @class */ (function (_super) {
                                         if (metadata) {
                                             giftCard.metadata = (0, utils_1.setMetadata)(giftCard, metadata);
                                         }
-                                        if ((0, utils_1.isDefined)(balance)) {
+                                        if ((0, medusa_core_utils_1.isDefined)(balance)) {
                                             if (balance < 0 || giftCard.value < balance) {
                                                 throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_ARGUMENT, "new balance is invalid");
                                             }

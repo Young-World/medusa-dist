@@ -1,4 +1,19 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -45,10 +60,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AdminPostOrdersOrderSwapsSwapFulfillmentsReq = void 0;
+exports.AdminPostOrdersOrderSwapsSwapFulfillmentsParams = exports.AdminPostOrdersOrderSwapsSwapFulfillmentsReq = void 0;
 var class_validator_1 = require("class-validator");
-var _1 = require(".");
 var validator_1 = require("../../../../utils/validator");
+var common_1 = require("../../../../types/common");
 /**
  * @oas [post] /orders/{id}/swaps/{swap_id}/fulfillments
  * operationId: "PostOrdersOrderSwapsSwapFulfillments"
@@ -58,17 +73,16 @@ var validator_1 = require("../../../../utils/validator");
  * parameters:
  *   - (path) id=* {string} The ID of the Order.
  *   - (path) swap_id=* {string} The ID of the Swap.
+ *   - (query) expand {string} Comma separated list of relations to include in the result.
+ *   - (query) fields {string} Comma separated list of fields to include in the result.
  * requestBody:
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           metadata:
- *             description: An optional set of key-value pairs to hold additional information.
- *             type: object
- *           no_notification:
- *             description: If set to true no notification will be send related to this Claim.
- *             type: boolean
+ *         $ref: "#/components/schemas/AdminPostOrdersOrderSwapsSwapFulfillmentsReq"
+ * x-codegen:
+ *   method: fulfillSwap
+ *   params: AdminPostOrdersOrderSwapsSwapFulfillmentsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -96,9 +110,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/order"
+ *           $ref: "#/components/schemas/AdminOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -139,9 +151,8 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                     }); })];
             case 2:
                 _b.sent();
-                return [4 /*yield*/, orderService.retrieve(id, {
-                        select: _1.defaultAdminOrdersFields,
-                        relations: _1.defaultAdminOrdersRelations,
+                return [4 /*yield*/, orderService.retrieveWithTotals(id, req.retrieveConfig, {
+                        includes: req.includes,
                     })];
             case 3:
                 order = _b.sent();
@@ -150,6 +161,17 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostOrdersOrderSwapsSwapFulfillmentsReq
+ * type: object
+ * properties:
+ *   metadata:
+ *     description: An optional set of key-value pairs to hold additional information.
+ *     type: object
+ *   no_notification:
+ *     description: If set to true no notification will be send related to this Claim.
+ *     type: boolean
+ */
 var AdminPostOrdersOrderSwapsSwapFulfillmentsReq = /** @class */ (function () {
     function AdminPostOrdersOrderSwapsSwapFulfillmentsReq() {
     }
@@ -166,4 +188,13 @@ var AdminPostOrdersOrderSwapsSwapFulfillmentsReq = /** @class */ (function () {
     return AdminPostOrdersOrderSwapsSwapFulfillmentsReq;
 }());
 exports.AdminPostOrdersOrderSwapsSwapFulfillmentsReq = AdminPostOrdersOrderSwapsSwapFulfillmentsReq;
+// eslint-disable-next-line max-len
+var AdminPostOrdersOrderSwapsSwapFulfillmentsParams = /** @class */ (function (_super) {
+    __extends(AdminPostOrdersOrderSwapsSwapFulfillmentsParams, _super);
+    function AdminPostOrdersOrderSwapsSwapFulfillmentsParams() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return AdminPostOrdersOrderSwapsSwapFulfillmentsParams;
+}(common_1.FindParams));
+exports.AdminPostOrdersOrderSwapsSwapFulfillmentsParams = AdminPostOrdersOrderSwapsSwapFulfillmentsParams;
 //# sourceMappingURL=fulfill-swap.js.map

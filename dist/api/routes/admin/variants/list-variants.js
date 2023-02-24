@@ -1,4 +1,19 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -63,9 +78,11 @@ var __read = (this && this.__read) || function (o, n) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminGetVariantsParams = void 0;
 var class_validator_1 = require("class-validator");
-var _1 = require("./");
 var class_transformer_1 = require("class-transformer");
-var validator_1 = require("../../../../utils/validator");
+var lodash_1 = require("lodash");
+var common_1 = require("../../../../types/common");
+var price_selection_1 = require("../../../../types/price-selection");
+var is_type_1 = require("../../../../utils/validators/is-type");
 /**
  * @oas [get] /variants
  * operationId: "GetVariants"
@@ -73,9 +90,54 @@ var validator_1 = require("../../../../utils/validator");
  * description: "Retrieves a list of Product Variants"
  * x-authenticated: true
  * parameters:
- *   - (query) q {string} Query used for searching variants.
- *   - (query) offset=0 {integer} How many variants to skip in the result.
- *   - (query) limit=20 {integer} Limit the number of variants returned.
+ *   - (query) id {string} A Product Variant id to filter by.
+ *   - (query) ids {string} A comma separated list of Product Variant ids to filter by.
+ *   - (query) expand {string} A comma separated list of Product Variant relations to load.
+ *   - (query) fields {string} A comma separated list of Product Variant fields to include.
+ *   - (query) offset=0 {number} How many product variants to skip in the result.
+ *   - (query) limit=100 {number} Maximum number of Product Variants to return.
+ *   - (query) cart_id {string} The id of the cart to use for price selection.
+ *   - (query) region_id {string} The id of the region to use for price selection.
+ *   - (query) currency_code {string} The currency code to use for price selection.
+ *   - (query) customer_id {string} The id of the customer to use for price selection.
+ *   - in: query
+ *     name: title
+ *     style: form
+ *     explode: false
+ *     description: product variant title to search for.
+ *     schema:
+ *       oneOf:
+ *         - type: string
+ *           description: a single title to search by
+ *         - type: array
+ *           description: multiple titles to search by
+ *           items:
+ *             type: string
+ *   - in: query
+ *     name: inventory_quantity
+ *     description: Filter by available inventory quantity
+ *     schema:
+ *       oneOf:
+ *         - type: number
+ *           description: a specific number to search by.
+ *         - type: object
+ *           description: search using less and greater than comparisons.
+ *           properties:
+ *             lt:
+ *               type: number
+ *               description: filter by inventory quantity less than this number
+ *             gt:
+ *               type: number
+ *               description: filter by inventory quantity greater than this number
+ *             lte:
+ *               type: number
+ *               description: filter by inventory quantity less than or equal to this number
+ *             gte:
+ *               type: number
+ *               description: filter by inventory quantity greater than or equal to this number
+ * x-codegen:
+ *   method: list
+ *   queryParams: AdminGetVariantsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -103,20 +165,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             variants:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/product_variant"
- *             count:
- *               type: integer
- *               description: The total number of items available
- *             offset:
- *               type: integer
- *               description: The number of items skipped before these items
- *             limit:
- *               type: integer
- *               description: The number of items per page
+ *           $ref: "#/components/schemas/AdminVariantsListRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -131,55 +180,109 @@ var validator_1 = require("../../../../utils/validator");
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var variantService, _a, offset, limit, q, selector, listConfig, _b, variants, count;
-    return __generator(this, function (_c) {
-        switch (_c.label) {
+    var variantService, pricingService, cartService, regionService, cleanFilterableFields, _a, rawVariants, count, regionId, currencyCode, cart, region, variants;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
             case 0:
                 variantService = req.scope.resolve("productVariantService");
-                return [4 /*yield*/, (0, validator_1.validator)(AdminGetVariantsParams, req.query)];
+                pricingService = req.scope.resolve("pricingService");
+                cartService = req.scope.resolve("cartService");
+                regionService = req.scope.resolve("regionService");
+                cleanFilterableFields = (0, lodash_1.omit)(req.filterableFields, [
+                    "cart_id",
+                    "region_id",
+                    "currency_code",
+                    "customer_id",
+                ]);
+                return [4 /*yield*/, variantService.listAndCount(cleanFilterableFields, req.listConfig)];
             case 1:
-                _a = _c.sent(), offset = _a.offset, limit = _a.limit, q = _a.q;
-                selector = {};
-                if ("q" in req.query) {
-                    selector.q = q;
-                }
-                listConfig = {
-                    select: _1.defaultAdminVariantFields,
-                    relations: _1.defaultAdminVariantRelations,
-                    skip: offset,
-                    take: limit,
-                };
-                return [4 /*yield*/, variantService.listAndCount(selector, listConfig)];
+                _a = __read.apply(void 0, [_b.sent(), 2]), rawVariants = _a[0], count = _a[1];
+                regionId = req.validatedQuery.region_id;
+                currencyCode = req.validatedQuery.currency_code;
+                if (!req.validatedQuery.cart_id) return [3 /*break*/, 4];
+                return [4 /*yield*/, cartService.retrieve(req.validatedQuery.cart_id, {
+                        select: ["id", "region_id"],
+                    })];
             case 2:
-                _b = __read.apply(void 0, [_c.sent(), 2]), variants = _b[0], count = _b[1];
-                res.json({ variants: variants, count: count, offset: offset, limit: limit });
+                cart = _b.sent();
+                return [4 /*yield*/, regionService.retrieve(cart.region_id, {
+                        select: ["id", "currency_code"],
+                    })];
+            case 3:
+                region = _b.sent();
+                regionId = region.id;
+                currencyCode = region.currency_code;
+                _b.label = 4;
+            case 4: return [4 /*yield*/, pricingService.setVariantPrices(rawVariants, {
+                    cart_id: req.validatedQuery.cart_id,
+                    region_id: regionId,
+                    currency_code: currencyCode,
+                    customer_id: req.validatedQuery.customer_id,
+                    include_discount_prices: true,
+                })];
+            case 5:
+                variants = _b.sent();
+                res.json({
+                    variants: variants,
+                    count: count,
+                    offset: req.listConfig.offset,
+                    limit: req.listConfig.limit,
+                });
                 return [2 /*return*/];
         }
     });
 }); });
-var AdminGetVariantsParams = /** @class */ (function () {
+var AdminGetVariantsParams = /** @class */ (function (_super) {
+    __extends(AdminGetVariantsParams, _super);
     function AdminGetVariantsParams() {
-        this.limit = 20;
-        this.offset = 0;
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.limit = 20;
+        _this.offset = 0;
+        return _this;
     }
     __decorate([
-        (0, class_validator_1.IsString)(),
         (0, class_validator_1.IsOptional)(),
+        (0, class_validator_1.IsString)(),
         __metadata("design:type", String)
     ], AdminGetVariantsParams.prototype, "q", void 0);
     __decorate([
-        (0, class_validator_1.IsInt)(),
         (0, class_validator_1.IsOptional)(),
+        (0, class_validator_1.IsInt)(),
         (0, class_transformer_1.Type)(function () { return Number; }),
         __metadata("design:type", Number)
     ], AdminGetVariantsParams.prototype, "limit", void 0);
     __decorate([
-        (0, class_validator_1.IsInt)(),
         (0, class_validator_1.IsOptional)(),
+        (0, class_validator_1.IsInt)(),
         (0, class_transformer_1.Type)(function () { return Number; }),
         __metadata("design:type", Number)
     ], AdminGetVariantsParams.prototype, "offset", void 0);
+    __decorate([
+        (0, class_validator_1.IsOptional)(),
+        (0, class_validator_1.IsString)(),
+        __metadata("design:type", String)
+    ], AdminGetVariantsParams.prototype, "expand", void 0);
+    __decorate([
+        (0, class_validator_1.IsString)(),
+        (0, class_validator_1.IsOptional)(),
+        __metadata("design:type", String)
+    ], AdminGetVariantsParams.prototype, "fields", void 0);
+    __decorate([
+        (0, class_validator_1.IsOptional)(),
+        (0, is_type_1.IsType)([String, [String]]),
+        __metadata("design:type", Object)
+    ], AdminGetVariantsParams.prototype, "id", void 0);
+    __decorate([
+        (0, class_validator_1.IsOptional)(),
+        (0, is_type_1.IsType)([String, [String]]),
+        __metadata("design:type", Object)
+    ], AdminGetVariantsParams.prototype, "title", void 0);
+    __decorate([
+        (0, class_validator_1.IsOptional)(),
+        (0, is_type_1.IsType)([Number, common_1.NumericalComparisonOperator]),
+        __metadata("design:type", Object)
+    ], AdminGetVariantsParams.prototype, "inventory_quantity", void 0);
     return AdminGetVariantsParams;
-}());
+}(price_selection_1.AdminPriceSelectionParams));
 exports.AdminGetVariantsParams = AdminGetVariantsParams;
 //# sourceMappingURL=list-variants.js.map

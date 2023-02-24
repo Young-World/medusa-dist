@@ -99,6 +99,9 @@ var validator_1 = require("../../../../utils/validator");
  *   - (query) expand {string} Comma separated string of the relations to include.
  *   - (query) offset=0 {integer} How many items to skip before the results.
  *   - (query) limit=100 {integer} Limit the number of items returned.
+ * x-codegen:
+ *   method: listVariants
+ *   queryParams: AdminGetProductsVariantsParams
  * x-codeSamples:
  *   - lang: Shell
  *     label: cURL
@@ -116,20 +119,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             variants:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/product_variant"
- *             count:
- *               type: integer
- *               description: The total number of items available
- *             offset:
- *               type: integer
- *               description: The number of items skipped before these items
- *             limit:
- *               type: integer
- *               description: The number of items per page
+ *           $ref: "#/components/schemas/AdminProductsListVariantsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

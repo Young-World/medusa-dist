@@ -42,6 +42,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var product_variant_1 = __importDefault(require("../services/product-variant"));
 var product_1 = __importDefault(require("../services/product"));
 var medusa_core_utils_1 = require("medusa-core-utils");
+var plugins_1 = require("../loaders/plugins");
 var searchFields = [
     "id",
     "title",
@@ -69,8 +70,7 @@ var searchRelations = [
     "options",
 ];
 var ProductSearchSubscriber = /** @class */ (function () {
-    function ProductSearchSubscriber(_a) {
-        var eventBusService = _a.eventBusService, searchService = _a.searchService, productService = _a.productService;
+    function ProductSearchSubscriber(container) {
         var _this = this;
         this.handleProductCreation = function (data) { return __awaiter(_this, void 0, void 0, function () {
             var product;
@@ -135,9 +135,19 @@ var ProductSearchSubscriber = /** @class */ (function () {
                 }
             });
         }); };
-        this.eventBus_ = eventBusService;
-        this.searchService_ = searchService;
-        this.productService_ = productService;
+        this.eventBus_ = container.eventBusService;
+        this.searchService_ = container.searchService;
+        this.productService_ = container.productService;
+        /**
+         * Do not subscribe to any event in case no search engine have been installed.
+         * If some events need to be subscribed out of the search engine reason, they can be subscribed above this comment
+         */
+        try {
+            container[plugins_1.isSearchEngineInstalledResolutionKey];
+        }
+        catch (e) {
+            return this;
+        }
         this.eventBus_.subscribe(product_1.default.Events.CREATED, this.handleProductCreation);
         this.eventBus_.subscribe(product_1.default.Events.UPDATED, this.handleProductUpdate);
         this.eventBus_.subscribe(product_1.default.Events.DELETED, this.handleProductDeletion);

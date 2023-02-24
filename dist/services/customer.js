@@ -108,7 +108,6 @@ var medusa_core_utils_1 = require("medusa-core-utils");
 var scrypt_kdf_1 = __importDefault(require("scrypt-kdf"));
 var interfaces_1 = require("../interfaces");
 var utils_1 = require("../utils");
-var exception_formatter_1 = require("../utils/exception-formatter");
 /**
  * Provides layer to manipulate customers.
  */
@@ -284,17 +283,55 @@ var CustomerService = /** @class */ (function (_super) {
         });
     };
     /**
-     * Gets a customer by email.
+     * Gets a registered customer by email.
      * @param {string} email - the email of the customer to get.
      * @param {Object} config - the config object containing query settings
      * @return {Promise<Customer>} the customer document.
+     * @deprecated
      */
     CustomerService.prototype.retrieveByEmail = function (email, config) {
         if (config === void 0) { config = {}; }
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.retrieve_({ email: email.toLowerCase() }, config)];
+                    case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(email)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"email\" must be defined");
+                        }
+                        return [4 /*yield*/, this.retrieve_({ email: email.toLowerCase() }, config)];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
+    CustomerService.prototype.retrieveUnregisteredByEmail = function (email, config) {
+        if (config === void 0) { config = {}; }
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.retrieve_({ email: email.toLowerCase(), has_account: false }, config)];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
+    CustomerService.prototype.retrieveRegisteredByEmail = function (email, config) {
+        if (config === void 0) { config = {}; }
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.retrieve_({ email: email.toLowerCase(), has_account: true }, config)];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
+    CustomerService.prototype.listByEmail = function (email, config) {
+        if (config === void 0) { config = { relations: [], skip: 0, take: 2 }; }
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.list({ email: email.toLowerCase() }, config)];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
@@ -327,6 +364,9 @@ var CustomerService = /** @class */ (function (_super) {
         if (config === void 0) { config = {}; }
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
+                if (!(0, medusa_core_utils_1.isDefined)(customerId)) {
+                    throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"customerId\" must be defined");
+                }
                 return [2 /*return*/, this.retrieve_({ id: customerId }, config)];
             });
         });
@@ -363,54 +403,45 @@ var CustomerService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var customerRepository, email, password, existing, hashedPassword, toUpdate, updated, hashedPassword, created, result;
+                            var customerRepository, email, password, existing, hashedPassword, created, result;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
                                         customerRepository = manager.getCustomRepository(this.customerRepository_);
                                         customer.email = customer.email.toLowerCase();
                                         email = customer.email, password = customer.password;
-                                        return [4 /*yield*/, this.retrieveByEmail(email).catch(function () { return undefined; })];
+                                        return [4 /*yield*/, this.listByEmail(email).catch(function () { return undefined; })
+                                            // should validate that "existing.some(acc => acc.has_account) && password"
+                                        ];
                                     case 1:
                                         existing = _a.sent();
-                                        if (existing && existing.has_account) {
-                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.DUPLICATE_ERROR, "A customer with the given email already has an account. Log in instead");
+                                        // should validate that "existing.some(acc => acc.has_account) && password"
+                                        if (existing) {
+                                            if (existing.some(function (customer) { return customer.has_account; }) && password) {
+                                                throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.DUPLICATE_ERROR, "A customer with the given email already has an account. Log in instead");
+                                            }
+                                            else if ((existing === null || existing === void 0 ? void 0 : existing.some(function (customer) { return !customer.has_account; })) &&
+                                                !password) {
+                                                throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.DUPLICATE_ERROR, "Guest customer with email already exists");
+                                            }
                                         }
-                                        if (!(existing && password && !existing.has_account)) return [3 /*break*/, 5];
+                                        if (!password) return [3 /*break*/, 3];
                                         return [4 /*yield*/, this.hashPassword_(password)];
                                     case 2:
                                         hashedPassword = _a.sent();
                                         customer.password_hash = hashedPassword;
                                         customer.has_account = true;
                                         delete customer.password;
-                                        toUpdate = __assign(__assign({}, existing), customer);
-                                        return [4 /*yield*/, customerRepository.save(toUpdate)];
+                                        _a.label = 3;
                                     case 3:
-                                        updated = _a.sent();
-                                        return [4 /*yield*/, this.eventBusService_
-                                                .withTransaction(manager)
-                                                .emit(CustomerService.Events.UPDATED, updated)];
-                                    case 4:
-                                        _a.sent();
-                                        return [2 /*return*/, updated];
-                                    case 5:
-                                        if (!password) return [3 /*break*/, 7];
-                                        return [4 /*yield*/, this.hashPassword_(password)];
-                                    case 6:
-                                        hashedPassword = _a.sent();
-                                        customer.password_hash = hashedPassword;
-                                        customer.has_account = true;
-                                        delete customer.password;
-                                        _a.label = 7;
-                                    case 7:
                                         created = customerRepository.create(customer);
                                         return [4 /*yield*/, customerRepository.save(created)];
-                                    case 8:
+                                    case 4:
                                         result = _a.sent();
                                         return [4 /*yield*/, this.eventBusService_
                                                 .withTransaction(manager)
                                                 .emit(CustomerService.Events.CREATED, result)];
-                                    case 9:
+                                    case 5:
                                         _a.sent();
                                         return [2 /*return*/, result];
                                 }
@@ -449,7 +480,7 @@ var CustomerService = /** @class */ (function (_super) {
                                         }
                                         if (!("billing_address_id" in update || "billing_address" in update)) return [3 /*break*/, 3];
                                         address = billing_address_id || billing_address;
-                                        if (!(0, utils_1.isDefined)(address)) return [3 /*break*/, 3];
+                                        if (!(0, medusa_core_utils_1.isDefined)(address)) return [3 /*break*/, 3];
                                         return [4 /*yield*/, this.updateBillingAddress_(customer, address)];
                                     case 2:
                                         _f.sent();
@@ -488,10 +519,6 @@ var CustomerService = /** @class */ (function (_super) {
                                         _f.sent();
                                         return [2 /*return*/, updated];
                                 }
-                            });
-                        }); }, function (error) { return __awaiter(_this, void 0, void 0, function () {
-                            return __generator(this, function (_a) {
-                                throw (0, exception_formatter_1.formatException)(error);
                             });
                         }); })];
                     case 1: return [2 /*return*/, _a.sent()];
@@ -538,7 +565,7 @@ var CustomerService = /** @class */ (function (_super) {
                                         _b.label = 3;
                                     case 3:
                                         address.country_code = (_a = address.country_code) === null || _a === void 0 ? void 0 : _a.toLowerCase();
-                                        if (!(0, utils_1.isDefined)(address === null || address === void 0 ? void 0 : address.id)) return [3 /*break*/, 4];
+                                        if (!(0, medusa_core_utils_1.isDefined)(address === null || address === void 0 ? void 0 : address.id)) return [3 /*break*/, 4];
                                         customer.billing_address_id = address.id;
                                         return [3 /*break*/, 9];
                                     case 4:

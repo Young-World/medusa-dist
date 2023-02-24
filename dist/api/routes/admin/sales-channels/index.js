@@ -36,6 +36,8 @@ var create_sales_channel_1 = require("./create-sales-channel");
 var delete_products_batch_1 = require("./delete-products-batch");
 var list_sales_channels_1 = require("./list-sales-channels");
 var update_sales_channel_1 = require("./update-sales-channel");
+var associate_stock_location_1 = require("./associate-stock-location");
+var remove_stock_location_1 = require("./remove-stock-location");
 var route = (0, express_1.Router)();
 exports.default = (function (app) {
     app.use("/sales-channels", (0, feature_flag_enabled_1.isFeatureFlagEnabled)("sales_channels"), route);
@@ -47,6 +49,8 @@ exports.default = (function (app) {
     salesChannelRouter.get("/", middlewares_1.default.wrap(require("./get-sales-channel").default));
     salesChannelRouter.delete("/", middlewares_1.default.wrap(require("./delete-sales-channel").default));
     salesChannelRouter.post("/", (0, middlewares_1.transformBody)(update_sales_channel_1.AdminPostSalesChannelsSalesChannelReq), middlewares_1.default.wrap(require("./update-sales-channel").default));
+    salesChannelRouter.post("/stock-locations", (0, middlewares_1.transformBody)(associate_stock_location_1.AdminPostSalesChannelsChannelStockLocationsReq), middlewares_1.default.wrap(require("./associate-stock-location").default));
+    salesChannelRouter.delete("/stock-locations", (0, middlewares_1.transformBody)(remove_stock_location_1.AdminDeleteSalesChannelsChannelStockLocationsReq), middlewares_1.default.wrap(require("./remove-stock-location").default));
     salesChannelRouter.delete("/products/batch", (0, middlewares_1.transformBody)(delete_products_batch_1.AdminDeleteSalesChannelsChannelProductsBatchReq), middlewares_1.default.wrap(require("./delete-products-batch").default));
     salesChannelRouter.post("/products/batch", (0, middlewares_1.transformBody)(add_product_batch_1.AdminPostSalesChannelsChannelProductsBatchReq), (0, product_existence_1.validateProductsExist)(function (req) { return req.body.product_ids; }), middlewares_1.default.wrap(require("./add-product-batch").default));
     route.post("/", (0, middlewares_1.transformBody)(create_sales_channel_1.AdminPostSalesChannelsReq), middlewares_1.default.wrap(require("./create-sales-channel").default));
@@ -59,4 +63,6 @@ __exportStar(require("./delete-sales-channel"), exports);
 __exportStar(require("./get-sales-channel"), exports);
 __exportStar(require("./list-sales-channels"), exports);
 __exportStar(require("./update-sales-channel"), exports);
+__exportStar(require("./associate-stock-location"), exports);
+__exportStar(require("./remove-stock-location"), exports);
 //# sourceMappingURL=index.js.map

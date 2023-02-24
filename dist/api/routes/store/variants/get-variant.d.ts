@@ -1,3 +1,4 @@
+import { PriceSelectionParams } from "../../../../types/price-selection";
 /**
  * @oas [get] /variants/{variant_id}
  * operationId: GetVariantsVariant
@@ -6,6 +7,7 @@
  * parameters:
  *   - (path) variant_id=* {string} The id of the Product Variant.
  *   - (query) cart_id {string} The id of the Cart to set prices based on.
+ *   - (query) sales_channel_id {string} A sales channel id for result configuration.
  *   - (query) region_id {string} The id of the Region to set prices based on.
  *   - in: query
  *     name: currency_code
@@ -17,6 +19,9 @@
  *       externalDocs:
  *         url: https://en.wikipedia.org/wiki/ISO_4217#Active_codes
  *         description: See a list of codes.
+ * x-codegen:
+ *   method: retrieve
+ *   queryParams: StoreGetVariantsVariantParams
  * x-codeSamples:
  *   - lang: Shell
  *     label: cURL
@@ -30,9 +35,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             variant:
- *               $ref: "#/components/schemas/product_variant"
+ *           $ref: "#/components/schemas/StoreVariantsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":
@@ -46,3 +49,6 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+export declare class StoreGetVariantsVariantParams extends PriceSelectionParams {
+    sales_channel_id?: string;
+}

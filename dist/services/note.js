@@ -66,24 +66,27 @@ var NoteService = /** @class */ (function (_super) {
     }
     /**
      * Retrieves a specific note.
-     * @param id - the id of the note to retrieve.
+     * @param noteId - the id of the note to retrieve.
      * @param config - any options needed to query for the result.
      * @return which resolves to the requested note.
      */
-    NoteService.prototype.retrieve = function (id, config) {
+    NoteService.prototype.retrieve = function (noteId, config) {
         if (config === void 0) { config = {}; }
         return __awaiter(this, void 0, void 0, function () {
             var noteRepo, query, note;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(noteId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"noteId\" must be defined");
+                        }
                         noteRepo = this.manager_.getCustomRepository(this.noteRepository_);
-                        query = (0, utils_1.buildQuery)({ id: id }, config);
+                        query = (0, utils_1.buildQuery)({ id: noteId }, config);
                         return [4 /*yield*/, noteRepo.findOne(query)];
                     case 1:
                         note = _a.sent();
                         if (!note) {
-                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Note with id: ".concat(id, " was not found."));
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Note with id: ".concat(noteId, " was not found."));
                         }
                         return [2 /*return*/, note];
                 }

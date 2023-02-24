@@ -1,5 +1,5 @@
 /**
- * [delete] /uploads
+ * @oas [delete] /uploads
  * operationId: "AdminDeleteUploads"
  * summary: "Delete an Uploaded File"
  * description: "Removes an uploaded file using the installed fileservice"
@@ -8,12 +8,7 @@
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - file_key
- *         properties:
- *           file_key:
- *             description: "key of the file to delete"
- *             type: string
+ *         $ref: "#/components/schemas/AdminDeleteUploadsReq"
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -47,18 +42,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             id:
- *               type: string
- *               description: The file key of the upload deleted
- *             object:
- *               type: string
- *               description: The type of the object that was deleted.
- *               default: file
- *             deleted:
- *               type: boolean
- *               description: Whether or not the items were deleted.
- *               default: true
+ *           $ref: "#/components/schemas/AdminDeleteUploadsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -74,6 +58,16 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminDeleteUploadsReq
+ * type: object
+ * required:
+ *   - file_key
+ * properties:
+ *   file_key:
+ *     description: "key of the file to delete"
+ *     type: string
+ */
 export declare class AdminDeleteUploadsReq {
     file_key: string;
 }

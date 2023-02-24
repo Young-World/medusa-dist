@@ -23,11 +23,11 @@ declare class NoteService extends TransactionBaseService {
     constructor({ manager, noteRepository, eventBusService, }: InjectedDependencies);
     /**
      * Retrieves a specific note.
-     * @param id - the id of the note to retrieve.
+     * @param noteId - the id of the note to retrieve.
      * @param config - any options needed to query for the result.
      * @return which resolves to the requested note.
      */
-    retrieve(id: string, config?: FindConfig<Note>): Promise<Note | never>;
+    retrieve(noteId: string, config?: FindConfig<Note>): Promise<Note | never>;
     /** Fetches all notes related to the given selector
      * @param selector - the query object for find
      * @param config - the configuration used to find the objects. contains relations, skip, and take.

@@ -177,22 +177,22 @@ var newTaxSystem1641636508055 = /** @class */ (function () {
                         return [4 /*yield*/, queryRunner.query("ALTER TABLE \"tax_rate\" DROP CONSTRAINT \"FK_b95a1e03b051993d208366cb960\"")];
                     case 10:
                         _a.sent();
-                        return [4 /*yield*/, queryRunner.query("DROP INDEX \"public\".\"IDX_f672727ab020df6c50fb64c1a7\"")];
+                        return [4 /*yield*/, queryRunner.query("DROP INDEX \"IDX_f672727ab020df6c50fb64c1a7\"")];
                     case 11:
                         _a.sent();
-                        return [4 /*yield*/, queryRunner.query("DROP INDEX \"public\".\"IDX_346e0016cf045b998074774764\"")];
+                        return [4 /*yield*/, queryRunner.query("DROP INDEX \"IDX_346e0016cf045b998074774764\"")];
                     case 12:
                         _a.sent();
-                        return [4 /*yield*/, queryRunner.query("DROP INDEX \"public\".\"IDX_25a3138bb236f63d9bb6c8ff11\"")];
+                        return [4 /*yield*/, queryRunner.query("DROP INDEX \"IDX_25a3138bb236f63d9bb6c8ff11\"")];
                     case 13:
                         _a.sent();
-                        return [4 /*yield*/, queryRunner.query("DROP INDEX \"public\".\"IDX_ece65a774192b34253abc4cd67\"")];
+                        return [4 /*yield*/, queryRunner.query("DROP INDEX \"IDX_ece65a774192b34253abc4cd67\"")];
                     case 14:
                         _a.sent();
-                        return [4 /*yield*/, queryRunner.query("DROP INDEX \"public\".\"IDX_1d04aebeabb6a89f87e536a124\"")];
+                        return [4 /*yield*/, queryRunner.query("DROP INDEX \"IDX_1d04aebeabb6a89f87e536a124\"")];
                     case 15:
                         _a.sent();
-                        return [4 /*yield*/, queryRunner.query("DROP INDEX \"public\".\"IDX_2484cf14c437a04586b07e7ddd\"")];
+                        return [4 /*yield*/, queryRunner.query("DROP INDEX \"IDX_2484cf14c437a04586b07e7ddd\"")];
                     case 16:
                         _a.sent();
                         return [4 /*yield*/, queryRunner.query("ALTER TABLE \"order\" ALTER COLUMN \"tax_rate\" SET NOT NULL")];
@@ -219,13 +219,13 @@ var newTaxSystem1641636508055 = /** @class */ (function () {
                         return [4 /*yield*/, queryRunner.query("DROP TABLE \"product_tax_rate\"")];
                     case 24:
                         _a.sent();
-                        return [4 /*yield*/, queryRunner.query("DROP INDEX \"public\".\"IDX_926ca9f29014af8091722dede0\"")];
+                        return [4 /*yield*/, queryRunner.query("DROP INDEX \"IDX_926ca9f29014af8091722dede0\"")];
                     case 25:
                         _a.sent();
                         return [4 /*yield*/, queryRunner.query("DROP TABLE \"shipping_method_tax_line\"")];
                     case 26:
                         _a.sent();
-                        return [4 /*yield*/, queryRunner.query("DROP INDEX \"public\".\"IDX_5077fa54b0d037e984385dfe8a\"")];
+                        return [4 /*yield*/, queryRunner.query("DROP INDEX \"IDX_5077fa54b0d037e984385dfe8a\"")];
                     case 27:
                         _a.sent();
                         return [4 /*yield*/, queryRunner.query("DROP TABLE \"line_item_tax_line\"")];

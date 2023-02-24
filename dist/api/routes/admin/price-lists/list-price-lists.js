@@ -189,6 +189,9 @@ var class_transformer_1 = require("class-transformer");
  *            type: string
  *            description: filter by dates greater than or equal to this date
  *            format: date
+ * x-codegen:
+ *   method: list
+ *   queryParams: AdminGetPriceListPaginationParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -216,20 +219,7 @@ var class_transformer_1 = require("class-transformer");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             price_lists:
- *              type: array
- *              items:
- *                $ref: "#/components/schemas/price_list"
- *             count:
- *               type: integer
- *               description: The total number of items available
- *             offset:
- *               type: integer
- *               description: The number of items skipped before these items
- *             limit:
- *               type: integer
- *               description: The number of items per page
+ *           $ref: "#/components/schemas/AdminPriceListsListRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

@@ -23,19 +23,14 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrderItemChange = exports.OrderEditItemChangeType = void 0;
 var typeorm_1 = require("typeorm");
 var interfaces_1 = require("../interfaces");
-var order_editing_1 = __importDefault(require("../loaders/feature-flags/order-editing"));
-var feature_flag_decorators_1 = require("../utils/feature-flag-decorators");
 var utils_1 = require("../utils");
 var db_aware_column_1 = require("../utils/db-aware-column");
-var order_edit_1 = require("./order-edit");
 var line_item_1 = require("./line-item");
+var order_edit_1 = require("./order-edit");
 var OrderEditItemChangeType;
 (function (OrderEditItemChangeType) {
     OrderEditItemChangeType["ITEM_ADD"] = "item_add";
@@ -91,53 +86,77 @@ var OrderItemChange = /** @class */ (function (_super) {
         __metadata("design:returntype", void 0)
     ], OrderItemChange.prototype, "beforeInsert", null);
     OrderItemChange = __decorate([
-        (0, feature_flag_decorators_1.FeatureFlagEntity)(order_editing_1.default.key),
         (0, typeorm_1.Unique)(["order_edit_id", "original_line_item_id"]),
-        (0, typeorm_1.Unique)(["order_edit_id", "line_item_id"])
+        (0, typeorm_1.Unique)(["order_edit_id", "line_item_id"]),
+        (0, typeorm_1.Entity)()
     ], OrderItemChange);
     return OrderItemChange;
 }(interfaces_1.SoftDeletableEntity));
 exports.OrderItemChange = OrderItemChange;
 /**
- * @schema order_item_change
+ * @schema OrderItemChange
  * title: "Order Item Change"
  * description: "Represents an order edit item change"
- * x-resourceId: order_item_change
+ * type: object
  * required:
- *   - type
+ *   - created_at
+ *   - deleted_at
+ *   - id
+ *   - line_item_id
  *   - order_edit_id
+ *   - original_line_item_id
+ *   - type
+ *   - updated_at
  * properties:
  *   id:
- *     type: string
  *     description: The order item change's ID
+ *     type: string
  *     example: oic_01G8TJSYT9M6AVS5N4EMNFS1EK
  *   type:
+ *     description: The order item change's status
  *     type: string
- *     description: The order's status
  *     enum:
  *       - item_add
  *       - item_remove
  *       - item_update
  *   order_edit_id:
- *     type: string
  *     description: The ID of the order edit
+ *     type: string
  *     example: oe_01G2SG30J8C85S4A5CHM2S1NS2
  *   order_edit:
- *     description: Order edit object
- *     $ref: "#/components/schemas/order_edit"
+ *     description: Available if the relation `order_edit` is expanded.
+ *     nullable: true
+ *     $ref: "#/components/schemas/OrderEdit"
  *   original_line_item_id:
- *      type: string
  *      description: The ID of the original line item in the order
+ *      nullable: true
+ *      type: string
  *      example: item_01G8ZC9GWT6B2GP5FSXRXNFNGN
  *   original_line_item:
- *      description: Original line item object.
- *      $ref: "#/components/schemas/line_item"
+ *      description: Available if the relation `original_line_item` is expanded.
+ *      nullable: true
+ *      $ref: "#/components/schemas/LineItem"
  *   line_item_id:
- *      type: string
  *      description: The ID of the cloned line item.
+ *      nullable: true
+ *      type: string
  *      example: item_01G8ZC9GWT6B2GP5FSXRXNFNGN
  *   line_item:
- *      description: Line item object.
- *      $ref: "#/components/schemas/line_item"
+ *      description: Available if the relation `line_item` is expanded.
+ *      nullable: true
+ *      $ref: "#/components/schemas/LineItem"
+ *   created_at:
+ *     description: The date with timezone at which the resource was created.
+ *     type: string
+ *     format: date-time
+ *   updated_at:
+ *     description: The date with timezone at which the resource was updated.
+ *     type: string
+ *     format: date-time
+ *   deleted_at:
+ *     description: The date with timezone at which the resource was deleted.
+ *     nullable: true
+ *     type: string
+ *     format: date-time
  */
 //# sourceMappingURL=order-item-change.js.map

@@ -61,20 +61,9 @@ var class_transformer_1 = require("class-transformer");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - product_ids
- *         properties:
- *           product_ids:
- *             description: The IDs of the products to add to the Sales Channel
- *             type: array
- *             items:
- *               type: object
- *               required:
- *                 - id
- *               properties:
- *                 id:
- *                   type: string
- *                   description: The ID of the product
+ *         $ref: "#/components/schemas/AdminPostSalesChannelsChannelProductsBatchReq"
+ * x-codegen:
+ *   method: addProducts
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -116,9 +105,7 @@ var class_transformer_1 = require("class-transformer");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             sales_channel:
- *               $ref: "#/components/schemas/sales_channel"
+ *           $ref: "#/components/schemas/AdminSalesChannelsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -158,6 +145,24 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostSalesChannelsChannelProductsBatchReq
+ * type: object
+ * required:
+ *   - product_ids
+ * properties:
+ *   product_ids:
+ *     description: The IDs of the products to add to the Sales Channel
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - id
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: The ID of the product
+ */
 var AdminPostSalesChannelsChannelProductsBatchReq = /** @class */ (function () {
     function AdminPostSalesChannelsChannelProductsBatchReq() {
     }

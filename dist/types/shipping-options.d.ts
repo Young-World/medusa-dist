@@ -63,3 +63,7 @@ export declare type UpdateShippingOptionInput = {
     data?: string;
     includes_tax?: boolean;
 };
+export declare type ValidatePriceTypeAndAmountInput = {
+    amount?: number;
+    price_type?: ShippingOptionPriceType;
+};

@@ -91,6 +91,9 @@ var Oauth = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(oauthId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"oauthId\" must be defined");
+                        }
                         repo = this.manager.getCustomRepository(this.oauthRepository_);
                         return [4 /*yield*/, repo.findOne({
                                 id: oauthId,

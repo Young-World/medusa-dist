@@ -11,13 +11,9 @@ import { Request, Response } from "express";
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           name:
- *             description: "Name of the customer group"
- *             type: string
- *           metadata:
- *             description: "Metadata for the customer."
- *             type: object
+ *         $ref: "#/components/schemas/AdminPostCustomerGroupsGroupReq"
+ * x-codegen:
+ *   method: update
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -51,9 +47,7 @@ import { Request, Response } from "express";
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             customer_group:
- *               $ref: "#/components/schemas/customer_group"
+ *           $ref: "#/components/schemas/AdminCustomerGroupsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -69,6 +63,17 @@ import { Request, Response } from "express";
  */
 declare const _default: (req: Request, res: Response) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostCustomerGroupsGroupReq
+ * type: object
+ * properties:
+ *   name:
+ *     description: "Name of the customer group"
+ *     type: string
+ *   metadata:
+ *     description: "Metadata for the customer."
+ *     type: object
+ */
 export declare class AdminPostCustomerGroupsGroupReq {
     name?: string;
     metadata?: Record<string, unknown>;

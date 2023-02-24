@@ -58,13 +58,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - email
- *         properties:
- *           email:
- *             description: "The Users email."
- *             type: string
- *             format: email
+ *         $ref: "#/components/schemas/AdminResetPasswordTokenRequest"
+ * x-codegen:
+ *   method: sendResetPasswordToken
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -142,6 +138,17 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminResetPasswordTokenRequest
+ * type: object
+ * required:
+ *   - email
+ * properties:
+ *   email:
+ *     description: "The Users email."
+ *     type: string
+ *     format: email
+ */
 var AdminResetPasswordTokenRequest = /** @class */ (function () {
     function AdminResetPasswordTokenRequest() {
     }

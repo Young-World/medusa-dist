@@ -35,13 +35,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.orderEditing1663059812399 = exports.featureFlag = void 0;
-var order_editing_1 = __importDefault(require("../loaders/feature-flags/order-editing"));
-exports.featureFlag = order_editing_1.default.key;
+exports.orderEditing1663059812399 = void 0;
 var orderEditing1663059812399 = /** @class */ (function () {
     function orderEditing1663059812399() {
         this.name = "orderEditing1663059812399";

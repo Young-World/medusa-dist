@@ -1,3 +1,5 @@
+import { NumericalComparisonOperator } from "../../../../types/common";
+import { AdminPriceSelectionParams } from "../../../../types/price-selection";
 /**
  * @oas [get] /variants
  * operationId: "GetVariants"
@@ -5,9 +7,54 @@
  * description: "Retrieves a list of Product Variants"
  * x-authenticated: true
  * parameters:
- *   - (query) q {string} Query used for searching variants.
- *   - (query) offset=0 {integer} How many variants to skip in the result.
- *   - (query) limit=20 {integer} Limit the number of variants returned.
+ *   - (query) id {string} A Product Variant id to filter by.
+ *   - (query) ids {string} A comma separated list of Product Variant ids to filter by.
+ *   - (query) expand {string} A comma separated list of Product Variant relations to load.
+ *   - (query) fields {string} A comma separated list of Product Variant fields to include.
+ *   - (query) offset=0 {number} How many product variants to skip in the result.
+ *   - (query) limit=100 {number} Maximum number of Product Variants to return.
+ *   - (query) cart_id {string} The id of the cart to use for price selection.
+ *   - (query) region_id {string} The id of the region to use for price selection.
+ *   - (query) currency_code {string} The currency code to use for price selection.
+ *   - (query) customer_id {string} The id of the customer to use for price selection.
+ *   - in: query
+ *     name: title
+ *     style: form
+ *     explode: false
+ *     description: product variant title to search for.
+ *     schema:
+ *       oneOf:
+ *         - type: string
+ *           description: a single title to search by
+ *         - type: array
+ *           description: multiple titles to search by
+ *           items:
+ *             type: string
+ *   - in: query
+ *     name: inventory_quantity
+ *     description: Filter by available inventory quantity
+ *     schema:
+ *       oneOf:
+ *         - type: number
+ *           description: a specific number to search by.
+ *         - type: object
+ *           description: search using less and greater than comparisons.
+ *           properties:
+ *             lt:
+ *               type: number
+ *               description: filter by inventory quantity less than this number
+ *             gt:
+ *               type: number
+ *               description: filter by inventory quantity greater than this number
+ *             lte:
+ *               type: number
+ *               description: filter by inventory quantity less than or equal to this number
+ *             gte:
+ *               type: number
+ *               description: filter by inventory quantity greater than or equal to this number
+ * x-codegen:
+ *   method: list
+ *   queryParams: AdminGetVariantsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -35,20 +82,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             variants:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/product_variant"
- *             count:
- *               type: integer
- *               description: The total number of items available
- *             offset:
- *               type: integer
- *               description: The number of items skipped before these items
- *             limit:
- *               type: integer
- *               description: The number of items per page
+ *           $ref: "#/components/schemas/AdminVariantsListRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -64,8 +98,13 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
-export declare class AdminGetVariantsParams {
+export declare class AdminGetVariantsParams extends AdminPriceSelectionParams {
     q?: string;
     limit?: number;
     offset?: number;
+    expand?: string;
+    fields?: string;
+    id?: string | string[];
+    title?: string | string[];
+    inventory_quantity?: number | NumericalComparisonOperator;
 }

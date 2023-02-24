@@ -57,18 +57,9 @@ var class_validator_1 = require("class-validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - name
- *         properties:
- *           name:
- *             description: The name of the Sales Channel
- *             type: string
- *           description:
- *             description: The description of the Sales Channel
- *             type: string
- *           is_disabled:
- *             description: Whether the Sales Channel is disabled or not.
- *             type: boolean
+ *         $ref: "#/components/schemas/AdminPostSalesChannelsReq"
+ * x-codegen:
+ *   method: create
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -103,9 +94,7 @@ var class_validator_1 = require("class-validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             sales_channel:
- *               $ref: "#/components/schemas/sales_channel"
+ *           $ref: "#/components/schemas/AdminSalesChannelsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -144,6 +133,22 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostSalesChannelsReq
+ * type: object
+ * required:
+ *   - name
+ * properties:
+ *   name:
+ *     description: The name of the Sales Channel
+ *     type: string
+ *   description:
+ *     description: The description of the Sales Channel
+ *     type: string
+ *   is_disabled:
+ *     description: Whether the Sales Channel is disabled or not.
+ *     type: boolean
+ */
 var AdminPostSalesChannelsReq = /** @class */ (function () {
     function AdminPostSalesChannelsReq() {
     }

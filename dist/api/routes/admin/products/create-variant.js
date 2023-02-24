@@ -47,10 +47,11 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminPostProductsProductVariantsReq = void 0;
 var class_validator_1 = require("class-validator");
+var class_transformer_1 = require("class-transformer");
 var _1 = require(".");
 var product_variant_1 = require("../../../../types/product-variant");
-var class_transformer_1 = require("class-transformer");
 var validator_1 = require("../../../../utils/validator");
+var create_product_variant_1 = require("./transaction/create-product-variant");
 /**
  * @oas [post] /products/{id}/variants
  * operationId: "PostProductsProductVariants"
@@ -63,103 +64,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - title
- *           - prices
- *           - options
- *         properties:
- *           title:
- *             description: The title to identify the Product Variant by.
- *             type: string
- *           sku:
- *             description: The unique SKU for the Product Variant.
- *             type: string
- *           ean:
- *             description: The EAN number of the item.
- *             type: string
- *           upc:
- *             description: The UPC number of the item.
- *             type: string
- *           barcode:
- *             description: A generic GTIN field for the Product Variant.
- *             type: string
- *           hs_code:
- *             description: The Harmonized System code for the Product Variant.
- *             type: string
- *           inventory_quantity:
- *             description: The amount of stock kept for the Product Variant.
- *             type: integer
- *             default: 0
- *           allow_backorder:
- *             description: Whether the Product Variant can be purchased when out of stock.
- *             type: boolean
- *           manage_inventory:
- *             description: Whether Medusa should keep track of the inventory for this Product Variant.
- *             type: boolean
- *           weight:
- *             description: The wieght of the Product Variant.
- *             type: number
- *           length:
- *             description: The length of the Product Variant.
- *             type: number
- *           height:
- *             description: The height of the Product Variant.
- *             type: number
- *           width:
- *             description: The width of the Product Variant.
- *             type: number
- *           origin_country:
- *             description: The country of origin of the Product Variant.
- *             type: string
- *           mid_code:
- *             description: The Manufacturer Identification code for the Product Variant.
- *             type: string
- *           material:
- *             description: The material composition of the Product Variant.
- *             type: string
- *           metadata:
- *             description: An optional set of key-value pairs with additional information.
- *             type: object
- *           prices:
- *             type: array
- *             items:
- *               required:
- *                 - amount
- *               properties:
- *                 id:
- *                   description: The ID of the price.
- *                   type: string
- *                 region_id:
- *                   description: The ID of the Region for which the price is used. Only required if currency_code is not provided.
- *                   type: string
- *                 currency_code:
- *                   description: The 3 character ISO currency code for which the price will be used. Only required if region_id is not provided.
- *                   type: string
- *                   externalDocs:
- *                     url: https://en.wikipedia.org/wiki/ISO_4217#Active_codes
- *                     description: See a list of codes.
- *                 amount:
- *                   description: The amount to charge for the Product Variant.
- *                   type: integer
- *                 min_quantity:
- *                  description: The minimum quantity for which the price will be used.
- *                  type: integer
- *                 max_quantity:
- *                   description: The maximum quantity for which the price will be used.
- *                   type: integer
- *           options:
- *             type: array
- *             items:
- *               required:
- *                 - option_id
- *                 - value
- *               properties:
- *                 option_id:
- *                   description: The ID of the Product Option to set the value for.
- *                   type: string
- *                 value:
- *                   description: The value to give for the Product Option.
- *                   type: string
+ *         $ref: "#/components/schemas/AdminPostProductsProductVariantsReq"
+ * x-codegen:
+ *   method: createVariant
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -218,9 +125,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             product:
- *               $ref: "#/components/schemas/product"
+ *           $ref: "#/components/schemas/AdminProductsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -235,7 +140,7 @@ var validator_1 = require("../../../../utils/validator");
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var id, validated, productVariantService, productService, manager, product;
+    var id, validated, inventoryService, productVariantInventoryService, productVariantService, manager, productService, product;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
@@ -243,21 +148,28 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                 return [4 /*yield*/, (0, validator_1.validator)(AdminPostProductsProductVariantsReq, req.body)];
             case 1:
                 validated = _a.sent();
+                inventoryService = req.scope.resolve("inventoryService");
+                productVariantInventoryService = req.scope.resolve("productVariantInventoryService");
                 productVariantService = req.scope.resolve("productVariantService");
-                productService = req.scope.resolve("productService");
                 manager = req.scope.resolve("manager");
                 return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
                         return __generator(this, function (_a) {
                             switch (_a.label) {
-                                case 0: return [4 /*yield*/, productVariantService
-                                        .withTransaction(transactionManager)
-                                        .create(id, validated)];
-                                case 1: return [2 /*return*/, _a.sent()];
+                                case 0: return [4 /*yield*/, (0, create_product_variant_1.createVariantTransaction)({
+                                        manager: transactionManager,
+                                        inventoryService: inventoryService,
+                                        productVariantInventoryService: productVariantInventoryService,
+                                        productVariantService: productVariantService,
+                                    }, id, validated)];
+                                case 1:
+                                    _a.sent();
+                                    return [2 /*return*/];
                             }
                         });
                     }); })];
             case 2:
                 _a.sent();
+                productService = req.scope.resolve("productService");
                 return [4 /*yield*/, productService.retrieve(id, {
                         select: _1.defaultAdminProductFields,
                         relations: _1.defaultAdminProductRelations,
@@ -282,9 +194,114 @@ var ProductVariantOptionReq = /** @class */ (function () {
     ], ProductVariantOptionReq.prototype, "option_id", void 0);
     return ProductVariantOptionReq;
 }());
+/**
+ * @schema AdminPostProductsProductVariantsReq
+ * type: object
+ * required:
+ *   - title
+ *   - prices
+ *   - options
+ * properties:
+ *   title:
+ *     description: The title to identify the Product Variant by.
+ *     type: string
+ *   sku:
+ *     description: The unique SKU for the Product Variant.
+ *     type: string
+ *   ean:
+ *     description: The EAN number of the item.
+ *     type: string
+ *   upc:
+ *     description: The UPC number of the item.
+ *     type: string
+ *   barcode:
+ *     description: A generic GTIN field for the Product Variant.
+ *     type: string
+ *   hs_code:
+ *     description: The Harmonized System code for the Product Variant.
+ *     type: string
+ *   inventory_quantity:
+ *     description: The amount of stock kept for the Product Variant.
+ *     type: integer
+ *     default: 0
+ *   allow_backorder:
+ *     description: Whether the Product Variant can be purchased when out of stock.
+ *     type: boolean
+ *   manage_inventory:
+ *     description: Whether Medusa should keep track of the inventory for this Product Variant.
+ *     type: boolean
+ *     default: true
+ *   weight:
+ *     description: The wieght of the Product Variant.
+ *     type: number
+ *   length:
+ *     description: The length of the Product Variant.
+ *     type: number
+ *   height:
+ *     description: The height of the Product Variant.
+ *     type: number
+ *   width:
+ *     description: The width of the Product Variant.
+ *     type: number
+ *   origin_country:
+ *     description: The country of origin of the Product Variant.
+ *     type: string
+ *   mid_code:
+ *     description: The Manufacturer Identification code for the Product Variant.
+ *     type: string
+ *   material:
+ *     description: The material composition of the Product Variant.
+ *     type: string
+ *   metadata:
+ *     description: An optional set of key-value pairs with additional information.
+ *     type: object
+ *   prices:
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - amount
+ *       properties:
+ *         id:
+ *           description: The ID of the price.
+ *           type: string
+ *         region_id:
+ *           description: The ID of the Region for which the price is used. Only required if currency_code is not provided.
+ *           type: string
+ *         currency_code:
+ *           description: The 3 character ISO currency code for which the price will be used. Only required if region_id is not provided.
+ *           type: string
+ *           externalDocs:
+ *             url: https://en.wikipedia.org/wiki/ISO_4217#Active_codes
+ *             description: See a list of codes.
+ *         amount:
+ *           description: The amount to charge for the Product Variant.
+ *           type: integer
+ *         min_quantity:
+ *          description: The minimum quantity for which the price will be used.
+ *          type: integer
+ *         max_quantity:
+ *           description: The maximum quantity for which the price will be used.
+ *           type: integer
+ *   options:
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - option_id
+ *         - value
+ *       properties:
+ *         option_id:
+ *           description: The ID of the Product Option to set the value for.
+ *           type: string
+ *         value:
+ *           description: The value to give for the Product Option.
+ *           type: string
+ */
 var AdminPostProductsProductVariantsReq = /** @class */ (function () {
     function AdminPostProductsProductVariantsReq() {
         this.inventory_quantity = 0;
+        this.manage_inventory = true;
         this.options = [];
     }
     __decorate([
@@ -319,7 +336,7 @@ var AdminPostProductsProductVariantsReq = /** @class */ (function () {
     __decorate([
         (0, class_validator_1.IsNumber)(),
         (0, class_validator_1.IsOptional)(),
-        __metadata("design:type", Object)
+        __metadata("design:type", Number)
     ], AdminPostProductsProductVariantsReq.prototype, "inventory_quantity", void 0);
     __decorate([
         (0, class_validator_1.IsBoolean)(),

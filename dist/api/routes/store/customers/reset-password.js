@@ -61,22 +61,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - email
- *           - password
- *           - token
- *         properties:
- *           email:
- *             description: "The email of the customer."
- *             type: string
- *             format: email
- *           password:
- *             description: "The Customer's password."
- *             type: string
- *             format: password
- *           token:
- *             description: "The reset password token"
- *             type: string
+ *         $ref: "#/components/schemas/StorePostCustomersResetPasswordReq"
+ * x-codegen:
+ *   method: resetPassword
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -109,9 +96,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             customer:
- *               $ref: "#/components/schemas/customer"
+ *           $ref: "#/components/schemas/StoreCustomersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -131,9 +116,9 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         switch (_a.label) {
             case 0: return [4 /*yield*/, (0, validator_1.validator)(StorePostCustomersResetPasswordReq, req.body)];
             case 1:
-                validated = _a.sent();
+                validated = (_a.sent());
                 customerService = req.scope.resolve("customerService");
-                return [4 /*yield*/, customerService.retrieveByEmail(validated.email, {
+                return [4 /*yield*/, customerService.retrieveRegisteredByEmail(validated.email, {
                         select: ["id", "password_hash"],
                     })];
             case 2:
@@ -166,6 +151,26 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema StorePostCustomersResetPasswordReq
+ * type: object
+ * required:
+ *   - email
+ *   - password
+ *   - token
+ * properties:
+ *   email:
+ *     description: "The email of the customer."
+ *     type: string
+ *     format: email
+ *   password:
+ *     description: "The Customer's password."
+ *     type: string
+ *     format: password
+ *   token:
+ *     description: "The reset password token"
+ *     type: string
+ */
 var StorePostCustomersResetPasswordReq = /** @class */ (function () {
     function StorePostCustomersResetPasswordReq() {
     }

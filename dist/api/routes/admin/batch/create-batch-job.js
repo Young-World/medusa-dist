@@ -69,37 +69,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *    application/json:
  *      schema:
- *        required:
- *          - type
- *          - context
- *        properties:
- *          type:
- *            type: string
- *            description: The type of batch job to start.
- *            example: product-export
- *          context:
- *            type: object
- *            description: Additional infomration regarding the batch to be used for processing.
- *            example:
- *              shape:
- *                prices:
- *                  - region: null
- *                    currency_code: "eur"
- *                dynamicImageColumnCount: 4
- *                dynamicOptionColumnCount: 2
- *              list_config:
- *                skip: 0
- *                take: 50
- *                order:
- *                  created_at: "DESC"
- *                relations:
- *                  - variants
- *                  - variant.prices
- *                  - images
- *          dry_run:
- *            type: boolean
- *            description: Set a batch job in dry_run mode to get some information on what will be done without applying any modifications.
- *            default: false
+ *        $ref: "#/components/schemas/AdminPostBatchesReq"
+ * x-codegen:
+ *   method: create
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -135,9 +107,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *            batch_job:
- *              $ref: "#/components/schemas/batch_job"
+ *           $ref: "#/components/schemas/AdminBatchJobRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -183,6 +153,41 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostBatchesReq
+ * type: object
+ * required:
+ *   - type
+ *   - context
+ * properties:
+ *   type:
+ *     type: string
+ *     description: The type of batch job to start.
+ *     example: product-export
+ *   context:
+ *     type: object
+ *     description: Additional infomration regarding the batch to be used for processing.
+ *     example:
+ *       shape:
+ *         prices:
+ *           - region: null
+ *             currency_code: "eur"
+ *         dynamicImageColumnCount: 4
+ *         dynamicOptionColumnCount: 2
+ *       list_config:
+ *         skip: 0
+ *         take: 50
+ *         order:
+ *           created_at: "DESC"
+ *         relations:
+ *           - variants
+ *           - variant.prices
+ *           - images
+ *   dry_run:
+ *     type: boolean
+ *     description: Set a batch job in dry_run mode to get some information on what will be done without applying any modifications.
+ *     default: false
+ */
 var AdminPostBatchesReq = /** @class */ (function () {
     function AdminPostBatchesReq() {
         this.dry_run = false;

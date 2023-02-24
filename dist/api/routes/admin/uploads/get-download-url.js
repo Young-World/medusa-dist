@@ -48,7 +48,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminPostUploadsDownloadUrlReq = void 0;
 var class_validator_1 = require("class-validator");
 /**
- * [post] /uploads/download-url
+ * @oas [post] /uploads/download-url
  * operationId: "PostUploadsDownloadUrl"
  * summary: "Get a File's Download URL"
  * description: "Creates a presigned download url for a file"
@@ -57,12 +57,7 @@ var class_validator_1 = require("class-validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - file_key
- *         properties:
- *           file_key:
- *             description: "key of the file to obtain the download link for"
- *             type: string
+ *         $ref: "#/components/schemas/AdminPostUploadsDownloadUrlReq"
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -96,10 +91,7 @@ var class_validator_1 = require("class-validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             download_url:
- *               type: string
- *               description: The Download URL of the file
+ *           $ref: "#/components/schemas/AdminUploadsDownloadUrlRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -129,6 +121,16 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostUploadsDownloadUrlReq
+ * type: object
+ * required:
+ *   - file_key
+ * properties:
+ *   file_key:
+ *     description: "key of the file to obtain the download link for"
+ *     type: string
+ */
 var AdminPostUploadsDownloadUrlReq = /** @class */ (function () {
     function AdminPostUploadsDownloadUrlReq() {
     }

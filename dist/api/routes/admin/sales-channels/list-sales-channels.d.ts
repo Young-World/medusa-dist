@@ -82,6 +82,9 @@ import { Request, Response } from "express";
  *   - (query) limit=20 {integer} Limit the number of sales channels returned.
  *   - (query) expand {string} (Comma separated) Which fields should be expanded in each sales channel of the result.
  *   - (query) fields {string} (Comma separated) Which fields should be included in each sales channel of the result.
+ * x-codegen:
+ *   method: list
+ *   queryParams: AdminGetSalesChannelsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -109,20 +112,7 @@ import { Request, Response } from "express";
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             sales_channels:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/sales_channel"
- *             count:
- *               type: integer
- *               description: The total number of items available
- *             offset:
- *               type: integer
- *               description: The number of items skipped before these items
- *             limit:
- *               type: integer
- *               description: The number of items per page
+ *           $ref: "#/components/schemas/AdminSalesChannelsListRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -138,7 +128,7 @@ import { Request, Response } from "express";
  */
 declare const _default: (req: Request, res: Response) => Promise<void>;
 export default _default;
-declare const AdminGetSalesChannelsParams_base: import("../../../../types/global").ClassConstructor<import("../../../../types/common").FindParams & import("../../../../types/common").FindPaginationParams>;
+declare const AdminGetSalesChannelsParams_base: import("../../../..").ClassConstructor<import("../../../../types/common").FindParams & import("../../../../types/common").FindPaginationParams>;
 export declare class AdminGetSalesChannelsParams extends AdminGetSalesChannelsParams_base {
     id?: string;
     q?: string;

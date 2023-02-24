@@ -67,8 +67,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         anyOf:
- *           - $ref: "#/components/schemas/address"
+ *         $ref: "#/components/schemas/StorePostCustomersCustomerAddressesAddressReq"
+ * x-codegen:
+ *   method: updateAddress
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -101,9 +102,7 @@ var validator_1 = require("../../../../utils/validator");
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            customer:
- *              $ref: "#/components/schemas/customer"
+ *          $ref: "#/components/schemas/StoreCustomersRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":
@@ -152,6 +151,11 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema StorePostCustomersCustomerAddressesAddressReq
+ * anyOf:
+ *   - $ref: "#/components/schemas/AddressFields"
+ */
 // eslint-disable-next-line max-len
 var StorePostCustomersCustomerAddressesAddressReq = /** @class */ (function (_super) {
     __extends(StorePostCustomersCustomerAddressesAddressReq, _super);

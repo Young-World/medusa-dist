@@ -116,9 +116,9 @@ var interfaces_1 = require("../../../interfaces");
 var batch_job_1 = require("../../../types/batch-job");
 var api_1 = require("../../../api");
 var get_query_config_1 = require("../../../utils/get-query-config");
-var index_1 = require("./index");
 var sales_channels_1 = __importDefault(require("../../../loaders/feature-flags/sales-channels"));
 var utils_1 = require("../../../utils");
+var columns_definition_1 = require("./types/columns-definition");
 var ProductExportStrategy = /** @class */ (function (_super) {
     __extends(ProductExportStrategy, _super);
     function ProductExportStrategy(_a) {
@@ -140,7 +140,8 @@ var ProductExportStrategy = /** @class */ (function (_super) {
          * column descriptors to this map.
          *
          */
-        _this.columnDescriptors = new Map(index_1.productExportSchemaDescriptors);
+        _this.columnsDefinition = __assign({}, columns_definition_1.productColumnsDefinition);
+        _this.salesChannelsColumnsDefinition = __assign({}, columns_definition_1.productSalesChannelColumnsDefinition);
         _this.NEWLINE_ = "\r\n";
         _this.DELIMITER_ = ";";
         _this.DEFAULT_LIMIT = 50;
@@ -279,19 +280,19 @@ var ProductExportStrategy = /** @class */ (function (_super) {
                         productCount = 0;
                         approximateFileSize = 0;
                         return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                                var batchJob, _a, writeStream, fileKey, promise, header, _b, _c, list_config, _d, filterable_fields, _e, productList, count, products;
+                                var productServiceTx, batchJobServiceTx, fileServiceTx, batchJob, _a, writeStream, fileKey, promise, header, _b, _c, list_config, _d, filterable_fields, _e, productList, count, products;
                                 var _this = this;
                                 var _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r;
                                 return __generator(this, function (_s) {
                                     switch (_s.label) {
-                                        case 0: return [4 /*yield*/, this.batchJobService_
-                                                .withTransaction(transactionManager)
-                                                .retrieve(batchJobId)];
+                                        case 0:
+                                            productServiceTx = this.productService_.withTransaction(transactionManager);
+                                            batchJobServiceTx = this.batchJobService_.withTransaction(transactionManager);
+                                            fileServiceTx = this.fileService_.withTransaction(transactionManager);
+                                            return [4 /*yield*/, batchJobServiceTx.retrieve(batchJobId)];
                                         case 1:
                                             batchJob = (_s.sent());
-                                            return [4 /*yield*/, this.fileService_
-                                                    .withTransaction(transactionManager)
-                                                    .getUploadStreamDescriptor({
+                                            return [4 /*yield*/, fileServiceTx.getUploadStreamDescriptor({
                                                     name: "exports/products/product-export-".concat(Date.now()),
                                                     ext: "csv",
                                                 })];
@@ -302,9 +303,7 @@ var ProductExportStrategy = /** @class */ (function (_super) {
                                             header = _s.sent();
                                             writeStream.write(header);
                                             approximateFileSize += Buffer.from(header).byteLength;
-                                            return [4 /*yield*/, this.batchJobService_
-                                                    .withTransaction(transactionManager)
-                                                    .update(batchJobId, {
+                                            return [4 /*yield*/, batchJobServiceTx.update(batchJobId, {
                                                     result: {
                                                         file_key: fileKey,
                                                         file_size: approximateFileSize,
@@ -317,9 +316,7 @@ var ProductExportStrategy = /** @class */ (function (_super) {
                                             offset = ((_k = (_j = (_h = batchJob.context) === null || _h === void 0 ? void 0 : _h.list_config) === null || _j === void 0 ? void 0 : _j.skip) !== null && _k !== void 0 ? _k : 0) + advancementCount;
                                             limit = (_o = (_m = (_l = batchJob.context) === null || _l === void 0 ? void 0 : _l.list_config) === null || _m === void 0 ? void 0 : _m.take) !== null && _o !== void 0 ? _o : limit;
                                             _b = batchJob.context, _c = _b.list_config, list_config = _c === void 0 ? {} : _c, _d = _b.filterable_fields, filterable_fields = _d === void 0 ? {} : _d;
-                                            return [4 /*yield*/, this.productService_
-                                                    .withTransaction(transactionManager)
-                                                    .listAndCount(filterable_fields, __assign(__assign({}, list_config), { skip: offset, take: Math.min((_p = batchJob.context.batch_size) !== null && _p !== void 0 ? _p : Infinity, limit) }))];
+                                            return [4 /*yield*/, productServiceTx.listAndCount(filterable_fields, __assign(__assign({}, list_config), { skip: offset, take: Math.min((_p = batchJob.context.batch_size) !== null && _p !== void 0 ? _p : Infinity, limit) }))];
                                         case 5:
                                             _e = __read.apply(void 0, [_s.sent(), 2]), productList = _e[0], count = _e[1];
                                             productCount = (_r = (_q = batchJob.context) === null || _q === void 0 ? void 0 : _q.batch_size) !== null && _r !== void 0 ? _r : count;
@@ -328,9 +325,7 @@ var ProductExportStrategy = /** @class */ (function (_super) {
                                         case 6:
                                             if (!(offset < productCount)) return [3 /*break*/, 12];
                                             if (!!(products === null || products === void 0 ? void 0 : products.length)) return [3 /*break*/, 8];
-                                            return [4 /*yield*/, this.productService_
-                                                    .withTransaction(transactionManager)
-                                                    .list(filterable_fields, __assign(__assign({}, list_config), { skip: offset, take: Math.min(productCount - offset, limit) }))];
+                                            return [4 /*yield*/, productServiceTx.list(filterable_fields, __assign(__assign({}, list_config), { skip: offset, take: Math.min(productCount - offset, limit) }))];
                                         case 7:
                                             products = _s.sent();
                                             _s.label = 8;
@@ -345,9 +340,7 @@ var ProductExportStrategy = /** @class */ (function (_super) {
                                             advancementCount += products.length;
                                             offset += products.length;
                                             products = [];
-                                            return [4 /*yield*/, this.batchJobService_
-                                                    .withTransaction(transactionManager)
-                                                    .update(batchJobId, {
+                                            return [4 /*yield*/, batchJobServiceTx.update(batchJobId, {
                                                     result: {
                                                         file_size: approximateFileSize,
                                                         count: productCount,
@@ -387,23 +380,37 @@ var ProductExportStrategy = /** @class */ (function (_super) {
     ProductExportStrategy.prototype.buildHeader = function (batchJob) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function () {
-            var _c, _d, prices, dynamicImageColumnCount, dynamicOptionColumnCount, dynamicSalesChannelsColumnCount;
+            var _c, _d, prices, dynamicImageColumnCount, dynamicOptionColumnCount, dynamicSalesChannelsColumnCount, exportedColumns;
             return __generator(this, function (_e) {
                 _c = (_b = (_a = batchJob === null || batchJob === void 0 ? void 0 : batchJob.context) === null || _a === void 0 ? void 0 : _a.shape) !== null && _b !== void 0 ? _b : {}, _d = _c.prices, prices = _d === void 0 ? [] : _d, dynamicImageColumnCount = _c.dynamicImageColumnCount, dynamicOptionColumnCount = _c.dynamicOptionColumnCount, dynamicSalesChannelsColumnCount = _c.dynamicSalesChannelsColumnCount;
                 this.appendMoneyAmountDescriptors(prices);
                 this.appendOptionsDescriptors(dynamicOptionColumnCount);
                 this.appendImagesDescriptors(dynamicImageColumnCount);
                 this.appendSalesChannelsDescriptors(dynamicSalesChannelsColumnCount);
-                return [2 /*return*/, (__spreadArray([], __read(this.columnDescriptors.keys()), false).join(this.DELIMITER_) + this.NEWLINE_)];
+                exportedColumns = Object.values(this.columnsDefinition)
+                    .map(function (descriptor) {
+                    return descriptor.exportDescriptor &&
+                        !("isDynamic" in descriptor.exportDescriptor) &&
+                        descriptor.name;
+                })
+                    .filter(function (name) { return !!name; });
+                return [2 /*return*/, exportedColumns.join(this.DELIMITER_) + this.NEWLINE_];
             });
         });
     };
     ProductExportStrategy.prototype.appendImagesDescriptors = function (maxImagesCount) {
+        var columnNameBuilder = this.columnsDefinition["Image Url"]
+            .exportDescriptor
+            .buildDynamicColumnName;
         var _loop_1 = function (i) {
-            this_1.columnDescriptors.set("Image ".concat(i + 1, " Url"), {
-                accessor: function (product) { var _a, _b; return (_b = (_a = product === null || product === void 0 ? void 0 : product.images[i]) === null || _a === void 0 ? void 0 : _a.url) !== null && _b !== void 0 ? _b : ""; },
-                entityName: "product",
-            });
+            var columnName = columnNameBuilder(i);
+            this_1.columnsDefinition[columnName] = {
+                name: columnName,
+                exportDescriptor: {
+                    accessor: function (product) { var _a, _b; return (_b = (_a = product === null || product === void 0 ? void 0 : product.images[i]) === null || _a === void 0 ? void 0 : _a.url) !== null && _b !== void 0 ? _b : ""; },
+                    entityName: "product",
+                },
+            };
         };
         var this_1 = this;
         for (var i = 0; i < maxImagesCount; ++i) {
@@ -411,15 +418,37 @@ var ProductExportStrategy = /** @class */ (function (_super) {
         }
     };
     ProductExportStrategy.prototype.appendSalesChannelsDescriptors = function (maxScCount) {
+        var columnNameIdBuilder = this.salesChannelsColumnsDefinition["Sales Channel Id"].exportDescriptor
+            .buildDynamicColumnName;
+        var columnNameNameBuilder = this.salesChannelsColumnsDefinition["Sales Channel Name"].exportDescriptor
+            .buildDynamicColumnName;
+        var columnNameDescriptionBuilder = this.salesChannelsColumnsDefinition["Sales Channel Description"].exportDescriptor
+            .buildDynamicColumnName;
         var _loop_2 = function (i) {
-            this_2.columnDescriptors.set("Sales channel ".concat(i + 1, " Name"), {
-                accessor: function (product) { var _a, _b; return (_b = (_a = product === null || product === void 0 ? void 0 : product.sales_channels[i]) === null || _a === void 0 ? void 0 : _a.name) !== null && _b !== void 0 ? _b : ""; },
-                entityName: "product",
-            });
-            this_2.columnDescriptors.set("Sales channel ".concat(i + 1, " Description"), {
-                accessor: function (product) { var _a, _b; return (_b = (_a = product === null || product === void 0 ? void 0 : product.sales_channels[i]) === null || _a === void 0 ? void 0 : _a.description) !== null && _b !== void 0 ? _b : ""; },
-                entityName: "product",
-            });
+            var columnNameId = columnNameIdBuilder(i);
+            this_2.columnsDefinition[columnNameId] = {
+                name: columnNameId,
+                exportDescriptor: {
+                    accessor: function (product) { var _a, _b; return (_b = (_a = product === null || product === void 0 ? void 0 : product.sales_channels[i]) === null || _a === void 0 ? void 0 : _a.name) !== null && _b !== void 0 ? _b : ""; },
+                    entityName: "product",
+                },
+            };
+            var columnNameName = columnNameNameBuilder(i);
+            this_2.columnsDefinition[columnNameName] = {
+                name: columnNameName,
+                exportDescriptor: {
+                    accessor: function (product) { var _a, _b; return (_b = (_a = product === null || product === void 0 ? void 0 : product.sales_channels[i]) === null || _a === void 0 ? void 0 : _a.name) !== null && _b !== void 0 ? _b : ""; },
+                    entityName: "product",
+                },
+            };
+            var columnNameDescription = columnNameDescriptionBuilder(i);
+            this_2.columnsDefinition[columnNameDescription] = {
+                name: columnNameDescription,
+                exportDescriptor: {
+                    accessor: function (product) { var _a, _b; return (_b = (_a = product === null || product === void 0 ? void 0 : product.sales_channels[i]) === null || _a === void 0 ? void 0 : _a.description) !== null && _b !== void 0 ? _b : ""; },
+                    entityName: "product",
+                },
+            };
         };
         var this_2 = this;
         for (var i = 0; i < maxScCount; ++i) {
@@ -428,15 +457,28 @@ var ProductExportStrategy = /** @class */ (function (_super) {
     };
     ProductExportStrategy.prototype.appendOptionsDescriptors = function (maxOptionsCount) {
         var _loop_3 = function (i) {
-            this_3.columnDescriptors
-                .set("Option ".concat(i + 1, " Name"), {
-                accessor: function (productOption) { var _a, _b; return (_b = (_a = productOption === null || productOption === void 0 ? void 0 : productOption.options[i]) === null || _a === void 0 ? void 0 : _a.title) !== null && _b !== void 0 ? _b : ""; },
-                entityName: "product",
-            })
-                .set("Option ".concat(i + 1, " Value"), {
-                accessor: function (variant) { var _a, _b; return (_b = (_a = variant === null || variant === void 0 ? void 0 : variant.options[i]) === null || _a === void 0 ? void 0 : _a.value) !== null && _b !== void 0 ? _b : ""; },
-                entityName: "variant",
-            });
+            var columnNameNameBuilder = this_3.columnsDefinition["Option Name"]
+                .exportDescriptor
+                .buildDynamicColumnName;
+            var columnNameName = columnNameNameBuilder(i);
+            this_3.columnsDefinition[columnNameName] = {
+                name: columnNameName,
+                exportDescriptor: {
+                    accessor: function (productOption) { var _a, _b; return (_b = (_a = productOption === null || productOption === void 0 ? void 0 : productOption.options[i]) === null || _a === void 0 ? void 0 : _a.title) !== null && _b !== void 0 ? _b : ""; },
+                    entityName: "product",
+                },
+            };
+            var columnNameValueBuilder = this_3.columnsDefinition["Option Value"]
+                .exportDescriptor
+                .buildDynamicColumnName;
+            var columnNameNameValue = columnNameValueBuilder(i);
+            this_3.columnsDefinition[columnNameNameValue] = {
+                name: columnNameNameValue,
+                exportDescriptor: {
+                    accessor: function (variant) { var _a, _b; return (_b = (_a = variant === null || variant === void 0 ? void 0 : variant.options[i]) === null || _a === void 0 ? void 0 : _a.value) !== null && _b !== void 0 ? _b : ""; },
+                    entityName: "variant",
+                },
+            };
         };
         var this_3 = this;
         for (var i = 0; i < maxOptionsCount; ++i) {
@@ -445,42 +487,53 @@ var ProductExportStrategy = /** @class */ (function (_super) {
     };
     ProductExportStrategy.prototype.appendMoneyAmountDescriptors = function (pricesData) {
         var e_1, _a;
-        var _b, _c, _d;
+        var columnNameBuilder = this.columnsDefinition["Price Currency"]
+            .exportDescriptor
+            .buildDynamicColumnName;
         var _loop_4 = function (priceData) {
             if (priceData.currency_code) {
-                this_4.columnDescriptors.set("Price ".concat((_b = priceData.currency_code) === null || _b === void 0 ? void 0 : _b.toUpperCase()), {
-                    accessor: function (variant) {
-                        var _a, _b;
-                        var price = variant.prices.find(function (variantPrice) {
-                            return (variantPrice.currency_code &&
-                                priceData.currency_code &&
-                                variantPrice.currency_code.toLowerCase() ===
-                                    priceData.currency_code.toLowerCase());
-                        });
-                        return (_b = (_a = price === null || price === void 0 ? void 0 : price.amount) === null || _a === void 0 ? void 0 : _a.toString()) !== null && _b !== void 0 ? _b : "";
+                var columnName = columnNameBuilder(priceData);
+                this_4.columnsDefinition[columnName] = {
+                    name: columnName,
+                    exportDescriptor: {
+                        accessor: function (variant) {
+                            var _a, _b;
+                            var price = variant.prices.find(function (variantPrice) {
+                                return (variantPrice.currency_code &&
+                                    priceData.currency_code &&
+                                    variantPrice.currency_code.toLowerCase() ===
+                                        priceData.currency_code.toLowerCase());
+                            });
+                            return (_b = (_a = price === null || price === void 0 ? void 0 : price.amount) === null || _a === void 0 ? void 0 : _a.toString()) !== null && _b !== void 0 ? _b : "";
+                        },
+                        entityName: "variant",
                     },
-                    entityName: "variant",
-                });
+                };
             }
             if (priceData.region) {
-                this_4.columnDescriptors.set("Price ".concat(priceData.region.name, " ").concat(((_c = priceData.region) === null || _c === void 0 ? void 0 : _c.currency_code)
-                    ? "[" + ((_d = priceData.region) === null || _d === void 0 ? void 0 : _d.currency_code.toUpperCase()) + "]"
-                    : ""), {
-                    accessor: function (variant) {
-                        var _a, _b;
-                        var price = variant.prices.find(function (variantPrice) {
-                            var _a, _b, _c, _d, _e, _f, _g, _h;
-                            return (variantPrice.region &&
-                                priceData.region &&
-                                ((_b = (_a = variantPrice.region) === null || _a === void 0 ? void 0 : _a.name) === null || _b === void 0 ? void 0 : _b.toLowerCase()) ===
-                                    ((_d = (_c = priceData.region) === null || _c === void 0 ? void 0 : _c.name) === null || _d === void 0 ? void 0 : _d.toLowerCase()) &&
-                                ((_f = (_e = variantPrice.region) === null || _e === void 0 ? void 0 : _e.id) === null || _f === void 0 ? void 0 : _f.toLowerCase()) ===
-                                    ((_h = (_g = priceData.region) === null || _g === void 0 ? void 0 : _g.id) === null || _h === void 0 ? void 0 : _h.toLowerCase()));
-                        });
-                        return (_b = (_a = price === null || price === void 0 ? void 0 : price.amount) === null || _a === void 0 ? void 0 : _a.toString()) !== null && _b !== void 0 ? _b : "";
+                var columnNameBuilder_1 = this_4.columnsDefinition["Price Region"]
+                    .exportDescriptor
+                    .buildDynamicColumnName;
+                var columnName = columnNameBuilder_1(priceData);
+                this_4.columnsDefinition[columnName] = {
+                    name: columnName,
+                    exportDescriptor: {
+                        accessor: function (variant) {
+                            var _a, _b;
+                            var price = variant.prices.find(function (variantPrice) {
+                                var _a, _b, _c, _d, _e, _f, _g, _h;
+                                return (variantPrice.region &&
+                                    priceData.region &&
+                                    ((_b = (_a = variantPrice.region) === null || _a === void 0 ? void 0 : _a.name) === null || _b === void 0 ? void 0 : _b.toLowerCase()) ===
+                                        ((_d = (_c = priceData.region) === null || _c === void 0 ? void 0 : _c.name) === null || _d === void 0 ? void 0 : _d.toLowerCase()) &&
+                                    ((_f = (_e = variantPrice.region) === null || _e === void 0 ? void 0 : _e.id) === null || _f === void 0 ? void 0 : _f.toLowerCase()) ===
+                                        ((_h = (_g = priceData.region) === null || _g === void 0 ? void 0 : _g.id) === null || _h === void 0 ? void 0 : _h.toLowerCase()));
+                            });
+                            return (_b = (_a = price === null || price === void 0 ? void 0 : price.amount) === null || _a === void 0 ? void 0 : _a.toString()) !== null && _b !== void 0 ? _b : "";
+                        },
+                        entityName: "variant",
                     },
-                    entityName: "variant",
-                });
+                };
             }
         };
         var this_4 = this;
@@ -506,8 +559,11 @@ var ProductExportStrategy = /** @class */ (function (_super) {
                 var variant = _d.value;
                 var variantLineData = [];
                 try {
-                    for (var _e = (e_3 = void 0, __values(this.columnDescriptors.entries())), _f = _e.next(); !_f.done; _f = _e.next()) {
-                        var _g = __read(_f.value, 2), columnSchema = _g[1];
+                    for (var _e = (e_3 = void 0, __values(Object.entries(this.columnsDefinition))), _f = _e.next(); !_f.done; _f = _e.next()) {
+                        var _g = __read(_f.value, 2), columnSchema = _g[1].exportDescriptor;
+                        if (!columnSchema || "isDynamic" in columnSchema) {
+                            continue;
+                        }
                         if (columnSchema.entityName === "product") {
                             var formattedContent = (0, utils_1.csvCellContentFormatter)(columnSchema.accessor(product));
                             variantLineData.push(formattedContent);

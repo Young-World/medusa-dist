@@ -5,7 +5,13 @@ declare type Price = Partial<Omit<MoneyAmount, "created_at" | "updated_at" | "de
     amount: number;
 };
 export declare class MoneyAmountRepository extends Repository<MoneyAmount> {
+    /**
+     * Will be removed in a future release.
+     * Use `deleteVariantPricesNotIn` instead.
+     * @deprecated
+     */
     findVariantPricesNotIn(variantId: string, prices: Price[]): Promise<MoneyAmount[]>;
+    deleteVariantPricesNotIn(variantId: string, prices: Price[]): Promise<void>;
     upsertVariantCurrencyPrice(variantId: string, price: Price): Promise<MoneyAmount>;
     addPriceListPrices(priceListId: string, prices: PriceListPriceCreateInput[], overrideExisting?: boolean): Promise<MoneyAmount[]>;
     deletePriceListPrices(priceListId: string, moneyAmountIds: string[]): Promise<void>;

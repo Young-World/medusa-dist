@@ -42,6 +42,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * summary: "Customer Log out"
  * description: "Destroys a Customer's authenticated session."
  * x-authenticated: true
+ * x-codegen:
+ *   method: deleteSession
  * x-codeSamples:
  *   - lang: Shell
  *     label: cURL
@@ -70,7 +72,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
-        req.session.jwt = {};
+        req.session.jwt_store = {};
         res.json({});
         return [2 /*return*/];
     });

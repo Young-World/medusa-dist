@@ -7,22 +7,9 @@
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - email
- *           - password
- *           - token
- *         properties:
- *           email:
- *             description: "The email of the customer."
- *             type: string
- *             format: email
- *           password:
- *             description: "The Customer's password."
- *             type: string
- *             format: password
- *           token:
- *             description: "The reset password token"
- *             type: string
+ *         $ref: "#/components/schemas/StorePostCustomersResetPasswordReq"
+ * x-codegen:
+ *   method: resetPassword
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -55,9 +42,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             customer:
- *               $ref: "#/components/schemas/customer"
+ *           $ref: "#/components/schemas/StoreCustomersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -73,6 +58,26 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema StorePostCustomersResetPasswordReq
+ * type: object
+ * required:
+ *   - email
+ *   - password
+ *   - token
+ * properties:
+ *   email:
+ *     description: "The email of the customer."
+ *     type: string
+ *     format: email
+ *   password:
+ *     description: "The Customer's password."
+ *     type: string
+ *     format: password
+ *   token:
+ *     description: "The reset password token"
+ *     type: string
+ */
 export declare class StorePostCustomersResetPasswordReq {
     email: string;
     token: string;

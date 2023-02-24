@@ -71,12 +71,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DiscountConditionRepository = exports.DiscountConditionJoinTableForeignKey = void 0;
 var typeorm_1 = require("typeorm");
 var models_1 = require("../models");
-var discount_condition_1 = require("../models/discount-condition");
-var discount_condition_customer_group_1 = require("../models/discount-condition-customer-group");
-var discount_condition_product_1 = require("../models/discount-condition-product");
-var discount_condition_product_collection_1 = require("../models/discount-condition-product-collection");
-var discount_condition_product_tag_1 = require("../models/discount-condition-product-tag");
-var discount_condition_product_type_1 = require("../models/discount-condition-product-type");
+var utils_1 = require("../utils");
 var DiscountConditionJoinTableForeignKey;
 (function (DiscountConditionJoinTableForeignKey) {
     DiscountConditionJoinTableForeignKey["PRODUCT_ID"] = "product_id";
@@ -103,7 +98,7 @@ var DiscountConditionRepository = /** @class */ (function (_super) {
         });
     };
     DiscountConditionRepository.prototype.getJoinTableResourceIdentifiers = function (type) {
-        var conditionTable = discount_condition_product_1.DiscountConditionProduct;
+        var conditionTable = models_1.DiscountConditionProduct;
         var joinTable = "product";
         var joinTableForeignKey = DiscountConditionJoinTableForeignKey.PRODUCT_ID;
         var joinTableKey = "id";
@@ -111,45 +106,45 @@ var DiscountConditionRepository = /** @class */ (function (_super) {
         // (e.g `type_id` for product types and `id` for products)
         var resourceKey;
         switch (type) {
-            case discount_condition_1.DiscountConditionType.PRODUCTS: {
+            case models_1.DiscountConditionType.PRODUCTS: {
                 resourceKey = "id";
                 joinTableForeignKey = DiscountConditionJoinTableForeignKey.PRODUCT_ID;
                 joinTable = "product";
-                conditionTable = discount_condition_product_1.DiscountConditionProduct;
+                conditionTable = models_1.DiscountConditionProduct;
                 break;
             }
-            case discount_condition_1.DiscountConditionType.PRODUCT_TYPES: {
+            case models_1.DiscountConditionType.PRODUCT_TYPES: {
                 resourceKey = "type_id";
                 joinTableForeignKey =
                     DiscountConditionJoinTableForeignKey.PRODUCT_TYPE_ID;
                 joinTable = "product";
-                conditionTable = discount_condition_product_type_1.DiscountConditionProductType;
+                conditionTable = models_1.DiscountConditionProductType;
                 break;
             }
-            case discount_condition_1.DiscountConditionType.PRODUCT_COLLECTIONS: {
+            case models_1.DiscountConditionType.PRODUCT_COLLECTIONS: {
                 resourceKey = "collection_id";
                 joinTableForeignKey =
                     DiscountConditionJoinTableForeignKey.PRODUCT_COLLECTION_ID;
                 joinTable = "product";
-                conditionTable = discount_condition_product_collection_1.DiscountConditionProductCollection;
+                conditionTable = models_1.DiscountConditionProductCollection;
                 break;
             }
-            case discount_condition_1.DiscountConditionType.PRODUCT_TAGS: {
+            case models_1.DiscountConditionType.PRODUCT_TAGS: {
                 joinTableKey = "product_id";
                 resourceKey = "product_tag_id";
                 joinTableForeignKey =
                     DiscountConditionJoinTableForeignKey.PRODUCT_TAG_ID;
                 joinTable = "product_tags";
-                conditionTable = discount_condition_product_tag_1.DiscountConditionProductTag;
+                conditionTable = models_1.DiscountConditionProductTag;
                 break;
             }
-            case discount_condition_1.DiscountConditionType.CUSTOMER_GROUPS: {
+            case models_1.DiscountConditionType.CUSTOMER_GROUPS: {
                 joinTableKey = "customer_id";
                 resourceKey = "customer_group_id";
                 joinTable = "customer_group_customers";
                 joinTableForeignKey =
                     DiscountConditionJoinTableForeignKey.CUSTOMER_GROUP_ID;
-                conditionTable = discount_condition_customer_group_1.DiscountConditionCustomerGroup;
+                conditionTable = models_1.DiscountConditionCustomerGroup;
                 break;
             }
             default:
@@ -165,7 +160,7 @@ var DiscountConditionRepository = /** @class */ (function (_super) {
     };
     DiscountConditionRepository.prototype.removeConditionResources = function (id, type, resourceIds) {
         return __awaiter(this, void 0, void 0, function () {
-            var _a, conditionTable, joinTableForeignKey;
+            var _a, conditionTable, joinTableForeignKey, idsToDelete;
             var _b;
             return __generator(this, function (_c) {
                 switch (_c.label) {
@@ -174,10 +169,13 @@ var DiscountConditionRepository = /** @class */ (function (_super) {
                         if (!conditionTable || !joinTableForeignKey) {
                             return [2 /*return*/, Promise.resolve()];
                         }
+                        idsToDelete = resourceIds.map(function (rId) {
+                            return (0, utils_1.isString)(rId) ? rId : rId.id;
+                        });
                         return [4 /*yield*/, this.createQueryBuilder()
                                 .delete()
                                 .from(conditionTable)
-                                .where((_b = { condition_id: id }, _b[joinTableForeignKey] = (0, typeorm_1.In)(resourceIds), _b))
+                                .where((_b = { condition_id: id }, _b[joinTableForeignKey] = (0, typeorm_1.In)(idsToDelete), _b))
                                 .execute()];
                     case 1: return [2 /*return*/, _c.sent()];
                 }
@@ -187,7 +185,7 @@ var DiscountConditionRepository = /** @class */ (function (_super) {
     DiscountConditionRepository.prototype.addConditionResources = function (conditionId, resourceIds, type, overrideExisting) {
         if (overrideExisting === void 0) { overrideExisting = false; }
         return __awaiter(this, void 0, void 0, function () {
-            var toInsert, _a, conditionTable, joinTableForeignKey, insertResult;
+            var toInsert, _a, conditionTable, joinTableForeignKey, idsToInsert, insertResult;
             var _b;
             return __generator(this, function (_c) {
                 switch (_c.label) {
@@ -197,7 +195,10 @@ var DiscountConditionRepository = /** @class */ (function (_super) {
                         if (!conditionTable || !joinTableForeignKey) {
                             return [2 /*return*/, Promise.resolve([])];
                         }
-                        toInsert = resourceIds.map(function (rId) {
+                        idsToInsert = resourceIds.map(function (rId) {
+                            return (0, utils_1.isString)(rId) ? rId : rId.id;
+                        });
+                        toInsert = idsToInsert.map(function (rId) {
                             var _a;
                             return (_a = {
                                     condition_id: conditionId
@@ -220,7 +221,7 @@ var DiscountConditionRepository = /** @class */ (function (_super) {
                                 .where((_b = {
                                     condition_id: conditionId
                                 },
-                                _b[joinTableForeignKey] = (0, typeorm_1.Not)((0, typeorm_1.In)(resourceIds)),
+                                _b[joinTableForeignKey] = (0, typeorm_1.Not)((0, typeorm_1.In)(idsToInsert)),
                                 _b))
                                 .execute()];
                     case 2:
@@ -288,6 +289,9 @@ var DiscountConditionRepository = /** @class */ (function (_super) {
                     case 3:
                         if (!!discountConditions_1_1.done) return [3 /*break*/, 6];
                         condition = discountConditions_1_1.value;
+                        if (condition.type === models_1.DiscountConditionType.CUSTOMER_GROUPS) {
+                            return [3 /*break*/, 5];
+                        }
                         return [4 /*yield*/, this.queryConditionTable({
                                 type: condition.type,
                                 condId: condition.id,
@@ -295,11 +299,11 @@ var DiscountConditionRepository = /** @class */ (function (_super) {
                             })];
                     case 4:
                         numConditions = _b.sent();
-                        if (condition.operator === discount_condition_1.DiscountConditionOperator.IN &&
+                        if (condition.operator === models_1.DiscountConditionOperator.IN &&
                             numConditions === 0) {
                             return [2 /*return*/, false];
                         }
-                        if (condition.operator === discount_condition_1.DiscountConditionOperator.NOT_IN &&
+                        if (condition.operator === models_1.DiscountConditionOperator.NOT_IN &&
                             numConditions > 0) {
                             return [2 /*return*/, false];
                         }
@@ -335,7 +339,7 @@ var DiscountConditionRepository = /** @class */ (function (_super) {
                             discountRuleId: discountRuleId,
                         })
                             .andWhere("discon.type = :type", {
-                            type: discount_condition_1.DiscountConditionType.CUSTOMER_GROUPS,
+                            type: models_1.DiscountConditionType.CUSTOMER_GROUPS,
                         })
                             .getMany()
                         // in case of no discount conditions, we assume that the discount
@@ -363,11 +367,11 @@ var DiscountConditionRepository = /** @class */ (function (_super) {
                             })];
                     case 4:
                         numConditions = _b.sent();
-                        if (condition.operator === discount_condition_1.DiscountConditionOperator.IN &&
+                        if (condition.operator === models_1.DiscountConditionOperator.IN &&
                             numConditions === 0) {
                             return [2 /*return*/, false];
                         }
-                        if (condition.operator === discount_condition_1.DiscountConditionOperator.NOT_IN &&
+                        if (condition.operator === models_1.DiscountConditionOperator.NOT_IN &&
                             numConditions > 0) {
                             return [2 /*return*/, false];
                         }
@@ -392,7 +396,7 @@ var DiscountConditionRepository = /** @class */ (function (_super) {
         });
     };
     DiscountConditionRepository = __decorate([
-        (0, typeorm_1.EntityRepository)(discount_condition_1.DiscountCondition)
+        (0, typeorm_1.EntityRepository)(models_1.DiscountCondition)
     ], DiscountConditionRepository);
     return DiscountConditionRepository;
 }(typeorm_1.Repository));

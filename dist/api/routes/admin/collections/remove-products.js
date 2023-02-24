@@ -59,15 +59,9 @@ var class_validator_1 = require("class-validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - product_ids
- *         properties:
- *           product_ids:
- *             description: "An array of Product IDs to remove from the Product Collection."
- *             type: array
- *             items:
- *               description: "The ID of a Product to add to the Product Collection."
- *               type: string
+ *         $ref: "#/components/schemas/AdminDeleteProductsFromCollectionReq"
+ * x-codegen:
+ *   method: removeProducts
  * x-codeSamples:
  *   - lang: Shell
  *     label: cURL
@@ -91,20 +85,7 @@ var class_validator_1 = require("class-validator");
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            id:
- *              type: string
- *              description: "The ID of the collection"
- *            object:
- *              type: string
- *              description: "The type of object the removal was executed on"
- *              default: product-collection
- *            removed_products:
- *              description: "The IDs of the products removed from the collection"
- *              type: array
- *              items:
- *                description: "The ID of a Product to add to the Product Collection."
- *                type: string
+ *          $ref: "#/components/schemas/AdminDeleteProductsFromCollectionRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":
@@ -148,6 +129,19 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminDeleteProductsFromCollectionReq
+ * type: object
+ * required:
+ *   - product_ids
+ * properties:
+ *   product_ids:
+ *     description: "An array of Product IDs to remove from the Product Collection."
+ *     type: array
+ *     items:
+ *       description: "The ID of a Product to add to the Product Collection."
+ *       type: string
+ */
 var AdminDeleteProductsFromCollectionReq = /** @class */ (function () {
     function AdminDeleteProductsFromCollectionReq() {
     }

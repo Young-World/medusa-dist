@@ -66,7 +66,7 @@ var class_validator_1 = require("class-validator");
 var class_transformer_1 = require("class-transformer");
 var lodash_1 = require("lodash");
 var validator_1 = require("../../../../utils/validator");
-var utils_1 = require("../../../../utils");
+var medusa_core_utils_1 = require("medusa-core-utils");
 /**
  * @oas [get] /gift-cards
  * operationId: "GetGiftCards"
@@ -77,6 +77,9 @@ var utils_1 = require("../../../../utils");
  *   - (query) offset=0 {number} The number of items to skip before the results.
  *   - (query) limit=50 {number} Limit the number of items returned.
  *   - (query) q {string} a search term to search by code or display ID
+ * x-codegen:
+ *   method: list
+ *   queryParams: AdminGetGiftCardsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -104,20 +107,7 @@ var utils_1 = require("../../../../utils");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             gift_cards:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/gift_card"
- *             count:
- *               type: integer
- *               description: The total number of items available
- *             offset:
- *               type: integer
- *               description: The number of items skipped before these items
- *             limit:
- *               type: integer
- *               description: The number of items per page
+ *           $ref: "#/components/schemas/AdminGiftCardsListRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -139,7 +129,7 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
             case 1:
                 validated = _b.sent();
                 giftCardService = req.scope.resolve("giftCardService");
-                return [4 /*yield*/, giftCardService.listAndCount((0, lodash_1.pickBy)(req.filterableFields, function (val) { return (0, utils_1.isDefined)(val); }), req.listConfig)];
+                return [4 /*yield*/, giftCardService.listAndCount((0, lodash_1.pickBy)(req.filterableFields, function (val) { return (0, medusa_core_utils_1.isDefined)(val); }), req.listConfig)];
             case 2:
                 _a = __read.apply(void 0, [_b.sent(), 2]), giftCards = _a[0], count = _a[1];
                 res.status(200).json({

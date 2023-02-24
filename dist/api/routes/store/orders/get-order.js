@@ -1,4 +1,19 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -36,7 +51,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var index_1 = require("./index");
+exports.StoreGetOrderParams = void 0;
+var common_1 = require("../../../../types/common");
+var clean_response_data_1 = require("../../../../utils/clean-response-data");
 /**
  * @oas [get] /orders/{id}
  * operationId: GetOrdersOrder
@@ -44,6 +61,10 @@ var index_1 = require("./index");
  * description: "Retrieves an Order"
  * parameters:
  *   - (path) id=* {string} The id of the Order.
+ *   - (query) fields {string} (Comma separated) Which fields should be included in the result.
+ *   - (query) expand {string} (Comma separated) Which fields should be expanded in the result.
+ * x-codegen:
+ *   method: retrieve
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -66,9 +87,7 @@ var index_1 = require("./index");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/order"
+ *           $ref: "#/components/schemas/StoreOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":
@@ -87,15 +106,22 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
             case 0:
                 id = req.params.id;
                 orderService = req.scope.resolve("orderService");
-                return [4 /*yield*/, orderService.retrieve(id, {
-                        select: index_1.defaultStoreOrdersFields,
-                        relations: index_1.defaultStoreOrdersRelations,
-                    })];
+                return [4 /*yield*/, orderService.retrieveWithTotals(id, req.retrieveConfig)];
             case 1:
                 order = _a.sent();
-                res.json({ order: order });
+                res.json({
+                    order: (0, clean_response_data_1.cleanResponseData)(order, req.allowedProperties || []),
+                });
                 return [2 /*return*/];
         }
     });
 }); });
+var StoreGetOrderParams = /** @class */ (function (_super) {
+    __extends(StoreGetOrderParams, _super);
+    function StoreGetOrderParams() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return StoreGetOrderParams;
+}(common_1.FindParams));
+exports.StoreGetOrderParams = StoreGetOrderParams;
 //# sourceMappingURL=get-order.js.map

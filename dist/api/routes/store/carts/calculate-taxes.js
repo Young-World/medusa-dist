@@ -44,6 +44,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *   this may involve making 3rd party API calls to a Tax Provider service."
  * parameters:
  *   - (path) id=* {String} The Cart ID.
+ * x-codegen:
+ *   method: calculateTaxes
  * x-codeSamples:
  *   - lang: Shell
  *     label: cURL
@@ -57,9 +59,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             cart:
- *               $ref: "#/components/schemas/cart"
+ *           $ref: "#/components/schemas/StoreCartsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":
@@ -116,10 +116,10 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                     case "finished": return [3 /*break*/, 8];
                 }
                 return [3 /*break*/, 9];
-            case 6: return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
-                    var _a, key, error;
-                    return __generator(this, function (_b) {
-                        switch (_b.label) {
+            case 6: return [4 /*yield*/, manager
+                    .transaction("SERIALIZABLE", function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
                             case 0: return [4 /*yield*/, idempotencyKeyService
                                     .withTransaction(transactionManager)
                                     .workStage(idempotencyKey.idempotency_key, function (manager) { return __awaiter(void 0, void 0, void 0, function () {
@@ -139,18 +139,15 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                     });
                                 }); })];
                             case 1:
-                                _a = _b.sent(), key = _a.key, error = _a.error;
-                                if (error) {
-                                    inProgress = false;
-                                    err = error;
-                                }
-                                else {
-                                    idempotencyKey = key;
-                                }
+                                idempotencyKey = _a.sent();
                                 return [2 /*return*/];
                         }
                     });
-                }); })];
+                }); })
+                    .catch(function (e) {
+                    inProgress = false;
+                    err = e;
+                })];
             case 7:
                 _b.sent();
                 return [3 /*break*/, 11];

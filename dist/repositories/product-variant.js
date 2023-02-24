@@ -14,6 +14,17 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -230,7 +241,7 @@ var ProductVariantRepository = /** @class */ (function (_super) {
             where: {},
         }; }
         return __awaiter(this, void 0, void 0, function () {
-            var count, entities, result, entitiesIds, toReturn, groupedRelations, entitiesIdsWithRelations, entitiesAndRelations, entitiesToReturn;
+            var count, entities, result, entitiesIds, options, toReturn, groupedRelations, entitiesIdsWithRelations, entitiesAndRelations, entitiesToReturn;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -258,10 +269,17 @@ var ProductVariantRepository = /** @class */ (function (_super) {
                             return [2 /*return*/, [[], count]];
                         }
                         if (!(relations.length === 0)) return [3 /*break*/, 6];
-                        return [4 /*yield*/, this.findByIds(entitiesIds, idsOrOptionsWithoutRelations)];
+                        options = __assign({}, idsOrOptionsWithoutRelations);
+                        // Since we are finding by the ids that have been retrieved above and those ids are already
+                        // applying skip/take. Remove those options to avoid getting no results
+                        if (typeof options === "object") {
+                            delete options.skip;
+                            delete options.take;
+                        }
+                        return [4 /*yield*/, this.findByIds(entitiesIds, options)];
                     case 5:
                         toReturn = _a.sent();
-                        return [2 /*return*/, [toReturn, toReturn.length]];
+                        return [2 /*return*/, [toReturn, count]];
                     case 6:
                         groupedRelations = this.getGroupedRelations(relations);
                         return [4 /*yield*/, this.queryProductVariantsWithIds(entitiesIds, groupedRelations, withDeleted)];
@@ -279,7 +297,7 @@ var ProductVariantRepository = /** @class */ (function (_super) {
         if (idsOrOptionsWithoutRelations === void 0) { idsOrOptionsWithoutRelations = {}; }
         if (withDeleted === void 0) { withDeleted = false; }
         return __awaiter(this, void 0, void 0, function () {
-            var entities, result, entitiesIds, groupedRelations, entitiesIdsWithRelations, entitiesAndRelations, entitiesToReturn;
+            var entities, result, entitiesIds, options, groupedRelations, entitiesIdsWithRelations, entitiesAndRelations, entitiesToReturn;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -305,7 +323,14 @@ var ProductVariantRepository = /** @class */ (function (_super) {
                             return [2 /*return*/, []];
                         }
                         if (!(relations.length === 0)) return [3 /*break*/, 6];
-                        return [4 /*yield*/, this.findByIds(entitiesIds, idsOrOptionsWithoutRelations)];
+                        options = __assign({}, idsOrOptionsWithoutRelations);
+                        // Since we are finding by the ids that have been retrieved above and those ids are already
+                        // applying skip/take. Remove those options to avoid getting no results
+                        if (typeof options === "object") {
+                            delete options.skip;
+                            delete options.take;
+                        }
+                        return [4 /*yield*/, this.findByIds(entitiesIds, options)];
                     case 5: return [2 /*return*/, _a.sent()];
                     case 6:
                         groupedRelations = this.getGroupedRelations(relations);

@@ -84,14 +84,14 @@ var __values = (this && this.__values) || function(o) {
     throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var models_1 = require("../models");
 var medusa_core_utils_1 = require("medusa-core-utils");
 var interfaces_1 = require("../interfaces");
+var models_1 = require("../models");
 var utils_1 = require("../utils");
 var ClaimService = /** @class */ (function (_super) {
     __extends(ClaimService, _super);
     function ClaimService(_a) {
-        var manager = _a.manager, addressRepository = _a.addressRepository, claimRepository = _a.claimRepository, shippingMethodRepository = _a.shippingMethodRepository, lineItemRepository = _a.lineItemRepository, claimItemService = _a.claimItemService, eventBusService = _a.eventBusService, fulfillmentProviderService = _a.fulfillmentProviderService, fulfillmentService = _a.fulfillmentService, inventoryService = _a.inventoryService, lineItemService = _a.lineItemService, paymentProviderService = _a.paymentProviderService, regionService = _a.regionService, returnService = _a.returnService, shippingOptionService = _a.shippingOptionService, taxProviderService = _a.taxProviderService, totalsService = _a.totalsService;
+        var manager = _a.manager, addressRepository = _a.addressRepository, claimRepository = _a.claimRepository, shippingMethodRepository = _a.shippingMethodRepository, lineItemRepository = _a.lineItemRepository, claimItemService = _a.claimItemService, eventBusService = _a.eventBusService, fulfillmentProviderService = _a.fulfillmentProviderService, fulfillmentService = _a.fulfillmentService, productVariantInventoryService = _a.productVariantInventoryService, lineItemService = _a.lineItemService, paymentProviderService = _a.paymentProviderService, regionService = _a.regionService, returnService = _a.returnService, shippingOptionService = _a.shippingOptionService, taxProviderService = _a.taxProviderService, totalsService = _a.totalsService;
         var _this = 
         // eslint-disable-next-line prefer-rest-params
         _super.call(this, arguments[0]) || this;
@@ -104,7 +104,7 @@ var ClaimService = /** @class */ (function (_super) {
         _this.eventBus_ = eventBusService;
         _this.fulfillmentProviderService_ = fulfillmentProviderService;
         _this.fulfillmentService_ = fulfillmentService;
-        _this.inventoryService_ = inventoryService;
+        _this.productVariantInventoryService_ = productVariantInventoryService;
         _this.lineItemService_ = lineItemService;
         _this.paymentProviderService_ = paymentProviderService;
         _this.regionService_ = regionService;
@@ -122,15 +122,16 @@ var ClaimService = /** @class */ (function (_super) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
                             var claimRepo, claim, claim_items, shipping_methods, metadata, no_notification, shippingOptionServiceTx, _a, _b, m, e_1_1, shipping_methods_1, shipping_methods_1_1, method, e_2_1, claimItemServiceTx, claim_items_1, claim_items_1_1, i, e_3_1;
                             var e_1, _c, e_2, _d, e_3, _e;
-                            return __generator(this, function (_f) {
-                                switch (_f.label) {
+                            var _f;
+                            return __generator(this, function (_g) {
+                                switch (_g.label) {
                                     case 0:
                                         claimRepo = transactionManager.getCustomRepository(this.claimRepository_);
                                         return [4 /*yield*/, this.retrieve(id, {
                                                 relations: ["shipping_methods"],
                                             })];
                                     case 1:
-                                        claim = _f.sent();
+                                        claim = _g.sent();
                                         if (claim.canceled_at) {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Canceled claim cannot be updated");
                                         }
@@ -139,16 +140,16 @@ var ClaimService = /** @class */ (function (_super) {
                                         claim.metadata = (0, utils_1.setMetadata)(claim, metadata);
                                         return [4 /*yield*/, claimRepo.save(claim)];
                                     case 2:
-                                        _f.sent();
-                                        _f.label = 3;
+                                        _g.sent();
+                                        _g.label = 3;
                                     case 3:
                                         if (!shipping_methods) return [3 /*break*/, 20];
                                         shippingOptionServiceTx = this.shippingOptionService_.withTransaction(transactionManager);
-                                        _f.label = 4;
+                                        _g.label = 4;
                                     case 4:
-                                        _f.trys.push([4, 9, 10, 11]);
+                                        _g.trys.push([4, 9, 10, 11]);
                                         _a = __values(claim.shipping_methods), _b = _a.next();
-                                        _f.label = 5;
+                                        _g.label = 5;
                                     case 5:
                                         if (!!_b.done) return [3 /*break*/, 8];
                                         m = _b.value;
@@ -156,14 +157,14 @@ var ClaimService = /** @class */ (function (_super) {
                                                 claim_order_id: null,
                                             })];
                                     case 6:
-                                        _f.sent();
-                                        _f.label = 7;
+                                        _g.sent();
+                                        _g.label = 7;
                                     case 7:
                                         _b = _a.next();
                                         return [3 /*break*/, 5];
                                     case 8: return [3 /*break*/, 11];
                                     case 9:
-                                        e_1_1 = _f.sent();
+                                        e_1_1 = _g.sent();
                                         e_1 = { error: e_1_1 };
                                         return [3 /*break*/, 11];
                                     case 10:
@@ -173,9 +174,9 @@ var ClaimService = /** @class */ (function (_super) {
                                         finally { if (e_1) throw e_1.error; }
                                         return [7 /*endfinally*/];
                                     case 11:
-                                        _f.trys.push([11, 18, 19, 20]);
+                                        _g.trys.push([11, 18, 19, 20]);
                                         shipping_methods_1 = __values(shipping_methods), shipping_methods_1_1 = shipping_methods_1.next();
-                                        _f.label = 12;
+                                        _g.label = 12;
                                     case 12:
                                         if (!!shipping_methods_1_1.done) return [3 /*break*/, 17];
                                         method = shipping_methods_1_1.value;
@@ -184,21 +185,21 @@ var ClaimService = /** @class */ (function (_super) {
                                                 claim_order_id: claim.id,
                                             })];
                                     case 13:
-                                        _f.sent();
+                                        _g.sent();
                                         return [3 /*break*/, 16];
-                                    case 14: return [4 /*yield*/, shippingOptionServiceTx.createShippingMethod(method.option_id, method.data, {
+                                    case 14: return [4 /*yield*/, shippingOptionServiceTx.createShippingMethod(method.option_id, (_f = method.data) !== null && _f !== void 0 ? _f : {}, {
                                             claim_order_id: claim.id,
                                             price: method.price,
                                         })];
                                     case 15:
-                                        _f.sent();
-                                        _f.label = 16;
+                                        _g.sent();
+                                        _g.label = 16;
                                     case 16:
                                         shipping_methods_1_1 = shipping_methods_1.next();
                                         return [3 /*break*/, 12];
                                     case 17: return [3 /*break*/, 20];
                                     case 18:
-                                        e_2_1 = _f.sent();
+                                        e_2_1 = _g.sent();
                                         e_2 = { error: e_2_1 };
                                         return [3 /*break*/, 20];
                                     case 19:
@@ -212,30 +213,30 @@ var ClaimService = /** @class */ (function (_super) {
                                         claim.no_notification = no_notification;
                                         return [4 /*yield*/, claimRepo.save(claim)];
                                     case 21:
-                                        _f.sent();
-                                        _f.label = 22;
+                                        _g.sent();
+                                        _g.label = 22;
                                     case 22:
                                         if (!claim_items) return [3 /*break*/, 30];
                                         claimItemServiceTx = this.claimItemService_.withTransaction(transactionManager);
-                                        _f.label = 23;
+                                        _g.label = 23;
                                     case 23:
-                                        _f.trys.push([23, 28, 29, 30]);
+                                        _g.trys.push([23, 28, 29, 30]);
                                         claim_items_1 = __values(claim_items), claim_items_1_1 = claim_items_1.next();
-                                        _f.label = 24;
+                                        _g.label = 24;
                                     case 24:
                                         if (!!claim_items_1_1.done) return [3 /*break*/, 27];
                                         i = claim_items_1_1.value;
                                         if (!i.id) return [3 /*break*/, 26];
                                         return [4 /*yield*/, claimItemServiceTx.update(i.id, i)];
                                     case 25:
-                                        _f.sent();
-                                        _f.label = 26;
+                                        _g.sent();
+                                        _g.label = 26;
                                     case 26:
                                         claim_items_1_1 = claim_items_1.next();
                                         return [3 /*break*/, 24];
                                     case 27: return [3 /*break*/, 30];
                                     case 28:
-                                        e_3_1 = _f.sent();
+                                        e_3_1 = _g.sent();
                                         e_3 = { error: e_3_1 };
                                         return [3 /*break*/, 30];
                                     case 29:
@@ -251,12 +252,162 @@ var ClaimService = /** @class */ (function (_super) {
                                             no_notification: claim.no_notification,
                                         })];
                                     case 31:
-                                        _f.sent();
+                                        _g.sent();
                                         return [2 /*return*/, claim];
                                 }
                             });
                         }); })];
                     case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
+    ClaimService.prototype.validateCreateClaimInput = function (data) {
+        var _a, _b, _c;
+        return __awaiter(this, void 0, void 0, function () {
+            var lineItemServiceTx, type, claim_items, additional_items, refund_amount, claimLineItems, claimLineItems_1, claimLineItems_1_1, line;
+            var e_4, _d;
+            return __generator(this, function (_e) {
+                switch (_e.label) {
+                    case 0:
+                        lineItemServiceTx = this.lineItemService_.withTransaction(this.manager_);
+                        type = data.type, claim_items = data.claim_items, additional_items = data.additional_items, refund_amount = data.refund_amount;
+                        if (type !== models_1.ClaimType.REFUND && type !== models_1.ClaimType.REPLACE) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Claim type must be one of \"refund\" or \"replace\".");
+                        }
+                        if (type === models_1.ClaimType.REPLACE && !(additional_items === null || additional_items === void 0 ? void 0 : additional_items.length)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Claims with type \"replace\" must have at least one additional item.");
+                        }
+                        if (!(claim_items === null || claim_items === void 0 ? void 0 : claim_items.length)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Claims must have at least one claim item.");
+                        }
+                        if (refund_amount && type !== models_1.ClaimType.REFUND) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Claim has type \"".concat(type, "\" but must be type \"refund\" to have a refund_amount."));
+                        }
+                        return [4 /*yield*/, lineItemServiceTx.list({ id: claim_items.map(function (c) { return c.item_id; }) }, { relations: ["order", "swap", "claim_order", "tax_lines"] })];
+                    case 1:
+                        claimLineItems = _e.sent();
+                        try {
+                            for (claimLineItems_1 = __values(claimLineItems), claimLineItems_1_1 = claimLineItems_1.next(); !claimLineItems_1_1.done; claimLineItems_1_1 = claimLineItems_1.next()) {
+                                line = claimLineItems_1_1.value;
+                                if (((_a = line.order) === null || _a === void 0 ? void 0 : _a.canceled_at) ||
+                                    ((_b = line.swap) === null || _b === void 0 ? void 0 : _b.canceled_at) ||
+                                    ((_c = line.claim_order) === null || _c === void 0 ? void 0 : _c.canceled_at)) {
+                                    throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Cannot create a claim on a canceled item.");
+                                }
+                            }
+                        }
+                        catch (e_4_1) { e_4 = { error: e_4_1 }; }
+                        finally {
+                            try {
+                                if (claimLineItems_1_1 && !claimLineItems_1_1.done && (_d = claimLineItems_1.return)) _d.call(claimLineItems_1);
+                            }
+                            finally { if (e_4) throw e_4.error; }
+                        }
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    /**
+     * Finds claim line items on an order and calculates the refund amount.
+     * There are three places too look:
+     * - Order items
+     * - Swap items
+     * - Claim items (from previous claims)
+     * Note, it will attempt to return early from each of these places to avoid having to iterate over all items every time.
+     * @param order - the order to find claim lines on
+     * @param claimItems - the claim items to match against
+     * @return the refund amount
+     */
+    ClaimService.prototype.getRefundTotalForClaimLinesOnOrder = function (order, claimItems) {
+        return __awaiter(this, void 0, void 0, function () {
+            var claimLines, refunds, claimLines_1, claimLines_1_1, item, refund, e_5_1;
+            var e_5, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        claimLines = claimItems
+                            .map(function (ci) {
+                            var e_6, _a, e_7, _b;
+                            var _c, _d;
+                            var predicate = function (it) {
+                                return it.shipped_quantity > 0 &&
+                                    ci.quantity <= it.shipped_quantity &&
+                                    it.id === ci.item_id;
+                            };
+                            var claimLine = order.items.find(predicate);
+                            if (claimLine) {
+                                return __assign(__assign({}, claimLine), { quantity: ci.quantity });
+                            }
+                            if ((_c = order.swaps) === null || _c === void 0 ? void 0 : _c.length) {
+                                try {
+                                    for (var _e = __values(order.swaps), _f = _e.next(); !_f.done; _f = _e.next()) {
+                                        var swap = _f.value;
+                                        var claimLine_1 = swap.additional_items.find(predicate);
+                                        if (claimLine_1) {
+                                            return __assign(__assign({}, claimLine_1), { quantity: ci.quantity });
+                                        }
+                                    }
+                                }
+                                catch (e_6_1) { e_6 = { error: e_6_1 }; }
+                                finally {
+                                    try {
+                                        if (_f && !_f.done && (_a = _e.return)) _a.call(_e);
+                                    }
+                                    finally { if (e_6) throw e_6.error; }
+                                }
+                            }
+                            if ((_d = order.claims) === null || _d === void 0 ? void 0 : _d.length) {
+                                try {
+                                    for (var _g = __values(order.claims), _h = _g.next(); !_h.done; _h = _g.next()) {
+                                        var claim = _h.value;
+                                        var claimLine_2 = claim.additional_items.find(predicate);
+                                        if (claimLine_2) {
+                                            return __assign(__assign({}, claimLine_2), { quantity: ci.quantity });
+                                        }
+                                    }
+                                }
+                                catch (e_7_1) { e_7 = { error: e_7_1 }; }
+                                finally {
+                                    try {
+                                        if (_h && !_h.done && (_b = _g.return)) _b.call(_g);
+                                    }
+                                    finally { if (e_7) throw e_7.error; }
+                                }
+                            }
+                            return null;
+                        })
+                            .filter(Boolean);
+                        refunds = [];
+                        _b.label = 1;
+                    case 1:
+                        _b.trys.push([1, 6, 7, 8]);
+                        claimLines_1 = __values(claimLines), claimLines_1_1 = claimLines_1.next();
+                        _b.label = 2;
+                    case 2:
+                        if (!!claimLines_1_1.done) return [3 /*break*/, 5];
+                        item = claimLines_1_1.value;
+                        return [4 /*yield*/, this.totalsService_.getLineItemRefund(order, item)];
+                    case 3:
+                        refund = _b.sent();
+                        refunds.push(refund);
+                        _b.label = 4;
+                    case 4:
+                        claimLines_1_1 = claimLines_1.next();
+                        return [3 /*break*/, 2];
+                    case 5: return [3 /*break*/, 8];
+                    case 6:
+                        e_5_1 = _b.sent();
+                        e_5 = { error: e_5_1 };
+                        return [3 /*break*/, 8];
+                    case 7:
+                        try {
+                            if (claimLines_1_1 && !claimLines_1_1.done && (_a = claimLines_1.return)) _a.call(claimLines_1);
+                        }
+                        finally { if (e_5) throw e_5.error; }
+                        return [7 /*endfinally*/];
+                    case 8: return [2 /*return*/, Math.round(refunds.reduce(function (acc, next) { return acc + next; }, 0))];
                 }
             });
         });
@@ -274,281 +425,159 @@ var ClaimService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                            var claimRepo, type, claim_items, order, return_shipping, additional_items, shipping_methods, refund_amount, shipping_address, shipping_address_id, no_notification, rest, lineItemServiceTx, claim_items_2, claim_items_2_1, item, line, e_4_1, addressId, addressRepo, created_1, saved, toRefund, lines, newItems, inventoryServiceTx, additional_items_1, additional_items_1_1, item, e_5_1, newItems_1, newItems_1_1, newItem, e_6_1, evaluatedNoNotification, created, result, calcContext, lineItems, shippingOptionServiceTx, shipping_methods_2, shipping_methods_2_1, method, e_7_1, claimItemServiceTx, claim_items_3, claim_items_3_1, ci, e_8_1;
-                            var e_4, _a, e_5, _b, e_6, _c, e_7, _d, e_8, _e;
+                            var claimRepo, type, claim_items, order, return_shipping, additional_items, shipping_methods, refund_amount, shipping_address, shipping_address_id, no_notification, rest, addressId, addressRepo, created_1, saved, toRefund, lineItemServiceTx, newItems, evaluatedNoNotification, created, result, calcContext, lineItems, shippingOptionServiceTx, shipping_methods_2, shipping_methods_2_1, method, e_8_1, claimItemServiceTx, claim_items_2, claim_items_2_1, ci, e_9_1;
+                            var e_8, _a, e_9, _b;
                             var _this = this;
-                            var _f, _g, _h;
-                            return __generator(this, function (_j) {
-                                switch (_j.label) {
+                            var _c;
+                            return __generator(this, function (_d) {
+                                switch (_d.label) {
                                     case 0:
                                         claimRepo = transactionManager.getCustomRepository(this.claimRepository_);
                                         type = data.type, claim_items = data.claim_items, order = data.order, return_shipping = data.return_shipping, additional_items = data.additional_items, shipping_methods = data.shipping_methods, refund_amount = data.refund_amount, shipping_address = data.shipping_address, shipping_address_id = data.shipping_address_id, no_notification = data.no_notification, rest = __rest(data, ["type", "claim_items", "order", "return_shipping", "additional_items", "shipping_methods", "refund_amount", "shipping_address", "shipping_address_id", "no_notification"]);
-                                        lineItemServiceTx = this.lineItemService_.withTransaction(transactionManager);
-                                        _j.label = 1;
+                                        return [4 /*yield*/, this.validateCreateClaimInput(data)];
                                     case 1:
-                                        _j.trys.push([1, 6, 7, 8]);
-                                        claim_items_2 = __values(claim_items), claim_items_2_1 = claim_items_2.next();
-                                        _j.label = 2;
-                                    case 2:
-                                        if (!!claim_items_2_1.done) return [3 /*break*/, 5];
-                                        item = claim_items_2_1.value;
-                                        return [4 /*yield*/, lineItemServiceTx.retrieve(item.item_id, {
-                                                relations: ["order", "swap", "claim_order", "tax_lines"],
-                                            })];
-                                    case 3:
-                                        line = _j.sent();
-                                        if (((_f = line.order) === null || _f === void 0 ? void 0 : _f.canceled_at) ||
-                                            ((_g = line.swap) === null || _g === void 0 ? void 0 : _g.canceled_at) ||
-                                            ((_h = line.claim_order) === null || _h === void 0 ? void 0 : _h.canceled_at)) {
-                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Cannot create a claim on a canceled item.");
-                                        }
-                                        _j.label = 4;
-                                    case 4:
-                                        claim_items_2_1 = claim_items_2.next();
-                                        return [3 /*break*/, 2];
-                                    case 5: return [3 /*break*/, 8];
-                                    case 6:
-                                        e_4_1 = _j.sent();
-                                        e_4 = { error: e_4_1 };
-                                        return [3 /*break*/, 8];
-                                    case 7:
-                                        try {
-                                            if (claim_items_2_1 && !claim_items_2_1.done && (_a = claim_items_2.return)) _a.call(claim_items_2);
-                                        }
-                                        finally { if (e_4) throw e_4.error; }
-                                        return [7 /*endfinally*/];
-                                    case 8:
+                                        _d.sent();
                                         addressId = shipping_address_id || order.shipping_address_id;
-                                        if (!shipping_address) return [3 /*break*/, 10];
+                                        if (!shipping_address) return [3 /*break*/, 3];
                                         addressRepo = transactionManager.getCustomRepository(this.addressRepository_);
                                         created_1 = addressRepo.create(shipping_address);
                                         return [4 /*yield*/, addressRepo.save(created_1)];
-                                    case 9:
-                                        saved = _j.sent();
+                                    case 2:
+                                        saved = _d.sent();
                                         addressId = saved.id;
-                                        _j.label = 10;
-                                    case 10:
-                                        if (type !== models_1.ClaimType.REFUND && type !== models_1.ClaimType.REPLACE) {
-                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Claim type must be one of \"refund\" or \"replace\".");
-                                        }
-                                        if (type === models_1.ClaimType.REPLACE && !(additional_items === null || additional_items === void 0 ? void 0 : additional_items.length)) {
-                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Claims with type \"replace\" must have at least one additional item.");
-                                        }
-                                        if (!(claim_items === null || claim_items === void 0 ? void 0 : claim_items.length)) {
-                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Claims must have at least one claim item.");
-                                        }
-                                        if (refund_amount && type !== models_1.ClaimType.REFUND) {
-                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Claim has type \"".concat(type, "\" but must be type \"refund\" to have a refund_amount."));
-                                        }
+                                        _d.label = 3;
+                                    case 3:
                                         toRefund = refund_amount;
-                                        if (!(type === models_1.ClaimType.REFUND && typeof refund_amount === "undefined")) return [3 /*break*/, 12];
-                                        lines = claim_items.map(function (ci) {
-                                            var e_9, _a, e_10, _b;
-                                            var _c, _d;
-                                            var allOrderItems = order.items;
-                                            if ((_c = order.swaps) === null || _c === void 0 ? void 0 : _c.length) {
-                                                try {
-                                                    for (var _e = __values(order.swaps), _f = _e.next(); !_f.done; _f = _e.next()) {
-                                                        var swap = _f.value;
-                                                        swap.additional_items.forEach(function (it) {
-                                                            if (it.shipped_quantity ||
-                                                                it.shipped_quantity === it.fulfilled_quantity) {
-                                                                allOrderItems.push(it);
-                                                            }
-                                                        });
-                                                    }
-                                                }
-                                                catch (e_9_1) { e_9 = { error: e_9_1 }; }
-                                                finally {
-                                                    try {
-                                                        if (_f && !_f.done && (_a = _e.return)) _a.call(_e);
-                                                    }
-                                                    finally { if (e_9) throw e_9.error; }
-                                                }
-                                            }
-                                            if ((_d = order.claims) === null || _d === void 0 ? void 0 : _d.length) {
-                                                try {
-                                                    for (var _g = __values(order.claims), _h = _g.next(); !_h.done; _h = _g.next()) {
-                                                        var claim = _h.value;
-                                                        claim.additional_items.forEach(function (it) {
-                                                            if (it.shipped_quantity ||
-                                                                it.shipped_quantity === it.fulfilled_quantity) {
-                                                                allOrderItems.push(it);
-                                                            }
-                                                        });
-                                                    }
-                                                }
-                                                catch (e_10_1) { e_10 = { error: e_10_1 }; }
-                                                finally {
-                                                    try {
-                                                        if (_h && !_h.done && (_b = _g.return)) _b.call(_g);
-                                                    }
-                                                    finally { if (e_10) throw e_10.error; }
-                                                }
-                                            }
-                                            var orderItem = allOrderItems.find(function (oi) { return oi.id === ci.item_id; });
-                                            return __assign(__assign({}, orderItem), { quantity: ci.quantity });
-                                        });
-                                        return [4 /*yield*/, this.totalsService_.getRefundTotal(order, lines)];
-                                    case 11:
-                                        toRefund = _j.sent();
-                                        _j.label = 12;
-                                    case 12:
+                                        if (!(type === models_1.ClaimType.REFUND && typeof refund_amount === "undefined")) return [3 /*break*/, 5];
+                                        return [4 /*yield*/, this.getRefundTotalForClaimLinesOnOrder(order, claim_items)];
+                                    case 4:
+                                        // In case no refund amount is passed, we calculate it based on the claim items on the order
+                                        toRefund = _d.sent();
+                                        _d.label = 5;
+                                    case 5:
+                                        lineItemServiceTx = this.lineItemService_.withTransaction(transactionManager);
                                         newItems = [];
-                                        if (!(0, utils_1.isDefined)(additional_items)) return [3 /*break*/, 29];
-                                        inventoryServiceTx = this.inventoryService_.withTransaction(transactionManager);
-                                        _j.label = 13;
-                                    case 13:
-                                        _j.trys.push([13, 18, 19, 20]);
-                                        additional_items_1 = __values(additional_items), additional_items_1_1 = additional_items_1.next();
-                                        _j.label = 14;
-                                    case 14:
-                                        if (!!additional_items_1_1.done) return [3 /*break*/, 17];
-                                        item = additional_items_1_1.value;
-                                        return [4 /*yield*/, inventoryServiceTx.confirmInventory(item.variant_id, item.quantity)];
-                                    case 15:
-                                        _j.sent();
-                                        _j.label = 16;
-                                    case 16:
-                                        additional_items_1_1 = additional_items_1.next();
-                                        return [3 /*break*/, 14];
-                                    case 17: return [3 /*break*/, 20];
-                                    case 18:
-                                        e_5_1 = _j.sent();
-                                        e_5 = { error: e_5_1 };
-                                        return [3 /*break*/, 20];
-                                    case 19:
-                                        try {
-                                            if (additional_items_1_1 && !additional_items_1_1.done && (_b = additional_items_1.return)) _b.call(additional_items_1);
-                                        }
-                                        finally { if (e_5) throw e_5.error; }
-                                        return [7 /*endfinally*/];
-                                    case 20: return [4 /*yield*/, Promise.all(additional_items.map(function (i) { return __awaiter(_this, void 0, void 0, function () {
-                                            return __generator(this, function (_a) {
-                                                return [2 /*return*/, lineItemServiceTx.generate(i.variant_id, order.region_id, i.quantity)];
-                                            });
-                                        }); }))];
-                                    case 21:
-                                        newItems = _j.sent();
-                                        _j.label = 22;
-                                    case 22:
-                                        _j.trys.push([22, 27, 28, 29]);
-                                        newItems_1 = __values(newItems), newItems_1_1 = newItems_1.next();
-                                        _j.label = 23;
-                                    case 23:
-                                        if (!!newItems_1_1.done) return [3 /*break*/, 26];
-                                        newItem = newItems_1_1.value;
-                                        return [4 /*yield*/, inventoryServiceTx.adjustInventory(newItem.variant_id, -newItem.quantity)];
-                                    case 24:
-                                        _j.sent();
-                                        _j.label = 25;
-                                    case 25:
-                                        newItems_1_1 = newItems_1.next();
-                                        return [3 /*break*/, 23];
-                                    case 26: return [3 /*break*/, 29];
-                                    case 27:
-                                        e_6_1 = _j.sent();
-                                        e_6 = { error: e_6_1 };
-                                        return [3 /*break*/, 29];
-                                    case 28:
-                                        try {
-                                            if (newItems_1_1 && !newItems_1_1.done && (_c = newItems_1.return)) _c.call(newItems_1);
-                                        }
-                                        finally { if (e_6) throw e_6.error; }
-                                        return [7 /*endfinally*/];
-                                    case 29:
+                                        if (!(0, medusa_core_utils_1.isDefined)(additional_items)) return [3 /*break*/, 8];
+                                        return [4 /*yield*/, Promise.all(additional_items.map(function (i) { return __awaiter(_this, void 0, void 0, function () {
+                                                return __generator(this, function (_a) {
+                                                    return [2 /*return*/, lineItemServiceTx.generate(i.variant_id, order.region_id, i.quantity)];
+                                                });
+                                            }); }))];
+                                    case 6:
+                                        newItems = _d.sent();
+                                        return [4 /*yield*/, Promise.all(newItems.map(function (newItem) { return __awaiter(_this, void 0, void 0, function () {
+                                                return __generator(this, function (_a) {
+                                                    switch (_a.label) {
+                                                        case 0:
+                                                            if (!newItem.variant_id) return [3 /*break*/, 2];
+                                                            return [4 /*yield*/, this.productVariantInventoryService_.reserveQuantity(newItem.variant_id, newItem.quantity, {
+                                                                    lineItemId: newItem.id,
+                                                                    salesChannelId: order.sales_channel_id,
+                                                                })];
+                                                        case 1:
+                                                            _a.sent();
+                                                            _a.label = 2;
+                                                        case 2: return [2 /*return*/];
+                                                    }
+                                                });
+                                            }); }))];
+                                    case 7:
+                                        _d.sent();
+                                        _d.label = 8;
+                                    case 8:
                                         evaluatedNoNotification = no_notification !== undefined
                                             ? no_notification
                                             : order.no_notification;
                                         created = claimRepo.create(__assign({ shipping_address_id: addressId, payment_status: type === models_1.ClaimType.REFUND ? "not_refunded" : "na", refund_amount: toRefund, type: type, additional_items: newItems, order_id: order.id, no_notification: evaluatedNoNotification }, rest));
                                         return [4 /*yield*/, claimRepo.save(created)];
-                                    case 30:
-                                        result = _j.sent();
-                                        if (!(result.additional_items && result.additional_items.length)) return [3 /*break*/, 34];
+                                    case 9:
+                                        result = _d.sent();
+                                        if (!(result.additional_items && result.additional_items.length)) return [3 /*break*/, 13];
                                         return [4 /*yield*/, this.totalsService_.getCalculationContext(order)];
-                                    case 31:
-                                        calcContext = _j.sent();
+                                    case 10:
+                                        calcContext = _d.sent();
                                         return [4 /*yield*/, lineItemServiceTx.list({
                                                 id: result.additional_items.map(function (i) { return i.id; }),
                                             })];
-                                    case 32:
-                                        lineItems = _j.sent();
+                                    case 11:
+                                        lineItems = _d.sent();
                                         return [4 /*yield*/, this.taxProviderService_
                                                 .withTransaction(transactionManager)
                                                 .createTaxLines(lineItems, calcContext)];
-                                    case 33:
-                                        _j.sent();
-                                        _j.label = 34;
-                                    case 34:
-                                        if (!shipping_methods) return [3 /*break*/, 44];
+                                    case 12:
+                                        _d.sent();
+                                        _d.label = 13;
+                                    case 13:
+                                        if (!shipping_methods) return [3 /*break*/, 23];
                                         shippingOptionServiceTx = this.shippingOptionService_.withTransaction(transactionManager);
-                                        _j.label = 35;
-                                    case 35:
-                                        _j.trys.push([35, 42, 43, 44]);
+                                        _d.label = 14;
+                                    case 14:
+                                        _d.trys.push([14, 21, 22, 23]);
                                         shipping_methods_2 = __values(shipping_methods), shipping_methods_2_1 = shipping_methods_2.next();
-                                        _j.label = 36;
-                                    case 36:
-                                        if (!!shipping_methods_2_1.done) return [3 /*break*/, 41];
+                                        _d.label = 15;
+                                    case 15:
+                                        if (!!shipping_methods_2_1.done) return [3 /*break*/, 20];
                                         method = shipping_methods_2_1.value;
-                                        if (!method.id) return [3 /*break*/, 38];
+                                        if (!method.id) return [3 /*break*/, 17];
                                         return [4 /*yield*/, shippingOptionServiceTx.updateShippingMethod(method.id, {
                                                 claim_order_id: result.id,
                                             })];
-                                    case 37:
-                                        _j.sent();
-                                        return [3 /*break*/, 40];
-                                    case 38: return [4 /*yield*/, shippingOptionServiceTx.createShippingMethod(method.option_id, method.data, {
+                                    case 16:
+                                        _d.sent();
+                                        return [3 /*break*/, 19];
+                                    case 17: return [4 /*yield*/, shippingOptionServiceTx.createShippingMethod(method.option_id, (_c = method.data) !== null && _c !== void 0 ? _c : {}, {
                                             claim_order_id: result.id,
                                             price: method.price,
                                         })];
-                                    case 39:
-                                        _j.sent();
-                                        _j.label = 40;
-                                    case 40:
+                                    case 18:
+                                        _d.sent();
+                                        _d.label = 19;
+                                    case 19:
                                         shipping_methods_2_1 = shipping_methods_2.next();
-                                        return [3 /*break*/, 36];
-                                    case 41: return [3 /*break*/, 44];
-                                    case 42:
-                                        e_7_1 = _j.sent();
-                                        e_7 = { error: e_7_1 };
-                                        return [3 /*break*/, 44];
-                                    case 43:
-                                        try {
-                                            if (shipping_methods_2_1 && !shipping_methods_2_1.done && (_d = shipping_methods_2.return)) _d.call(shipping_methods_2);
-                                        }
-                                        finally { if (e_7) throw e_7.error; }
-                                        return [7 /*endfinally*/];
-                                    case 44:
-                                        claimItemServiceTx = this.claimItemService_.withTransaction(transactionManager);
-                                        _j.label = 45;
-                                    case 45:
-                                        _j.trys.push([45, 50, 51, 52]);
-                                        claim_items_3 = __values(claim_items), claim_items_3_1 = claim_items_3.next();
-                                        _j.label = 46;
-                                    case 46:
-                                        if (!!claim_items_3_1.done) return [3 /*break*/, 49];
-                                        ci = claim_items_3_1.value;
-                                        return [4 /*yield*/, claimItemServiceTx.create(__assign(__assign({}, ci), { claim_order_id: result.id }))];
-                                    case 47:
-                                        _j.sent();
-                                        _j.label = 48;
-                                    case 48:
-                                        claim_items_3_1 = claim_items_3.next();
-                                        return [3 /*break*/, 46];
-                                    case 49: return [3 /*break*/, 52];
-                                    case 50:
-                                        e_8_1 = _j.sent();
+                                        return [3 /*break*/, 15];
+                                    case 20: return [3 /*break*/, 23];
+                                    case 21:
+                                        e_8_1 = _d.sent();
                                         e_8 = { error: e_8_1 };
-                                        return [3 /*break*/, 52];
-                                    case 51:
+                                        return [3 /*break*/, 23];
+                                    case 22:
                                         try {
-                                            if (claim_items_3_1 && !claim_items_3_1.done && (_e = claim_items_3.return)) _e.call(claim_items_3);
+                                            if (shipping_methods_2_1 && !shipping_methods_2_1.done && (_a = shipping_methods_2.return)) _a.call(shipping_methods_2);
                                         }
                                         finally { if (e_8) throw e_8.error; }
                                         return [7 /*endfinally*/];
-                                    case 52:
-                                        if (!return_shipping) return [3 /*break*/, 54];
+                                    case 23:
+                                        claimItemServiceTx = this.claimItemService_.withTransaction(transactionManager);
+                                        _d.label = 24;
+                                    case 24:
+                                        _d.trys.push([24, 29, 30, 31]);
+                                        claim_items_2 = __values(claim_items), claim_items_2_1 = claim_items_2.next();
+                                        _d.label = 25;
+                                    case 25:
+                                        if (!!claim_items_2_1.done) return [3 /*break*/, 28];
+                                        ci = claim_items_2_1.value;
+                                        return [4 /*yield*/, claimItemServiceTx.create(__assign(__assign({}, ci), { claim_order_id: result.id }))];
+                                    case 26:
+                                        _d.sent();
+                                        _d.label = 27;
+                                    case 27:
+                                        claim_items_2_1 = claim_items_2.next();
+                                        return [3 /*break*/, 25];
+                                    case 28: return [3 /*break*/, 31];
+                                    case 29:
+                                        e_9_1 = _d.sent();
+                                        e_9 = { error: e_9_1 };
+                                        return [3 /*break*/, 31];
+                                    case 30:
+                                        try {
+                                            if (claim_items_2_1 && !claim_items_2_1.done && (_b = claim_items_2.return)) _b.call(claim_items_2);
+                                        }
+                                        finally { if (e_9) throw e_9.error; }
+                                        return [7 /*endfinally*/];
+                                    case 31:
+                                        if (!return_shipping) return [3 /*break*/, 33];
                                         return [4 /*yield*/, this.returnService_.withTransaction(transactionManager).create({
+                                                refund_amount: toRefund,
                                                 order_id: order.id,
                                                 claim_order_id: result.id,
                                                 items: claim_items.map(function (ci) {
@@ -561,17 +590,17 @@ var ClaimService = /** @class */ (function (_super) {
                                                 shipping_method: return_shipping,
                                                 no_notification: evaluatedNoNotification,
                                             })];
-                                    case 53:
-                                        _j.sent();
-                                        _j.label = 54;
-                                    case 54: return [4 /*yield*/, this.eventBus_
+                                    case 32:
+                                        _d.sent();
+                                        _d.label = 33;
+                                    case 33: return [4 /*yield*/, this.eventBus_
                                             .withTransaction(transactionManager)
                                             .emit(ClaimService.Events.CREATED, {
                                             id: result.id,
                                             no_notification: result.no_notification,
                                         })];
-                                    case 55:
-                                        _j.sent();
+                                    case 34:
+                                        _d.sent();
                                         return [2 /*return*/, result];
                                 }
                             });
@@ -600,8 +629,8 @@ var ClaimService = /** @class */ (function (_super) {
                     case 0:
                         metadata = config.metadata, no_notification = config.no_notification;
                         return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                                var claim, order, evaluatedNoNotification, fulfillments, successfullyFulfilledItems, fulfillments_1, fulfillments_1_1, fulfillment, _loop_1, this_1, _a, _b, item, e_11_1, claimRepo, claimOrder, eventBusTx, fulfillments_2, fulfillments_2_1, fulfillment, e_12_1;
-                                var e_13, _c, e_11, _d, e_12, _e;
+                                var claim, order, evaluatedNoNotification, fulfillments, successfullyFulfilledItems, fulfillments_1, fulfillments_1_1, fulfillment, _loop_1, this_1, _a, _b, item, e_10_1, claimRepo, claimOrder, eventBusTx, fulfillments_2, fulfillments_2_1, fulfillment, e_11_1;
+                                var e_12, _c, e_10, _d, e_11, _e;
                                 var _f;
                                 return __generator(this, function (_g) {
                                     switch (_g.label) {
@@ -653,12 +682,12 @@ var ClaimService = /** @class */ (function (_super) {
                                                     successfullyFulfilledItems = successfullyFulfilledItems.concat(fulfillment.items);
                                                 }
                                             }
-                                            catch (e_13_1) { e_13 = { error: e_13_1 }; }
+                                            catch (e_12_1) { e_12 = { error: e_12_1 }; }
                                             finally {
                                                 try {
                                                     if (fulfillments_1_1 && !fulfillments_1_1.done && (_c = fulfillments_1.return)) _c.call(fulfillments_1);
                                                 }
-                                                finally { if (e_13) throw e_13.error; }
+                                                finally { if (e_12) throw e_12.error; }
                                             }
                                             claim.fulfillment_status = models_1.ClaimFulfillmentStatus.FULFILLED;
                                             _loop_1 = function (item) {
@@ -711,14 +740,14 @@ var ClaimService = /** @class */ (function (_super) {
                                             return [3 /*break*/, 4];
                                         case 7: return [3 /*break*/, 10];
                                         case 8:
-                                            e_11_1 = _g.sent();
-                                            e_11 = { error: e_11_1 };
+                                            e_10_1 = _g.sent();
+                                            e_10 = { error: e_10_1 };
                                             return [3 /*break*/, 10];
                                         case 9:
                                             try {
                                                 if (_b && !_b.done && (_d = _a.return)) _d.call(_a);
                                             }
-                                            finally { if (e_11) throw e_11.error; }
+                                            finally { if (e_10) throw e_10.error; }
                                             return [7 /*endfinally*/];
                                         case 10:
                                             claimRepo = transactionManager.getCustomRepository(this.claimRepository_);
@@ -747,14 +776,14 @@ var ClaimService = /** @class */ (function (_super) {
                                             return [3 /*break*/, 13];
                                         case 16: return [3 /*break*/, 19];
                                         case 17:
-                                            e_12_1 = _g.sent();
-                                            e_12 = { error: e_12_1 };
+                                            e_11_1 = _g.sent();
+                                            e_11 = { error: e_11_1 };
                                             return [3 /*break*/, 19];
                                         case 18:
                                             try {
                                                 if (fulfillments_2_1 && !fulfillments_2_1.done && (_e = fulfillments_2.return)) _e.call(fulfillments_2);
                                             }
-                                            finally { if (e_12) throw e_12.error; }
+                                            finally { if (e_11) throw e_11.error; }
                                             return [7 /*endfinally*/];
                                         case 19: return [2 /*return*/, claimOrder];
                                     }
@@ -860,8 +889,8 @@ var ClaimService = /** @class */ (function (_super) {
                     case 0:
                         metadata = config.metadata, no_notification = config.no_notification;
                         return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                                var claim, evaluatedNoNotification, shipment, lineItemServiceTx, _loop_2, _a, _b, additionalItem, e_14_1, claimRepo, claimOrder;
-                                var e_14, _c;
+                                var claim, evaluatedNoNotification, shipment, lineItemServiceTx, _loop_2, _a, _b, additionalItem, e_13_1, claimRepo, claimOrder;
+                                var e_13, _c;
                                 return __generator(this, function (_d) {
                                     switch (_d.label) {
                                         case 0: return [4 /*yield*/, this.retrieve(id, {
@@ -929,14 +958,14 @@ var ClaimService = /** @class */ (function (_super) {
                                             return [3 /*break*/, 4];
                                         case 7: return [3 /*break*/, 10];
                                         case 8:
-                                            e_14_1 = _d.sent();
-                                            e_14 = { error: e_14_1 };
+                                            e_13_1 = _d.sent();
+                                            e_13 = { error: e_13_1 };
                                             return [3 /*break*/, 10];
                                         case 9:
                                             try {
                                                 if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                                             }
-                                            finally { if (e_14) throw e_14.error; }
+                                            finally { if (e_13) throw e_13.error; }
                                             return [7 /*endfinally*/];
                                         case 10:
                                             claimRepo = transactionManager.getCustomRepository(this.claimRepository_);
@@ -968,7 +997,7 @@ var ClaimService = /** @class */ (function (_super) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
                             var claim, _a, _b, f, claimRepo, claimOrder;
-                            var e_15, _c;
+                            var e_14, _c;
                             return __generator(this, function (_d) {
                                 switch (_d.label) {
                                     case 0: return [4 /*yield*/, this.retrieve(id, {
@@ -988,12 +1017,12 @@ var ClaimService = /** @class */ (function (_super) {
                                                     }
                                                 }
                                             }
-                                            catch (e_15_1) { e_15 = { error: e_15_1 }; }
+                                            catch (e_14_1) { e_14 = { error: e_14_1 }; }
                                             finally {
                                                 try {
                                                     if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                                                 }
-                                                finally { if (e_15) throw e_15.error; }
+                                                finally { if (e_14) throw e_14.error; }
                                             }
                                         }
                                         if (claim.return_order && claim.return_order.status !== "canceled") {
@@ -1049,25 +1078,28 @@ var ClaimService = /** @class */ (function (_super) {
     };
     /**
      * Gets an order by id.
-     * @param id - id of the claim order to retrieve
+     * @param claimId - id of the claim order to retrieve
      * @param config - the config object containing query settings
      * @return the order document
      */
-    ClaimService.prototype.retrieve = function (id, config) {
+    ClaimService.prototype.retrieve = function (claimId, config) {
         if (config === void 0) { config = {}; }
         return __awaiter(this, void 0, void 0, function () {
             var manager, claimRepo, query, claim;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(claimId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"claimId\" must be defined");
+                        }
                         manager = this.manager_;
                         claimRepo = manager.getCustomRepository(this.claimRepository_);
-                        query = (0, utils_1.buildQuery)({ id: id }, config);
+                        query = (0, utils_1.buildQuery)({ id: claimId }, config);
                         return [4 /*yield*/, claimRepo.findOne(query)];
                     case 1:
                         claim = _a.sent();
                         if (!claim) {
-                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Claim with ".concat(id, " was not found"));
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Claim with ".concat(claimId, " was not found"));
                         }
                         return [2 /*return*/, claim];
                 }

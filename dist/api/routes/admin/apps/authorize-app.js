@@ -58,20 +58,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - application_name
- *           - state
- *           - code
- *         properties:
- *           application_name:
- *             type: string
- *             description:  Name of the application for the token to be generated for.
- *           state:
- *             type: string
- *             description: State of the application.
- *           code:
- *             type: string
- *             description: The code for the generated token.
+ *         $ref: "#/components/schemas/AdminPostAppsReq"
+ * x-codegen:
+ *   method: authorize
  * x-codeSamples:
  *   - lang: Shell
  *     label: cURL
@@ -95,9 +84,7 @@ var validator_1 = require("../../../../utils/validator");
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            apps:
- *              $ref: "#/components/schemas/OAuth"
+ *          $ref: "#/components/schemas/AdminAppsRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":
@@ -127,6 +114,24 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostAppsReq
+ * type: object
+ * required:
+ *   - application_name
+ *   - state
+ *   - code
+ * properties:
+ *   application_name:
+ *     type: string
+ *     description:  Name of the application for the token to be generated for.
+ *   state:
+ *     type: string
+ *     description: State of the application.
+ *   code:
+ *     type: string
+ *     description: The code for the generated token.
+ */
 var AdminPostAppsReq = /** @class */ (function () {
     function AdminPostAppsReq() {
     }

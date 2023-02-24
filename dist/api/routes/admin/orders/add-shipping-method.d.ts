@@ -1,14 +1,22 @@
+import { FindParams } from "../../../../types/common";
 /**
  * @oas [post] /orders/{id}/shipping-methods
  * operationId: "PostOrdersOrderShippingMethods"
  * summary: "Add a Shipping Method"
  * description: "Adds a Shipping Method to an Order. If another Shipping Method exists with the same Shipping Profile, the previous Shipping Method will be replaced."
- * x-authenticated: true
  * parameters:
  *   - (path) id=* {string} The ID of the Order.
- *   - (body) price=* {integer} The price (excluding VAT) that should be charged for the Shipping Method
- *   - (body) option_id=* {string} The ID of the Shipping Option to create the Shipping Method from.
- *   - (body) data {object} The data required for the Shipping Option to create a Shipping Method. This will depend on the Fulfillment Provider.
+ *   - (query) expand {string} Comma separated list of relations to include in the result.
+ *   - (query) fields {string} Comma separated list of fields to include in the result.
+ * requestBody:
+ *   content:
+ *     application/json:
+ *       schema:
+ *         $ref: "#/components/schemas/AdminPostOrdersOrderShippingMethodsReq"
+ * x-authenticated: true
+ * x-codegen:
+ *   method: addShippingMethod
+ *   params: AdminPostOrdersOrderShippingMethodsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -44,9 +52,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/order"
+ *           $ref: "#/components/schemas/AdminOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -62,8 +68,27 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostOrdersOrderShippingMethodsReq
+ * type: object
+ * required:
+ *   - price
+ *   - option_id
+ * properties:
+ *   price:
+ *     type: number
+ *     description: The price (excluding VAT) that should be charged for the Shipping Method
+ *   option_id:
+ *     type: string
+ *     description: The ID of the Shipping Option to create the Shipping Method from.
+ *   date:
+ *     type: object
+ *     description: The data required for the Shipping Option to create a Shipping Method. This will depend on the Fulfillment Provider.
+ */
 export declare class AdminPostOrdersOrderShippingMethodsReq {
     price: number;
     option_id: string;
     data?: Record<string, unknown>;
+}
+export declare class AdminPostOrdersOrderShippingMethodsParams extends FindParams {
 }

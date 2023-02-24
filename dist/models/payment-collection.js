@@ -23,30 +23,20 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PaymentCollection = exports.PaymentCollectionType = exports.PaymentCollectionStatus = void 0;
 var typeorm_1 = require("typeorm");
-var soft_deletable_entity_1 = require("../interfaces/models/soft-deletable-entity");
-var db_aware_column_1 = require("../utils/db-aware-column");
-var utils_1 = require("../utils");
 var _1 = require(".");
-var order_editing_1 = __importDefault(require("../loaders/feature-flags/order-editing"));
-var feature_flag_decorators_1 = require("../utils/feature-flag-decorators");
+var soft_deletable_entity_1 = require("../interfaces/models/soft-deletable-entity");
+var utils_1 = require("../utils");
+var db_aware_column_1 = require("../utils/db-aware-column");
 var PaymentCollectionStatus;
 (function (PaymentCollectionStatus) {
     PaymentCollectionStatus["NOT_PAID"] = "not_paid";
     PaymentCollectionStatus["AWAITING"] = "awaiting";
     PaymentCollectionStatus["AUTHORIZED"] = "authorized";
     PaymentCollectionStatus["PARTIALLY_AUTHORIZED"] = "partially_authorized";
-    PaymentCollectionStatus["CAPTURED"] = "captured";
-    PaymentCollectionStatus["PARTIALLY_CAPTURED"] = "partially_captured";
-    PaymentCollectionStatus["REFUNDED"] = "refunded";
-    PaymentCollectionStatus["PARTIALLY_REFUNDED"] = "partially_refunded";
     PaymentCollectionStatus["CANCELED"] = "canceled";
-    PaymentCollectionStatus["REQUIRES_ACTION"] = "requires_action";
 })(PaymentCollectionStatus = exports.PaymentCollectionStatus || (exports.PaymentCollectionStatus = {}));
 var PaymentCollectionType;
 (function (PaymentCollectionType) {
@@ -69,8 +59,8 @@ var PaymentCollection = /** @class */ (function (_super) {
         __metadata("design:type", String)
     ], PaymentCollection.prototype, "status", void 0);
     __decorate([
-        (0, typeorm_1.Column)({ nullable: true }),
-        __metadata("design:type", String)
+        (0, typeorm_1.Column)({ type: "varchar", nullable: true }),
+        __metadata("design:type", Object)
     ], PaymentCollection.prototype, "description", void 0);
     __decorate([
         (0, typeorm_1.Column)({ type: "int" }),
@@ -78,12 +68,8 @@ var PaymentCollection = /** @class */ (function (_super) {
     ], PaymentCollection.prototype, "amount", void 0);
     __decorate([
         (0, typeorm_1.Column)({ type: "int", nullable: true }),
-        __metadata("design:type", Number)
+        __metadata("design:type", Object)
     ], PaymentCollection.prototype, "authorized_amount", void 0);
-    __decorate([
-        (0, typeorm_1.Column)({ type: "int", nullable: true }),
-        __metadata("design:type", Number)
-    ], PaymentCollection.prototype, "refunded_amount", void 0);
     __decorate([
         (0, typeorm_1.Index)(),
         (0, typeorm_1.Column)(),
@@ -149,9 +135,109 @@ var PaymentCollection = /** @class */ (function (_super) {
         __metadata("design:returntype", void 0)
     ], PaymentCollection.prototype, "beforeInsert", null);
     PaymentCollection = __decorate([
-        (0, feature_flag_decorators_1.FeatureFlagEntity)(order_editing_1.default.key)
+        (0, typeorm_1.Entity)()
     ], PaymentCollection);
     return PaymentCollection;
 }(soft_deletable_entity_1.SoftDeletableEntity));
 exports.PaymentCollection = PaymentCollection;
+/**
+ * @schema PaymentCollection
+ * title: "Payment Collection"
+ * description: "Payment Collection"
+ * type: object
+ * required:
+ *   - amount
+ *   - authorized_amount
+ *   - created_at
+ *   - created_by
+ *   - currency_code
+ *   - deleted_at
+ *   - description
+ *   - id
+ *   - metadata
+ *   - region_id
+ *   - status
+ *   - type
+ *   - updated_at
+ * properties:
+ *   id:
+ *     description: The payment collection's ID
+ *     type: string
+ *     example: paycol_01G8TJSYT9M6AVS5N4EMNFS1EK
+ *   type:
+ *     description: The type of the payment collection
+ *     type: string
+ *     enum:
+ *       - order_edit
+ *   status:
+ *     description: The type of the payment collection
+ *     type: string
+ *     enum:
+ *       - not_paid
+ *       - awaiting
+ *       - authorized
+ *       - partially_authorized
+ *       - canceled
+ *   description:
+ *     description: Description of the payment collection
+ *     nullable: true
+ *     type: string
+ *   amount:
+ *     description: Amount of the payment collection.
+ *     type: integer
+ *   authorized_amount:
+ *     description: Authorized amount of the payment collection.
+ *     nullable: true
+ *     type: integer
+ *   region_id:
+ *     description: The region's ID
+ *     type: string
+ *     example: reg_01G1G5V26T9H8Y0M4JNE3YGA4G
+ *   region:
+ *     description: Available if the relation `region` is expanded.
+ *     nullable: true
+ *     $ref: "#/components/schemas/Region"
+ *   currency_code:
+ *     description: The 3 character ISO code for the currency.
+ *     type: string
+ *     example: usd
+ *     externalDocs:
+ *       url: https://en.wikipedia.org/wiki/ISO_4217#Active_codes
+ *       description: See a list of codes.
+ *   currency:
+ *     description: Available if the relation `currency` is expanded.
+ *     nullable: true
+ *     $ref: "#/components/schemas/Currency"
+ *   payment_sessions:
+ *     description: Available if the relation `payment_sessions` is expanded.
+ *     type: array
+ *     items:
+ *       $ref: "#/components/schemas/PaymentSession"
+ *   payments:
+ *     description: Available if the relation `payments` is expanded.
+ *     type: array
+ *     items:
+ *       $ref: "#/components/schemas/Payment"
+ *   created_by:
+ *     description: The ID of the user that created the payment collection.
+ *     type: string
+ *   created_at:
+ *     description: The date with timezone at which the resource was created.
+ *     type: string
+ *     format: date-time
+ *   updated_at:
+ *     description: The date with timezone at which the resource was updated.
+ *     type: string
+ *     format: date-time
+ *   deleted_at:
+ *     description: The date with timezone at which the resource was deleted.
+ *     nullable: true
+ *     type: string
+ *     format: date-time
+ *   metadata:
+ *     description: An optional key-value map with additional details
+ *     nullable: true
+ *     type: object
+ *     example: {car: "white"}
+ */
 //# sourceMappingURL=payment-collection.js.map

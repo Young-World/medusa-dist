@@ -59,15 +59,9 @@ var class_validator_1 = require("class-validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - product_ids
- *         properties:
- *           product_ids:
- *             description: "An array of Product IDs to add to the Product Collection."
- *             type: array
- *             items:
- *               description: "The ID of a Product to add to the Product Collection."
- *               type: string
+ *         $ref: "#/components/schemas/AdminPostProductsToCollectionReq"
+ * x-codegen:
+ *   method: addProducts
  * x-codeSamples:
  *   - lang: Shell
  *     label: cURL
@@ -91,9 +85,7 @@ var class_validator_1 = require("class-validator");
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            collection:
- *              $ref: "#/components/schemas/product_collection"
+ *          $ref: "#/components/schemas/AdminCollectionsRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":
@@ -133,6 +125,19 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostProductsToCollectionReq
+ * type: object
+ * required:
+ *   - product_ids
+ * properties:
+ *   product_ids:
+ *     description: "An array of Product IDs to add to the Product Collection."
+ *     type: array
+ *     items:
+ *       description: "The ID of a Product to add to the Product Collection."
+ *       type: string
+ */
 var AdminPostProductsToCollectionReq = /** @class */ (function () {
     function AdminPostProductsToCollectionReq() {
     }

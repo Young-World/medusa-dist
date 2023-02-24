@@ -11,8 +11,9 @@ import { AddressPayload } from "../../../../types/common";
  *   content:
  *     application/json:
  *       schema:
- *         anyOf:
- *           - $ref: "#/components/schemas/address"
+ *         $ref: "#/components/schemas/StorePostCustomersCustomerAddressesAddressReq"
+ * x-codegen:
+ *   method: updateAddress
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -45,9 +46,7 @@ import { AddressPayload } from "../../../../types/common";
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            customer:
- *              $ref: "#/components/schemas/customer"
+ *          $ref: "#/components/schemas/StoreCustomersRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":
@@ -63,5 +62,10 @@ import { AddressPayload } from "../../../../types/common";
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema StorePostCustomersCustomerAddressesAddressReq
+ * anyOf:
+ *   - $ref: "#/components/schemas/AddressFields"
+ */
 export declare class StorePostCustomersCustomerAddressesAddressReq extends AddressPayload {
 }

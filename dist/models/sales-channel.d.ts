@@ -1,44 +1,59 @@
 import { SoftDeletableEntity } from "../interfaces";
+import { SalesChannelLocation } from "./sales-channel-location";
 export declare class SalesChannel extends SoftDeletableEntity {
     name: string;
     description: string | null;
     is_disabled: boolean;
+    locations: SalesChannelLocation[];
     private beforeInsert;
 }
 /**
- * @schema sales_channel
+ * @schema SalesChannel
  * title: "Sales Channel"
  * description: "A Sales Channel"
- * x-resourceId: sales_channel
+ * type: object
  * required:
+ *   - created_at
+ *   - deleted_at
+ *   - description
+ *   - id
+ *   - is_disabled
  *   - name
+ *   - updated_at
  * properties:
  *  id:
- *    type: string
  *    description: The sales channel's ID
+ *    type: string
  *    example: sc_01G8X9A7ESKAJXG2H0E6F1MW7A
  *  name:
- *    description: "The name of the sales channel."
+ *    description: The name of the sales channel.
  *    type: string
  *    example: Market
  *  description:
- *    description: "The description of the sales channel."
+ *    description: The description of the sales channel.
+ *    nullable: true
  *    type: string
  *    example: Multi-vendor market
  *  is_disabled:
- *    description: "Specify if the sales channel is enabled or disabled."
+ *    description: Specify if the sales channel is enabled or disabled.
  *    type: boolean
  *    default: false
+ *  locations:
+ *    description: The Stock Locations related to the sales channel. Available if the relation `locations` is expanded.
+ *    type: array
+ *    items:
+ *      $ref: "#/components/schemas/SalesChannelLocation"
  *  created_at:
+ *    description: The date with timezone at which the resource was created.
  *    type: string
- *    description: "The date with timezone at which the resource was created."
  *    format: date-time
  *  updated_at:
+ *    description: The date with timezone at which the resource was updated.
  *    type: string
- *    description: "The date with timezone at which the resource was updated."
  *    format: date-time
  *  deleted_at:
+ *    description: The date with timezone at which the resource was deleted.
+ *    nullable: true
  *    type: string
- *    description: "The date with timezone at which the resource was deleted."
  *    format: date-time
- */ 
+ */

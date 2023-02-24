@@ -105,17 +105,18 @@ var lodash_1 = require("lodash");
 var medusa_core_utils_1 = require("medusa-core-utils");
 var typeorm_1 = require("typeorm");
 var interfaces_1 = require("../interfaces");
+var sales_channels_1 = __importDefault(require("../loaders/feature-flags/sales-channels"));
 var models_1 = require("../models");
+var cart_1 = require("../types/cart");
 var utils_1 = require("../utils");
 var is_email_1 = require("../utils/is-email");
-var sales_channels_1 = __importDefault(require("../loaders/feature-flags/sales-channels"));
 /* Provides layer to manipulate carts.
  * @implements BaseService
  */
 var CartService = /** @class */ (function (_super) {
     __extends(CartService, _super);
     function CartService(_a) {
-        var manager = _a.manager, cartRepository = _a.cartRepository, shippingMethodRepository = _a.shippingMethodRepository, lineItemRepository = _a.lineItemRepository, eventBusService = _a.eventBusService, paymentProviderService = _a.paymentProviderService, productService = _a.productService, productVariantService = _a.productVariantService, taxProviderService = _a.taxProviderService, regionService = _a.regionService, lineItemService = _a.lineItemService, shippingOptionService = _a.shippingOptionService, customerService = _a.customerService, discountService = _a.discountService, giftCardService = _a.giftCardService, totalsService = _a.totalsService, addressRepository = _a.addressRepository, paymentSessionRepository = _a.paymentSessionRepository, inventoryService = _a.inventoryService, customShippingOptionService = _a.customShippingOptionService, lineItemAdjustmentService = _a.lineItemAdjustmentService, priceSelectionStrategy = _a.priceSelectionStrategy, salesChannelService = _a.salesChannelService, featureFlagRouter = _a.featureFlagRouter, storeService = _a.storeService;
+        var manager = _a.manager, cartRepository = _a.cartRepository, shippingMethodRepository = _a.shippingMethodRepository, lineItemRepository = _a.lineItemRepository, eventBusService = _a.eventBusService, paymentProviderService = _a.paymentProviderService, productService = _a.productService, productVariantService = _a.productVariantService, taxProviderService = _a.taxProviderService, regionService = _a.regionService, lineItemService = _a.lineItemService, shippingOptionService = _a.shippingOptionService, customerService = _a.customerService, discountService = _a.discountService, giftCardService = _a.giftCardService, totalsService = _a.totalsService, newTotalsService = _a.newTotalsService, addressRepository = _a.addressRepository, paymentSessionRepository = _a.paymentSessionRepository, customShippingOptionService = _a.customShippingOptionService, lineItemAdjustmentService = _a.lineItemAdjustmentService, priceSelectionStrategy = _a.priceSelectionStrategy, salesChannelService = _a.salesChannelService, featureFlagRouter = _a.featureFlagRouter, storeService = _a.storeService, productVariantInventoryService = _a.productVariantInventoryService;
         var _this = 
         // eslint-disable-next-line prefer-rest-params
         _super.call(this, arguments[0]) || this;
@@ -134,9 +135,9 @@ var CartService = /** @class */ (function (_super) {
         _this.discountService_ = discountService;
         _this.giftCardService_ = giftCardService;
         _this.totalsService_ = totalsService;
+        _this.newTotalsService_ = newTotalsService;
         _this.addressRepository_ = addressRepository;
         _this.paymentSessionRepository_ = paymentSessionRepository;
-        _this.inventoryService_ = inventoryService;
         _this.customShippingOptionService_ = customShippingOptionService;
         _this.taxProviderService_ = taxProviderService;
         _this.lineItemAdjustmentService_ = lineItemAdjustmentService;
@@ -144,151 +145,9 @@ var CartService = /** @class */ (function (_super) {
         _this.salesChannelService_ = salesChannelService;
         _this.featureFlagRouter_ = featureFlagRouter;
         _this.storeService_ = storeService;
+        _this.productVariantInventoryService_ = productVariantInventoryService;
         return _this;
     }
-    CartService.prototype.getTotalsRelations = function (config) {
-        var relationSet = new Set(config.relations);
-        relationSet.add("items");
-        relationSet.add("items.tax_lines");
-        relationSet.add("items.adjustments");
-        relationSet.add("gift_cards");
-        relationSet.add("discounts");
-        relationSet.add("discounts.rule");
-        relationSet.add("shipping_methods");
-        relationSet.add("shipping_methods.tax_lines");
-        relationSet.add("shipping_address");
-        relationSet.add("region");
-        relationSet.add("region.tax_rates");
-        return Array.from(relationSet.values());
-    };
-    CartService.prototype.transformQueryForTotals_ = function (config) {
-        var select = config.select, relations = config.relations;
-        if (!select) {
-            return {
-                select: select,
-                relations: relations,
-                totalsToSelect: [],
-            };
-        }
-        var totalFields = [
-            "subtotal",
-            "tax_total",
-            "shipping_total",
-            "discount_total",
-            "gift_card_total",
-            "total",
-        ];
-        var totalsToSelect = select.filter(function (v) {
-            return totalFields.includes(v);
-        });
-        if (totalsToSelect.length > 0) {
-            var relationSet = new Set(relations);
-            relationSet.add("items");
-            relationSet.add("items.tax_lines");
-            relationSet.add("gift_cards");
-            relationSet.add("discounts");
-            relationSet.add("discounts.rule");
-            // relationSet.add("discounts.parent_discount")
-            // relationSet.add("discounts.parent_discount.rule")
-            // relationSet.add("discounts.parent_discount.regions")
-            relationSet.add("shipping_methods");
-            relationSet.add("shipping_address");
-            relationSet.add("region");
-            relationSet.add("region.tax_rates");
-            relations = Array.from(relationSet.values());
-            select = select.filter(function (v) { return !totalFields.includes(v); });
-        }
-        return {
-            relations: relations,
-            select: select,
-            totalsToSelect: totalsToSelect,
-        };
-    };
-    CartService.prototype.decorateTotals_ = function (cart, totalsToSelect, options) {
-        if (options === void 0) { options = { force_taxes: false }; }
-        return __awaiter(this, void 0, void 0, function () {
-            var totals, totalsToSelect_1, totalsToSelect_1_1, key, _a, _b, _c, _d, _e, giftCardBreakdown, _f, e_1_1;
-            var e_1, _g;
-            return __generator(this, function (_h) {
-                switch (_h.label) {
-                    case 0:
-                        totals = {};
-                        _h.label = 1;
-                    case 1:
-                        _h.trys.push([1, 18, 19, 20]);
-                        totalsToSelect_1 = __values(totalsToSelect), totalsToSelect_1_1 = totalsToSelect_1.next();
-                        _h.label = 2;
-                    case 2:
-                        if (!!totalsToSelect_1_1.done) return [3 /*break*/, 17];
-                        key = totalsToSelect_1_1.value;
-                        _a = key;
-                        switch (_a) {
-                            case "total": return [3 /*break*/, 3];
-                            case "shipping_total": return [3 /*break*/, 5];
-                            case "discount_total": return [3 /*break*/, 7];
-                            case "tax_total": return [3 /*break*/, 9];
-                            case "gift_card_total": return [3 /*break*/, 11];
-                            case "subtotal": return [3 /*break*/, 13];
-                        }
-                        return [3 /*break*/, 15];
-                    case 3:
-                        _b = totals;
-                        return [4 /*yield*/, this.totalsService_.getTotal(cart, {
-                                force_taxes: options.force_taxes,
-                            })];
-                    case 4:
-                        _b.total = _h.sent();
-                        return [3 /*break*/, 16];
-                    case 5:
-                        _c = totals;
-                        return [4 /*yield*/, this.totalsService_.getShippingTotal(cart)];
-                    case 6:
-                        _c.shipping_total = _h.sent();
-                        return [3 /*break*/, 16];
-                    case 7:
-                        _d = totals;
-                        return [4 /*yield*/, this.totalsService_.getDiscountTotal(cart)];
-                    case 8:
-                        _d.discount_total = _h.sent();
-                        return [3 /*break*/, 16];
-                    case 9:
-                        _e = totals;
-                        return [4 /*yield*/, this.totalsService_.getTaxTotal(cart, options.force_taxes)];
-                    case 10:
-                        _e.tax_total = _h.sent();
-                        return [3 /*break*/, 16];
-                    case 11: return [4 /*yield*/, this.totalsService_.getGiftCardTotal(cart)];
-                    case 12:
-                        giftCardBreakdown = _h.sent();
-                        totals.gift_card_total = giftCardBreakdown.total;
-                        totals.gift_card_tax_total = giftCardBreakdown.tax_total;
-                        return [3 /*break*/, 16];
-                    case 13:
-                        _f = totals;
-                        return [4 /*yield*/, this.totalsService_.getSubtotal(cart)];
-                    case 14:
-                        _f.subtotal = _h.sent();
-                        return [3 /*break*/, 16];
-                    case 15: return [3 /*break*/, 16];
-                    case 16:
-                        totalsToSelect_1_1 = totalsToSelect_1.next();
-                        return [3 /*break*/, 2];
-                    case 17: return [3 /*break*/, 20];
-                    case 18:
-                        e_1_1 = _h.sent();
-                        e_1 = { error: e_1_1 };
-                        return [3 /*break*/, 20];
-                    case 19:
-                        try {
-                            if (totalsToSelect_1_1 && !totalsToSelect_1_1.done && (_g = totalsToSelect_1.return)) _g.call(totalsToSelect_1);
-                        }
-                        finally { if (e_1) throw e_1.error; }
-                        return [7 /*endfinally*/];
-                    case 20: return [2 /*return*/, Object.assign(cart, totals)];
-                }
-            });
-        });
-    };
     /**
      * @param selector - the query object for find
      * @param config - config object
@@ -314,9 +173,52 @@ var CartService = /** @class */ (function (_super) {
      * Gets a cart by id.
      * @param cartId - the id of the cart to get.
      * @param options - the options to get a cart
+     * @param totalsConfig
      * @return the cart document.
      */
     CartService.prototype.retrieve = function (cartId, options, totalsConfig) {
+        if (options === void 0) { options = {}; }
+        if (totalsConfig === void 0) { totalsConfig = {}; }
+        return __awaiter(this, void 0, void 0, function () {
+            var totalsToSelect, manager, cartRepo, query, queryRelations, raw;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(cartId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"cartId\" must be defined");
+                        }
+                        totalsToSelect = this.transformQueryForTotals_(options).totalsToSelect;
+                        if (!totalsToSelect.length) return [3 /*break*/, 2];
+                        return [4 /*yield*/, this.retrieveLegacy(cartId, options, totalsConfig)];
+                    case 1: return [2 /*return*/, _a.sent()];
+                    case 2:
+                        manager = this.manager_;
+                        cartRepo = manager.getCustomRepository(this.cartRepository_);
+                        query = (0, utils_1.buildQuery)({ id: cartId }, options);
+                        if ((options.select || []).length === 0) {
+                            query.select = undefined;
+                        }
+                        queryRelations = query.relations;
+                        query.relations = undefined;
+                        return [4 /*yield*/, cartRepo.findOneWithRelations(queryRelations, query)];
+                    case 3:
+                        raw = _a.sent();
+                        if (!raw) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Cart with ".concat(cartId, " was not found"));
+                        }
+                        return [2 /*return*/, raw];
+                }
+            });
+        });
+    };
+    /**
+     * @deprecated
+     * @param cartId
+     * @param options
+     * @param totalsConfig
+     * @protected
+     */
+    CartService.prototype.retrieveLegacy = function (cartId, options, totalsConfig) {
         if (options === void 0) { options = {}; }
         if (totalsConfig === void 0) { totalsConfig = {}; }
         return __awaiter(this, void 0, void 0, function () {
@@ -331,12 +233,7 @@ var CartService = /** @class */ (function (_super) {
                         if (relations && relations.length > 0) {
                             query.relations = relations;
                         }
-                        if (select && select.length > 0) {
-                            query.select = select;
-                        }
-                        else {
-                            query.select = undefined;
-                        }
+                        query.select = (select === null || select === void 0 ? void 0 : select.length) ? select : undefined;
                         queryRelations = query.relations;
                         query.relations = undefined;
                         return [4 /*yield*/, cartRepo.findOneWithRelations(queryRelations, query)];
@@ -351,32 +248,6 @@ var CartService = /** @class */ (function (_super) {
             });
         });
     };
-    CartService.prototype.retrieveNew = function (cartId, options) {
-        if (options === void 0) { options = {}; }
-        return __awaiter(this, void 0, void 0, function () {
-            var manager, cartRepo, query, queryRelations, raw;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        manager = this.manager_;
-                        cartRepo = manager.getCustomRepository(this.cartRepository_);
-                        query = (0, utils_1.buildQuery)({ id: cartId }, options);
-                        if ((options.select || []).length <= 0) {
-                            query.select = undefined;
-                        }
-                        queryRelations = query.relations;
-                        query.relations = undefined;
-                        return [4 /*yield*/, cartRepo.findOneWithRelations(queryRelations, query)];
-                    case 1:
-                        raw = _a.sent();
-                        if (!raw) {
-                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Cart with ".concat(cartId, " was not found"));
-                        }
-                        return [2 /*return*/, raw];
-                }
-            });
-        });
-    };
     CartService.prototype.retrieveWithTotals = function (cartId, options, totalsConfig) {
         if (options === void 0) { options = {}; }
         if (totalsConfig === void 0) { totalsConfig = {}; }
@@ -386,7 +257,7 @@ var CartService = /** @class */ (function (_super) {
                 switch (_a.label) {
                     case 0:
                         relations = this.getTotalsRelations(options);
-                        return [4 /*yield*/, this.retrieveNew(cartId, __assign(__assign({}, options), { relations: relations }))];
+                        return [4 /*yield*/, this.retrieve(cartId, __assign(__assign({}, options), { relations: relations }))];
                     case 1:
                         cart = _a.sent();
                         return [4 /*yield*/, this.decorateTotals(cart, totalsConfig)];
@@ -406,75 +277,108 @@ var CartService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                            var cartRepo, addressRepo, rawCart, _a, customer, region, regCountries, addr, remainingFields, remainingFields_1, remainingFields_1_1, remainingField, key, createdCart, cart;
-                            var e_2, _b;
-                            var _c;
-                            return __generator(this, function (_d) {
-                                switch (_d.label) {
+                            var cartRepo, addressRepo, rawCart, _a, customer, customer, region, _b, regCountries, addr, addr, remainingFields, remainingFields_1, remainingFields_1_1, remainingField, key, createdCart, cart;
+                            var e_1, _c;
+                            var _d;
+                            return __generator(this, function (_e) {
+                                switch (_e.label) {
                                     case 0:
                                         cartRepo = transactionManager.getCustomRepository(this.cartRepository_);
                                         addressRepo = transactionManager.getCustomRepository(this.addressRepository_);
                                         rawCart = {
-                                            context: (_c = data.context) !== null && _c !== void 0 ? _c : {},
+                                            context: (_d = data.context) !== null && _d !== void 0 ? _d : {},
                                         };
                                         if (!this.featureFlagRouter_.isFeatureEnabled(sales_channels_1.default.key)) return [3 /*break*/, 2];
                                         _a = rawCart;
                                         return [4 /*yield*/, this.getValidatedSalesChannel(data.sales_channel_id)];
                                     case 1:
-                                        _a.sales_channel_id = (_d.sent()).id;
-                                        _d.label = 2;
+                                        _a.sales_channel_id = (_e.sent()).id;
+                                        _e.label = 2;
                                     case 2:
-                                        if (!data.email) return [3 /*break*/, 4];
-                                        return [4 /*yield*/, this.createOrFetchUserFromEmail_(data.email)];
+                                        if (!data.customer_id) return [3 /*break*/, 4];
+                                        return [4 /*yield*/, this.customerService_
+                                                .withTransaction(transactionManager)
+                                                .retrieve(data.customer_id)
+                                                .catch(function () { return undefined; })];
                                     case 3:
-                                        customer = _d.sent();
+                                        customer = _e.sent();
+                                        rawCart.customer = customer;
+                                        rawCart.customer_id = customer === null || customer === void 0 ? void 0 : customer.id;
+                                        rawCart.email = customer === null || customer === void 0 ? void 0 : customer.email;
+                                        _e.label = 4;
+                                    case 4:
+                                        if (!(!rawCart.email && data.email)) return [3 /*break*/, 6];
+                                        return [4 /*yield*/, this.createOrFetchGuestCustomerFromEmail_(data.email)];
+                                    case 5:
+                                        customer = _e.sent();
                                         rawCart.customer = customer;
                                         rawCart.customer_id = customer.id;
                                         rawCart.email = customer.email;
-                                        _d.label = 4;
-                                    case 4:
-                                        if (!data.region_id) {
+                                        _e.label = 6;
+                                    case 6:
+                                        if (!data.region_id && !data.region) {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "A region_id must be provided when creating a cart");
                                         }
                                         rawCart.region_id = data.region_id;
-                                        return [4 /*yield*/, this.regionService_
-                                                .withTransaction(transactionManager)
-                                                .retrieve(data.region_id, {
-                                                relations: ["countries"],
-                                            })];
-                                    case 5:
-                                        region = _d.sent();
+                                        if (!data.region) return [3 /*break*/, 7];
+                                        _b = data.region;
+                                        return [3 /*break*/, 9];
+                                    case 7: return [4 /*yield*/, this.regionService_
+                                            .withTransaction(transactionManager)
+                                            .retrieve(data.region_id, {
+                                            relations: ["countries"],
+                                        })];
+                                    case 8:
+                                        _b = _e.sent();
+                                        _e.label = 9;
+                                    case 9:
+                                        region = _b;
                                         regCountries = region.countries.map(function (_a) {
                                             var iso_2 = _a.iso_2;
                                             return iso_2;
                                         });
-                                        if (!(!data.shipping_address && !data.shipping_address_id)) return [3 /*break*/, 6];
+                                        if (!(!data.shipping_address && !data.shipping_address_id)) return [3 /*break*/, 10];
                                         if (region.countries.length === 1) {
                                             rawCart.shipping_address = addressRepo.create({
                                                 country_code: regCountries[0],
                                             });
                                         }
-                                        return [3 /*break*/, 8];
-                                    case 6:
+                                        return [3 /*break*/, 12];
+                                    case 10:
                                         if (data.shipping_address) {
                                             if (!regCountries.includes(data.shipping_address.country_code)) {
                                                 throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Shipping country not in region");
                                             }
                                             rawCart.shipping_address = data.shipping_address;
                                         }
-                                        if (!data.shipping_address_id) return [3 /*break*/, 8];
+                                        if (!data.shipping_address_id) return [3 /*break*/, 12];
                                         return [4 /*yield*/, addressRepo.findOne(data.shipping_address_id)];
-                                    case 7:
-                                        addr = _d.sent();
+                                    case 11:
+                                        addr = _e.sent();
                                         if ((addr === null || addr === void 0 ? void 0 : addr.country_code) &&
                                             !regCountries.includes(addr.country_code)) {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Shipping country not in region");
                                         }
                                         rawCart.shipping_address_id = data.shipping_address_id;
-                                        _d.label = 8;
-                                    case 8:
+                                        _e.label = 12;
+                                    case 12:
+                                        if (data.billing_address) {
+                                            if (!regCountries.includes(data.billing_address.country_code)) {
+                                                throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Billing country not in region");
+                                            }
+                                            rawCart.billing_address = data.billing_address;
+                                        }
+                                        if (!data.billing_address_id) return [3 /*break*/, 14];
+                                        return [4 /*yield*/, addressRepo.findOne(data.billing_address_id)];
+                                    case 13:
+                                        addr = _e.sent();
+                                        if ((addr === null || addr === void 0 ? void 0 : addr.country_code) && !regCountries.includes(addr.country_code)) {
+                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Billing country not in region");
+                                        }
+                                        rawCart.billing_address_id = data.billing_address_id;
+                                        _e.label = 14;
+                                    case 14:
                                         remainingFields = [
-                                            "billing_address_id",
                                             "context",
                                             "type",
                                             "metadata",
@@ -484,30 +388,30 @@ var CartService = /** @class */ (function (_super) {
                                         try {
                                             for (remainingFields_1 = __values(remainingFields), remainingFields_1_1 = remainingFields_1.next(); !remainingFields_1_1.done; remainingFields_1_1 = remainingFields_1.next()) {
                                                 remainingField = remainingFields_1_1.value;
-                                                if ((0, utils_1.isDefined)(data[remainingField]) && remainingField !== "object") {
+                                                if ((0, medusa_core_utils_1.isDefined)(data[remainingField]) && remainingField !== "object") {
                                                     key = remainingField;
                                                     rawCart[key] = data[remainingField];
                                                 }
                                             }
                                         }
-                                        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                                        catch (e_1_1) { e_1 = { error: e_1_1 }; }
                                         finally {
                                             try {
-                                                if (remainingFields_1_1 && !remainingFields_1_1.done && (_b = remainingFields_1.return)) _b.call(remainingFields_1);
+                                                if (remainingFields_1_1 && !remainingFields_1_1.done && (_c = remainingFields_1.return)) _c.call(remainingFields_1);
                                             }
-                                            finally { if (e_2) throw e_2.error; }
+                                            finally { if (e_1) throw e_1.error; }
                                         }
                                         createdCart = cartRepo.create(rawCart);
                                         return [4 /*yield*/, cartRepo.save(createdCart)];
-                                    case 9:
-                                        cart = _d.sent();
+                                    case 15:
+                                        cart = _e.sent();
                                         return [4 /*yield*/, this.eventBus_
                                                 .withTransaction(transactionManager)
                                                 .emit(CartService.Events.CREATED, {
                                                 id: cart.id,
                                             })];
-                                    case 10:
-                                        _d.sent();
+                                    case 16:
+                                        _e.sent();
                                         return [2 /*return*/, cart];
                                 }
                             });
@@ -523,7 +427,7 @@ var CartService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        if (!(0, utils_1.isDefined)(salesChannelId)) return [3 /*break*/, 2];
+                        if (!(0, medusa_core_utils_1.isDefined)(salesChannelId)) return [3 /*break*/, 2];
                         return [4 /*yield*/, this.salesChannelService_
                                 .withTransaction(this.manager_)
                                 .retrieve(salesChannelId)];
@@ -652,28 +556,36 @@ var CartService = /** @class */ (function (_super) {
     /**
      * Check if line item's variant belongs to the cart's sales channel.
      *
-     * @param cart - the cart for the line item
+     * @param sales_channel_id - the cart for the line item
      * @param lineItem - the line item being added
      * @return a boolean indicating validation result
      */
-    CartService.prototype.validateLineItem = function (cart, lineItem) {
+    CartService.prototype.validateLineItem = function (_a, lineItem) {
+        var _b;
+        var sales_channel_id = _a.sales_channel_id;
         return __awaiter(this, void 0, void 0, function () {
-            var lineItemVariant;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var lineItemVariant, _c;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
                     case 0:
-                        if (!cart.sales_channel_id) {
+                        if (!sales_channel_id || !lineItem.variant_id) {
                             return [2 /*return*/, true];
                         }
-                        return [4 /*yield*/, this.productVariantService_
-                                .withTransaction(this.manager_)
-                                .retrieve(lineItem.variant_id)];
-                    case 1:
-                        lineItemVariant = _a.sent();
+                        if (!((_b = lineItem.variant) === null || _b === void 0 ? void 0 : _b.product_id)) return [3 /*break*/, 1];
+                        _c = lineItem.variant;
+                        return [3 /*break*/, 3];
+                    case 1: return [4 /*yield*/, this.productVariantService_
+                            .withTransaction(this.manager_)
+                            .retrieve(lineItem.variant_id, { select: ["id", "product_id"] })];
+                    case 2:
+                        _c = _d.sent();
+                        _d.label = 3;
+                    case 3:
+                        lineItemVariant = _c;
                         return [4 /*yield*/, this.productService_
                                 .withTransaction(this.manager_)
-                                .filterProductsBySalesChannel([lineItemVariant.product_id], cart.sales_channel_id)];
-                    case 2: return [2 /*return*/, !!(_a.sent()).length];
+                                .filterProductsBySalesChannel([lineItemVariant.product_id], sales_channel_id)];
+                    case 4: return [2 /*return*/, !!(_d.sent()).length];
                 }
             });
         });
@@ -686,99 +598,291 @@ var CartService = /** @class */ (function (_super) {
      *    validateSalesChannels - should check if product belongs to the same sales chanel as cart
      *                            (if cart has associated sales channel)
      * @return the result of the update operation
+     * @deprecated Use {@link addOrUpdateLineItems} instead.
      */
     CartService.prototype.addLineItem = function (cartId, lineItem, config) {
         if (config === void 0) { config = { validateSalesChannels: true }; }
         return __awaiter(this, void 0, void 0, function () {
+            var select;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                            var cart, currentItem, quantity, lineItemRepository, result;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.retrieve(cartId, {
-                                            relations: [
-                                                "shipping_methods",
-                                                "items",
-                                                "items.adjustments",
-                                                "payment_sessions",
-                                                "items.variant",
-                                                "items.variant.product",
-                                                "discounts",
-                                                "discounts.rule",
-                                            ],
-                                        })];
-                                    case 1:
-                                        cart = _a.sent();
-                                        if (!this.featureFlagRouter_.isFeatureEnabled("sales_channels")) return [3 /*break*/, 3];
-                                        if (!config.validateSalesChannels) return [3 /*break*/, 3];
-                                        return [4 /*yield*/, this.validateLineItem(cart, lineItem)];
-                                    case 2:
-                                        if (!(_a.sent())) {
-                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "The product \"".concat(lineItem.title, "\" must belongs to the sales channel on which the cart has been created."));
-                                        }
-                                        _a.label = 3;
-                                    case 3:
-                                        if (lineItem.should_merge) {
-                                            currentItem = cart.items.find(function (item) {
-                                                if (item.should_merge && item.variant_id === lineItem.variant_id) {
-                                                    return (0, lodash_1.isEqual)(item.metadata, lineItem.metadata);
+                    case 0:
+                        select = ["id"];
+                        if (this.featureFlagRouter_.isFeatureEnabled("sales_channels")) {
+                            select.push("sales_channel_id");
+                        }
+                        return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
+                                var cart, lineItemIsValid, lineItemServiceTx, currentItem, _a, existingItem, quantity, isCovered;
+                                return __generator(this, function (_b) {
+                                    switch (_b.label) {
+                                        case 0: return [4 /*yield*/, this.retrieve(cartId, { select: select })];
+                                        case 1:
+                                            cart = _b.sent();
+                                            if (!this.featureFlagRouter_.isFeatureEnabled("sales_channels")) return [3 /*break*/, 3];
+                                            if (!config.validateSalesChannels) return [3 /*break*/, 3];
+                                            if (!lineItem.variant_id) return [3 /*break*/, 3];
+                                            return [4 /*yield*/, this.validateLineItem(cart, lineItem)];
+                                        case 2:
+                                            lineItemIsValid = _b.sent();
+                                            if (!lineItemIsValid) {
+                                                throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "The product \"".concat(lineItem.title, "\" must belongs to the sales channel on which the cart has been created."));
+                                            }
+                                            _b.label = 3;
+                                        case 3:
+                                            lineItemServiceTx = this.lineItemService_.withTransaction(transactionManager);
+                                            if (!lineItem.should_merge) return [3 /*break*/, 5];
+                                            return [4 /*yield*/, lineItemServiceTx.list({
+                                                    cart_id: cart.id,
+                                                    variant_id: lineItem.variant_id,
+                                                    should_merge: true,
+                                                }, { take: 1, select: ["id", "metadata", "quantity"] })];
+                                        case 4:
+                                            _a = __read.apply(void 0, [_b.sent(), 1]), existingItem = _a[0];
+                                            if (existingItem &&
+                                                (0, lodash_1.isEqual)(existingItem.metadata, lineItem.metadata)) {
+                                                currentItem = existingItem;
+                                            }
+                                            _b.label = 5;
+                                        case 5:
+                                            quantity = currentItem
+                                                ? (currentItem.quantity += lineItem.quantity)
+                                                : lineItem.quantity;
+                                            if (!lineItem.variant_id) return [3 /*break*/, 7];
+                                            return [4 /*yield*/, this.productVariantInventoryService_.confirmInventory(lineItem.variant_id, quantity, { salesChannelId: cart.sales_channel_id })];
+                                        case 6:
+                                            isCovered = _b.sent();
+                                            if (!isCovered) {
+                                                throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Variant with id: ".concat(lineItem.variant_id, " does not have the required inventory"), medusa_core_utils_1.MedusaError.Codes.INSUFFICIENT_INVENTORY);
+                                            }
+                                            _b.label = 7;
+                                        case 7:
+                                            if (!currentItem) return [3 /*break*/, 9];
+                                            return [4 /*yield*/, lineItemServiceTx.update(currentItem.id, {
+                                                    quantity: currentItem.quantity,
+                                                })];
+                                        case 8:
+                                            _b.sent();
+                                            return [3 /*break*/, 11];
+                                        case 9: return [4 /*yield*/, lineItemServiceTx.create(__assign(__assign({}, lineItem), { has_shipping: false, cart_id: cart.id }))];
+                                        case 10:
+                                            _b.sent();
+                                            _b.label = 11;
+                                        case 11: return [4 /*yield*/, lineItemServiceTx
+                                                .update({ cart_id: cartId, has_shipping: true }, { has_shipping: false })
+                                                .catch(function (err) {
+                                                // We only want to catch the errors related to not found items since we don't care if there is not item to update
+                                                if ("type" in err && err.type === medusa_core_utils_1.MedusaError.Types.NOT_FOUND) {
+                                                    return;
                                                 }
-                                                return false;
+                                                throw err;
+                                            })];
+                                        case 12:
+                                            _b.sent();
+                                            return [4 /*yield*/, this.retrieve(cart.id, {
+                                                    relations: ["items", "discounts", "discounts.rule", "region"],
+                                                })];
+                                        case 13:
+                                            cart = _b.sent();
+                                            return [4 /*yield*/, this.refreshAdjustments_(cart)];
+                                        case 14:
+                                            _b.sent();
+                                            return [4 /*yield*/, this.eventBus_
+                                                    .withTransaction(transactionManager)
+                                                    .emit(CartService.Events.UPDATED, { id: cart.id })];
+                                        case 15:
+                                            _b.sent();
+                                            return [2 /*return*/];
+                                    }
+                                });
+                            }); })];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
+    /**
+     * Adds or update one or multiple line items to the cart. It also update all existing items in the cart
+     * to have has_shipping to false. Finally, the adjustments will be updated.
+     * @param cartId - the id of the cart that we will add to
+     * @param lineItems - the line items to add.
+     * @param config
+     *    validateSalesChannels - should check if product belongs to the same sales chanel as cart
+     *                            (if cart has associated sales channel)
+     * @return the result of the update operation
+     */
+    CartService.prototype.addOrUpdateLineItems = function (cartId, lineItems, config) {
+        if (config === void 0) { config = { validateSalesChannels: true }; }
+        return __awaiter(this, void 0, void 0, function () {
+            var items, select;
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        items = Array.isArray(lineItems) ? lineItems : [lineItems];
+                        select = ["id"];
+                        if (this.featureFlagRouter_.isFeatureEnabled("sales_channels")) {
+                            select.push("sales_channel_id");
+                        }
+                        return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
+                                var cart, areValid, invalidProducts, lineItemServiceTx, productVariantInventoryServiceTx, existingItems, existingItemsVariantMap, lineItemsToCreate, lineItemsToUpdate, items_1, items_1_1, item, currentItem, existingItem, isSufficient, e_2_1, itemKeysToUpdate;
+                                var e_2, _a;
+                                var _this = this;
+                                return __generator(this, function (_b) {
+                                    switch (_b.label) {
+                                        case 0: return [4 /*yield*/, this.retrieve(cartId, { select: select })];
+                                        case 1:
+                                            cart = _b.sent();
+                                            if (!this.featureFlagRouter_.isFeatureEnabled("sales_channels")) return [3 /*break*/, 3];
+                                            if (!config.validateSalesChannels) return [3 /*break*/, 3];
+                                            return [4 /*yield*/, Promise.all(items.map(function (item) { return __awaiter(_this, void 0, void 0, function () {
+                                                    return __generator(this, function (_a) {
+                                                        switch (_a.label) {
+                                                            case 0:
+                                                                if (!item.variant_id) return [3 /*break*/, 2];
+                                                                return [4 /*yield*/, this.validateLineItem(cart, item)];
+                                                            case 1: return [2 /*return*/, _a.sent()];
+                                                            case 2: return [2 /*return*/, true];
+                                                        }
+                                                    });
+                                                }); }))];
+                                        case 2:
+                                            areValid = _b.sent();
+                                            invalidProducts = areValid
+                                                .map(function (valid, index) {
+                                                return !valid ? { title: items[index].title } : undefined;
+                                            })
+                                                .filter(function (v) { return !!v; });
+                                            if (invalidProducts.length) {
+                                                throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "The products [".concat(invalidProducts
+                                                    .map(function (item) { return item.title; })
+                                                    .join(" - "), "] must belongs to the sales channel on which the cart has been created."));
+                                            }
+                                            _b.label = 3;
+                                        case 3:
+                                            lineItemServiceTx = this.lineItemService_.withTransaction(transactionManager);
+                                            productVariantInventoryServiceTx = this.productVariantInventoryService_.withTransaction(transactionManager);
+                                            return [4 /*yield*/, lineItemServiceTx.list({
+                                                    cart_id: cart.id,
+                                                    variant_id: (0, typeorm_1.In)([items.map(function (item) { return item.variant_id; })]),
+                                                    should_merge: true,
+                                                }, { select: ["id", "metadata", "quantity"] })];
+                                        case 4:
+                                            existingItems = _b.sent();
+                                            existingItemsVariantMap = new Map();
+                                            existingItems.forEach(function (item) {
+                                                existingItemsVariantMap.set(item.variant_id, item);
                                             });
-                                        }
-                                        quantity = currentItem
-                                            ? (currentItem.quantity += lineItem.quantity)
-                                            : lineItem.quantity;
-                                        // Confirm inventory or throw error
-                                        return [4 /*yield*/, this.inventoryService_
-                                                .withTransaction(transactionManager)
-                                                .confirmInventory(lineItem.variant_id, quantity)];
-                                    case 4:
-                                        // Confirm inventory or throw error
-                                        _a.sent();
-                                        if (!currentItem) return [3 /*break*/, 6];
-                                        return [4 /*yield*/, this.lineItemService_
-                                                .withTransaction(transactionManager)
-                                                .update(currentItem.id, {
-                                                quantity: currentItem.quantity,
-                                            })];
-                                    case 5:
-                                        _a.sent();
-                                        return [3 /*break*/, 8];
-                                    case 6: return [4 /*yield*/, this.lineItemService_
-                                            .withTransaction(transactionManager)
-                                            .create(__assign(__assign({}, lineItem), { has_shipping: false, cart_id: cartId }))];
-                                    case 7:
-                                        _a.sent();
-                                        _a.label = 8;
-                                    case 8:
-                                        lineItemRepository = transactionManager.getCustomRepository(this.lineItemRepository_);
-                                        return [4 /*yield*/, lineItemRepository.update({
-                                                id: (0, typeorm_1.In)(cart.items.map(function (item) { return item.id; })),
-                                            }, {
-                                                has_shipping: false,
-                                            })];
-                                    case 9:
-                                        _a.sent();
-                                        return [4 /*yield*/, this.retrieve(cartId, {
-                                                relations: ["items", "discounts", "discounts.rule", "region"],
-                                            })];
-                                    case 10:
-                                        result = _a.sent();
-                                        return [4 /*yield*/, this.refreshAdjustments_(result)];
-                                    case 11:
-                                        _a.sent();
-                                        return [4 /*yield*/, this.eventBus_
-                                                .withTransaction(transactionManager)
-                                                .emit(CartService.Events.UPDATED, result)];
-                                    case 12:
-                                        _a.sent();
-                                        return [2 /*return*/, result];
-                                }
-                            });
-                        }); })];
+                                            lineItemsToCreate = [];
+                                            lineItemsToUpdate = [];
+                                            _b.label = 5;
+                                        case 5:
+                                            _b.trys.push([5, 11, 12, 13]);
+                                            items_1 = __values(items), items_1_1 = items_1.next();
+                                            _b.label = 6;
+                                        case 6:
+                                            if (!!items_1_1.done) return [3 /*break*/, 10];
+                                            item = items_1_1.value;
+                                            currentItem = void 0;
+                                            existingItem = existingItemsVariantMap.get(item.variant_id);
+                                            if (item.should_merge) {
+                                                if (existingItem && (0, lodash_1.isEqual)(existingItem.metadata, item.metadata)) {
+                                                    currentItem = existingItem;
+                                                }
+                                            }
+                                            // If content matches one of the line items currently in the cart we can
+                                            // simply update the quantity of the existing line item
+                                            item.quantity = currentItem
+                                                ? (currentItem.quantity += item.quantity)
+                                                : item.quantity;
+                                            if (!item.variant_id) return [3 /*break*/, 8];
+                                            return [4 /*yield*/, productVariantInventoryServiceTx.confirmInventory(item.variant_id, item.quantity, { salesChannelId: cart.sales_channel_id })];
+                                        case 7:
+                                            isSufficient = _b.sent();
+                                            if (!isSufficient) {
+                                                throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Variant with id: ".concat(item.variant_id, " does not have the required inventory"), medusa_core_utils_1.MedusaError.Codes.INSUFFICIENT_INVENTORY);
+                                            }
+                                            _b.label = 8;
+                                        case 8:
+                                            if (currentItem) {
+                                                lineItemsToUpdate[currentItem.id] = {
+                                                    quantity: item.quantity,
+                                                    has_shipping: false,
+                                                };
+                                            }
+                                            else {
+                                                // Since the variant is eager loaded, we are removing it before the line item is being created.
+                                                delete item.variant;
+                                                item.has_shipping = false;
+                                                item.cart_id = cart.id;
+                                                lineItemsToCreate.push(item);
+                                            }
+                                            _b.label = 9;
+                                        case 9:
+                                            items_1_1 = items_1.next();
+                                            return [3 /*break*/, 6];
+                                        case 10: return [3 /*break*/, 13];
+                                        case 11:
+                                            e_2_1 = _b.sent();
+                                            e_2 = { error: e_2_1 };
+                                            return [3 /*break*/, 13];
+                                        case 12:
+                                            try {
+                                                if (items_1_1 && !items_1_1.done && (_a = items_1.return)) _a.call(items_1);
+                                            }
+                                            finally { if (e_2) throw e_2.error; }
+                                            return [7 /*endfinally*/];
+                                        case 13:
+                                            itemKeysToUpdate = Object.keys(lineItemsToUpdate);
+                                            if (!itemKeysToUpdate.length) return [3 /*break*/, 15];
+                                            return [4 /*yield*/, Promise.all(itemKeysToUpdate.map(function (id) { return __awaiter(_this, void 0, void 0, function () {
+                                                    return __generator(this, function (_a) {
+                                                        switch (_a.label) {
+                                                            case 0: return [4 /*yield*/, lineItemServiceTx.update(id, lineItemsToUpdate[id])];
+                                                            case 1: return [2 /*return*/, _a.sent()];
+                                                        }
+                                                    });
+                                                }); }))];
+                                        case 14:
+                                            _b.sent();
+                                            _b.label = 15;
+                                        case 15: 
+                                        // Create all items that needs to be created
+                                        return [4 /*yield*/, lineItemServiceTx.create(lineItemsToCreate)];
+                                        case 16:
+                                            // Create all items that needs to be created
+                                            _b.sent();
+                                            return [4 /*yield*/, lineItemServiceTx
+                                                    .update({
+                                                    cart_id: cartId,
+                                                    has_shipping: true,
+                                                }, { has_shipping: false })
+                                                    .catch(function (err) {
+                                                    // We only want to catch the errors related to not found items since we don't care if there is not item to update
+                                                    if ("type" in err && err.type === medusa_core_utils_1.MedusaError.Types.NOT_FOUND) {
+                                                        return;
+                                                    }
+                                                    throw err;
+                                                })];
+                                        case 17:
+                                            _b.sent();
+                                            return [4 /*yield*/, this.retrieve(cart.id, {
+                                                    relations: ["items", "discounts", "discounts.rule", "region"],
+                                                })];
+                                        case 18:
+                                            cart = _b.sent();
+                                            return [4 /*yield*/, this.refreshAdjustments_(cart)];
+                                        case 19:
+                                            _b.sent();
+                                            return [4 /*yield*/, this.eventBus_
+                                                    .withTransaction(transactionManager)
+                                                    .emit(CartService.Events.UPDATED, { id: cart.id })];
+                                        case 20:
+                                            _b.sent();
+                                            return [2 /*return*/];
+                                    }
+                                });
+                            }); })];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
@@ -797,50 +901,54 @@ var CartService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                            var cart, lineItemExists, hasInventory, updatedCart;
+                            var lineItem, select, cart, hasInventory, updatedCart;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.retrieve(cartId, {
-                                            relations: ["items", "items.adjustments", "payment_sessions"],
-                                        })
-                                        // Ensure that the line item exists in the cart
-                                    ];
+                                    case 0: return [4 /*yield*/, this.lineItemService_.retrieve(lineItemId, {
+                                            select: ["id", "quantity", "variant_id", "cart_id"],
+                                        })];
                                     case 1:
-                                        cart = _a.sent();
-                                        lineItemExists = cart.items.find(function (i) { return i.id === lineItemId; });
-                                        if (!lineItemExists) {
+                                        lineItem = _a.sent();
+                                        if (lineItem.cart_id !== cartId) {
+                                            // Ensure that the line item exists in the cart
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "A line item with the provided id doesn't exist in the cart");
                                         }
-                                        if (!lineItemUpdate.quantity) return [3 /*break*/, 3];
-                                        return [4 /*yield*/, this.inventoryService_
-                                                .withTransaction(transactionManager)
-                                                .confirmInventory(lineItemExists.variant_id, lineItemUpdate.quantity)];
+                                        if (!lineItemUpdate.quantity) return [3 /*break*/, 4];
+                                        if (!lineItem.variant_id) return [3 /*break*/, 4];
+                                        select = ["id"];
+                                        if (this.featureFlagRouter_.isFeatureEnabled(sales_channels_1.default.key)) {
+                                            select.push("sales_channel_id");
+                                        }
+                                        return [4 /*yield*/, this.retrieve(cartId, { select: select })];
                                     case 2:
+                                        cart = _a.sent();
+                                        return [4 /*yield*/, this.productVariantInventoryService_.confirmInventory(lineItem.variant_id, lineItemUpdate.quantity, { salesChannelId: cart.sales_channel_id })];
+                                    case 3:
                                         hasInventory = _a.sent();
                                         if (!hasInventory) {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Inventory doesn't cover the desired quantity");
                                         }
-                                        _a.label = 3;
-                                    case 3: return [4 /*yield*/, this.lineItemService_
+                                        _a.label = 4;
+                                    case 4: return [4 /*yield*/, this.lineItemService_
                                             .withTransaction(transactionManager)
                                             .update(lineItemId, lineItemUpdate)];
-                                    case 4:
+                                    case 5:
                                         _a.sent();
                                         return [4 /*yield*/, this.retrieve(cartId, {
                                                 relations: ["items", "discounts", "discounts.rule", "region"],
                                             })];
-                                    case 5:
+                                    case 6:
                                         updatedCart = _a.sent();
                                         return [4 /*yield*/, this.refreshAdjustments_(updatedCart)
                                             // Update the line item
                                         ];
-                                    case 6:
+                                    case 7:
                                         _a.sent();
                                         // Update the line item
                                         return [4 /*yield*/, this.eventBus_
                                                 .withTransaction(transactionManager)
                                                 .emit(CartService.Events.UPDATED, updatedCart)];
-                                    case 7:
+                                    case 8:
                                         // Update the line item
                                         _a.sent();
                                         return [2 /*return*/, updatedCart];
@@ -921,11 +1029,11 @@ var CartService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                            var cartRepo, relations, cart, customer, shippingAddress_1, countryCode, addrRepo, billingAddress, shippingAddress, previousDiscounts, hasFreeShipping, prevContext, updatedCart;
+                            var cartRepo, relations, cart, originalCartCustomer, customer, shippingAddress_1, countryCode, addrRepo, billingAddress, shippingAddress, previousDiscounts, hasFreeShipping, prevContext, updatedCart;
                             var _this = this;
-                            var _a, _b, _c, _d;
-                            return __generator(this, function (_e) {
-                                switch (_e.label) {
+                            var _a, _b, _c, _d, _e;
+                            return __generator(this, function (_f) {
+                                switch (_f.label) {
                                     case 0:
                                         cartRepo = transactionManager.getCustomRepository(this.cartRepository_);
                                         relations = [
@@ -947,85 +1055,72 @@ var CartService = /** @class */ (function (_super) {
                                             relations.push("items.variant", "items.variant.product");
                                         }
                                         return [4 /*yield*/, this.retrieve(cartId, {
-                                                select: [
-                                                    "subtotal",
-                                                    "tax_total",
-                                                    "shipping_total",
-                                                    "discount_total",
-                                                    "total",
-                                                ],
                                                 relations: relations,
                                             })];
                                     case 1:
-                                        cart = _e.sent();
+                                        cart = _f.sent();
+                                        originalCartCustomer = __assign({}, ((_a = cart.customer) !== null && _a !== void 0 ? _a : {}));
                                         if (!data.customer_id) return [3 /*break*/, 3];
                                         return [4 /*yield*/, this.updateCustomerId_(cart, data.customer_id)];
                                     case 2:
-                                        _e.sent();
+                                        _f.sent();
                                         return [3 /*break*/, 5];
                                     case 3:
-                                        if (!(0, utils_1.isDefined)(data.email)) return [3 /*break*/, 5];
-                                        return [4 /*yield*/, this.createOrFetchUserFromEmail_(data.email)];
+                                        if (!(0, medusa_core_utils_1.isDefined)(data.email)) return [3 /*break*/, 5];
+                                        return [4 /*yield*/, this.createOrFetchGuestCustomerFromEmail_(data.email)];
                                     case 4:
-                                        customer = _e.sent();
+                                        customer = _f.sent();
                                         cart.customer = customer;
                                         cart.customer_id = customer.id;
                                         cart.email = customer.email;
-                                        _e.label = 5;
+                                        _f.label = 5;
                                     case 5:
-                                        if (!((0, utils_1.isDefined)(data.customer_id) || (0, utils_1.isDefined)(data.region_id))) return [3 /*break*/, 7];
+                                        if (!((0, medusa_core_utils_1.isDefined)(data.customer_id) || (0, medusa_core_utils_1.isDefined)(data.region_id))) return [3 /*break*/, 7];
                                         return [4 /*yield*/, this.updateUnitPrices_(cart, data.region_id, data.customer_id)];
                                     case 6:
-                                        _e.sent();
-                                        _e.label = 7;
+                                        _f.sent();
+                                        _f.label = 7;
                                     case 7:
-                                        if (!(0, utils_1.isDefined)(data.region_id)) return [3 /*break*/, 9];
+                                        if (!(0, medusa_core_utils_1.isDefined)(data.region_id)) return [3 /*break*/, 9];
                                         shippingAddress_1 = typeof data.shipping_address !== "string"
                                             ? data.shipping_address
                                             : {};
-                                        countryCode = (_a = (data.country_code || (shippingAddress_1 === null || shippingAddress_1 === void 0 ? void 0 : shippingAddress_1.country_code))) !== null && _a !== void 0 ? _a : null;
+                                        countryCode = (_b = (data.country_code || (shippingAddress_1 === null || shippingAddress_1 === void 0 ? void 0 : shippingAddress_1.country_code))) !== null && _b !== void 0 ? _b : null;
                                         return [4 /*yield*/, this.setRegion_(cart, data.region_id, countryCode)];
                                     case 8:
-                                        _e.sent();
-                                        _e.label = 9;
+                                        _f.sent();
+                                        _f.label = 9;
                                     case 9:
                                         addrRepo = transactionManager.getCustomRepository(this.addressRepository_);
-                                        billingAddress = (_b = data.billing_address_id) !== null && _b !== void 0 ? _b : data.billing_address;
+                                        billingAddress = (_c = data.billing_address_id) !== null && _c !== void 0 ? _c : data.billing_address;
                                         if (!(billingAddress !== undefined)) return [3 /*break*/, 11];
                                         return [4 /*yield*/, this.updateBillingAddress_(cart, billingAddress, addrRepo)];
                                     case 10:
-                                        _e.sent();
-                                        _e.label = 11;
+                                        _f.sent();
+                                        _f.label = 11;
                                     case 11:
-                                        shippingAddress = (_c = data.shipping_address_id) !== null && _c !== void 0 ? _c : data.shipping_address;
+                                        shippingAddress = (_d = data.shipping_address_id) !== null && _d !== void 0 ? _d : data.shipping_address;
                                         if (!(shippingAddress !== undefined)) return [3 /*break*/, 13];
                                         return [4 /*yield*/, this.updateShippingAddress_(cart, shippingAddress, addrRepo)];
                                     case 12:
-                                        _e.sent();
-                                        _e.label = 13;
+                                        _f.sent();
+                                        _f.label = 13;
                                     case 13:
                                         if (!this.featureFlagRouter_.isFeatureEnabled(sales_channels_1.default.key)) return [3 /*break*/, 15];
-                                        if (!((0, utils_1.isDefined)(data.sales_channel_id) &&
+                                        if (!((0, medusa_core_utils_1.isDefined)(data.sales_channel_id) &&
                                             data.sales_channel_id != cart.sales_channel_id)) return [3 /*break*/, 15];
                                         return [4 /*yield*/, this.onSalesChannelChange(cart, data.sales_channel_id)];
                                     case 14:
-                                        _e.sent();
+                                        _f.sent();
                                         cart.sales_channel_id = data.sales_channel_id;
-                                        _e.label = 15;
+                                        _f.label = 15;
                                     case 15:
-                                        if (!(0, utils_1.isDefined)(data.discounts)) return [3 /*break*/, 20];
+                                        if (!((0, medusa_core_utils_1.isDefined)(data.discounts) && data.discounts.length)) return [3 /*break*/, 21];
                                         previousDiscounts = __spreadArray([], __read(cart.discounts), false);
                                         cart.discounts.length = 0;
-                                        return [4 /*yield*/, Promise.all(data.discounts.map(function (_a) {
-                                                var code = _a.code;
-                                                return __awaiter(_this, void 0, void 0, function () {
-                                                    return __generator(this, function (_b) {
-                                                        return [2 /*return*/, this.applyDiscount(cart, code)];
-                                                    });
-                                                });
-                                            }))];
+                                        return [4 /*yield*/, this.applyDiscounts(cart, data.discounts.map(function (d) { return d.code; }))];
                                     case 16:
-                                        _e.sent();
+                                        _f.sent();
                                         hasFreeShipping = cart.discounts.some(function (_a) {
                                             var rule = _a.rule;
                                             return (rule === null || rule === void 0 ? void 0 : rule.type) === models_1.DiscountRuleType.FREE_SHIPPING;
@@ -1037,18 +1132,26 @@ var CartService = /** @class */ (function (_super) {
                                             !hasFreeShipping)) return [3 /*break*/, 18];
                                         return [4 /*yield*/, this.adjustFreeShipping_(cart, false)];
                                     case 17:
-                                        _e.sent();
-                                        _e.label = 18;
+                                        _f.sent();
+                                        _f.label = 18;
                                     case 18:
                                         if (!hasFreeShipping) return [3 /*break*/, 20];
                                         return [4 /*yield*/, this.adjustFreeShipping_(cart, true)];
                                     case 19:
-                                        _e.sent();
-                                        _e.label = 20;
-                                    case 20:
-                                        if (!("gift_cards" in data)) return [3 /*break*/, 22];
+                                        _f.sent();
+                                        _f.label = 20;
+                                    case 20: return [3 /*break*/, 23];
+                                    case 21:
+                                        if (!((0, medusa_core_utils_1.isDefined)(data.discounts) && !data.discounts.length)) return [3 /*break*/, 23];
+                                        cart.discounts.length = 0;
+                                        return [4 /*yield*/, this.refreshAdjustments_(cart)];
+                                    case 22:
+                                        _f.sent();
+                                        _f.label = 23;
+                                    case 23:
+                                        if (!("gift_cards" in data)) return [3 /*break*/, 25];
                                         cart.gift_cards = [];
-                                        return [4 /*yield*/, Promise.all(((_d = data.gift_cards) !== null && _d !== void 0 ? _d : []).map(function (_a) {
+                                        return [4 /*yield*/, Promise.all(((_e = data.gift_cards) !== null && _e !== void 0 ? _e : []).map(function (_a) {
                                                 var code = _a.code;
                                                 return __awaiter(_this, void 0, void 0, function () {
                                                     return __generator(this, function (_b) {
@@ -1056,10 +1159,10 @@ var CartService = /** @class */ (function (_super) {
                                                     });
                                                 });
                                             }))];
-                                    case 21:
-                                        _e.sent();
-                                        _e.label = 22;
-                                    case 22:
+                                    case 24:
+                                        _f.sent();
+                                        _f.label = 25;
+                                    case 25:
                                         if (data === null || data === void 0 ? void 0 : data.metadata) {
                                             cart.metadata = (0, utils_1.setMetadata)(cart, data.metadata);
                                         }
@@ -1074,20 +1177,21 @@ var CartService = /** @class */ (function (_super) {
                                             cart.payment_authorized_at = data.payment_authorized_at;
                                         }
                                         return [4 /*yield*/, cartRepo.save(cart)];
-                                    case 23:
-                                        updatedCart = _e.sent();
-                                        if (!("email" in data || "customer_id" in data)) return [3 /*break*/, 25];
+                                    case 26:
+                                        updatedCart = _f.sent();
+                                        if (!((data.email && data.email !== originalCartCustomer.email) ||
+                                            (data.customer_id && data.customer_id !== originalCartCustomer.id))) return [3 /*break*/, 28];
                                         return [4 /*yield*/, this.eventBus_
                                                 .withTransaction(transactionManager)
                                                 .emit(CartService.Events.CUSTOMER_UPDATED, updatedCart.id)];
-                                    case 24:
-                                        _e.sent();
-                                        _e.label = 25;
-                                    case 25: return [4 /*yield*/, this.eventBus_
+                                    case 27:
+                                        _f.sent();
+                                        _f.label = 28;
+                                    case 28: return [4 /*yield*/, this.eventBus_
                                             .withTransaction(transactionManager)
                                             .emit(CartService.Events.UPDATED, updatedCart)];
-                                    case 26:
-                                        _e.sent();
+                                    case 29:
+                                        _f.sent();
                                         return [2 /*return*/, updatedCart];
                                 }
                             });
@@ -1119,7 +1223,7 @@ var CartService = /** @class */ (function (_super) {
                         return [4 /*yield*/, this.productService_
                                 .withTransaction(this.manager_)
                                 .filterProductsBySalesChannel(productIds, newSalesChannelId, {
-                                select: ["id", "sales_channels"],
+                                select: ["id"],
                                 take: productIds.length,
                             })];
                     case 2:
@@ -1172,7 +1276,7 @@ var CartService = /** @class */ (function (_super) {
      * @param email - the email to use
      * @return the resultign customer object
      */
-    CartService.prototype.createOrFetchUserFromEmail_ = function (email) {
+    CartService.prototype.createOrFetchGuestCustomerFromEmail_ = function (email) {
         return __awaiter(this, void 0, void 0, function () {
             var validatedEmail, customer;
             return __generator(this, function (_a) {
@@ -1181,7 +1285,7 @@ var CartService = /** @class */ (function (_super) {
                         validatedEmail = (0, is_email_1.validateEmail)(email);
                         return [4 /*yield*/, this.customerService_
                                 .withTransaction(this.transactionManager_)
-                                .retrieveByEmail(validatedEmail)
+                                .retrieveUnregisteredByEmail(validatedEmail)
                                 .catch(function () { return undefined; })];
                     case 1:
                         customer = _a.sent();
@@ -1205,29 +1309,27 @@ var CartService = /** @class */ (function (_super) {
      * @return the result of the update operation
      */
     CartService.prototype.updateBillingAddress_ = function (cart, addressOrId, addrRepo) {
-        var _a, _b;
         return __awaiter(this, void 0, void 0, function () {
-            var address, _c, addr;
-            return __generator(this, function (_d) {
-                switch (_d.label) {
+            var address, _a, addr;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         if (!(typeof addressOrId === "string")) return [3 /*break*/, 2];
                         return [4 /*yield*/, addrRepo.findOne({
                                 where: { id: addressOrId },
                             })];
                     case 1:
-                        address = (_d.sent());
+                        address = (_b.sent());
                         return [3 /*break*/, 3];
                     case 2:
                         address = addressOrId;
-                        _d.label = 3;
+                        _b.label = 3;
                     case 3:
-                        address.country_code = (_b = (_a = address.country_code) === null || _a === void 0 ? void 0 : _a.toLowerCase()) !== null && _b !== void 0 ? _b : null;
                         if (!address.id) return [3 /*break*/, 5];
-                        _c = cart;
+                        _a = cart;
                         return [4 /*yield*/, addrRepo.save(address)];
                     case 4:
-                        _c.billing_address = _d.sent();
+                        _a.billing_address = _b.sent();
                         return [3 /*break*/, 9];
                     case 5:
                         if (!cart.billing_address_id) return [3 /*break*/, 8];
@@ -1235,14 +1337,14 @@ var CartService = /** @class */ (function (_super) {
                                 where: { id: cart.billing_address_id },
                             })];
                     case 6:
-                        addr = _d.sent();
+                        addr = _b.sent();
                         return [4 /*yield*/, addrRepo.save(__assign(__assign({}, addr), address))];
                     case 7:
-                        _d.sent();
+                        _b.sent();
                         return [3 /*break*/, 9];
                     case 8:
                         cart.billing_address = addrRepo.create(__assign({}, address));
-                        _d.label = 9;
+                        _b.label = 9;
                     case 9: return [2 /*return*/];
                 }
             });
@@ -1256,11 +1358,10 @@ var CartService = /** @class */ (function (_super) {
      * @return the result of the update operation
      */
     CartService.prototype.updateShippingAddress_ = function (cart, addressOrId, addrRepo) {
-        var _a, _b;
         return __awaiter(this, void 0, void 0, function () {
-            var address, _c, addr;
-            return __generator(this, function (_d) {
-                switch (_d.label) {
+            var address, _a, addr;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         if (addressOrId === null) {
                             cart.shipping_address = null;
@@ -1271,25 +1372,25 @@ var CartService = /** @class */ (function (_super) {
                                 where: { id: addressOrId },
                             })];
                     case 1:
-                        address = (_d.sent());
+                        address = (_b.sent());
                         return [3 /*break*/, 3];
                     case 2:
                         address = addressOrId;
-                        _d.label = 3;
+                        _b.label = 3;
                     case 3:
-                        address.country_code = (_b = (_a = address.country_code) === null || _a === void 0 ? void 0 : _a.toLowerCase()) !== null && _b !== void 0 ? _b : null;
                         if (address.country_code &&
                             !cart.region.countries.find(function (_a) {
+                                var _b;
                                 var iso_2 = _a.iso_2;
-                                return address.country_code === iso_2;
+                                return ((_b = address.country_code) === null || _b === void 0 ? void 0 : _b.toLowerCase()) === iso_2;
                             })) {
                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Shipping country must be in the cart region");
                         }
                         if (!address.id) return [3 /*break*/, 5];
-                        _c = cart;
+                        _a = cart;
                         return [4 /*yield*/, addrRepo.save(address)];
                     case 4:
-                        _c.shipping_address = _d.sent();
+                        _a.shipping_address = _b.sent();
                         return [3 /*break*/, 9];
                     case 5:
                         if (!cart.shipping_address_id) return [3 /*break*/, 8];
@@ -1297,14 +1398,14 @@ var CartService = /** @class */ (function (_super) {
                                 where: { id: cart.shipping_address_id },
                             })];
                     case 6:
-                        addr = _d.sent();
+                        addr = _b.sent();
                         return [4 /*yield*/, addrRepo.save(__assign(__assign({}, addr), address))];
                     case 7:
-                        _d.sent();
+                        _b.sent();
                         return [3 /*break*/, 9];
                     case 8:
                         cart.shipping_address = addrRepo.create(__assign({}, address));
-                        _d.label = 9;
+                        _b.label = 9;
                     case 9: return [2 /*return*/];
                 }
             });
@@ -1346,50 +1447,71 @@ var CartService = /** @class */ (function (_super) {
      * Throws if discount regions does not include the cart region
      * @param cart - the cart to update
      * @param discountCode - the discount code
-     * @return the result of the update operation
      */
     CartService.prototype.applyDiscount = function (cart, discountCode) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.applyDiscounts(cart, [discountCode])];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
+    /**
+     * Updates the cart's discounts.
+     * If discount besides free shipping is already applied, this
+     * will be overwritten
+     * Throws if discount regions does not include the cart region
+     * @param cart - the cart to update
+     * @param discountCodes - the discount code(s) to apply
+     */
+    CartService.prototype.applyDiscounts = function (cart, discountCodes) {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                            var discount, rule, toParse, sawNotShipping, newDiscounts;
+                            var discounts, rules, discountsMap, toParse, sawNotShipping, newDiscounts, hadNonFreeShippingDiscounts;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0: return [4 /*yield*/, this.discountService_
                                             .withTransaction(transactionManager)
-                                            .retrieveByCode(discountCode, { relations: ["rule", "regions"] })];
+                                            .listByCodes(discountCodes, { relations: ["rule", "regions"] })];
                                     case 1:
-                                        discount = _a.sent();
+                                        discounts = _a.sent();
                                         return [4 /*yield*/, this.discountService_
                                                 .withTransaction(transactionManager)
-                                                .validateDiscountForCartOrThrow(cart, discount)];
+                                                .validateDiscountForCartOrThrow(cart, discounts)];
                                     case 2:
                                         _a.sent();
-                                        rule = discount.rule;
-                                        // if discount is already there, we simply resolve
-                                        if (cart.discounts.find(function (_a) {
-                                            var id = _a.id;
-                                            return id === discount.id;
-                                        })) {
-                                            return [2 /*return*/];
-                                        }
-                                        toParse = __spreadArray(__spreadArray([], __read(cart.discounts), false), [discount], false);
+                                        rules = new Map();
+                                        discountsMap = new Map(discounts.map(function (d) {
+                                            rules.set(d.id, d.rule);
+                                            return [d.id, d];
+                                        }));
+                                        cart.discounts.forEach(function (discount) {
+                                            if (discountsMap.has(discount.id)) {
+                                                discountsMap.delete(discount.id);
+                                            }
+                                        });
+                                        toParse = __spreadArray(__spreadArray([], __read(cart.discounts), false), __read(discountsMap.values()), false);
                                         sawNotShipping = false;
                                         newDiscounts = toParse.map(function (discountToParse) {
                                             var _a;
                                             switch ((_a = discountToParse.rule) === null || _a === void 0 ? void 0 : _a.type) {
                                                 case models_1.DiscountRuleType.FREE_SHIPPING:
-                                                    if (discountToParse.rule.type === rule.type) {
-                                                        return discount;
+                                                    if (discountToParse.rule.type ===
+                                                        rules.get(discountToParse.id).type) {
+                                                        return discountsMap.get(discountToParse.id);
                                                     }
                                                     return discountToParse;
                                                 default:
                                                     if (!sawNotShipping) {
                                                         sawNotShipping = true;
-                                                        if ((rule === null || rule === void 0 ? void 0 : rule.type) !== models_1.DiscountRuleType.FREE_SHIPPING) {
-                                                            return discount;
+                                                        if (rules.get(discountToParse.id).type !==
+                                                            models_1.DiscountRuleType.FREE_SHIPPING) {
+                                                            return discountsMap.get(discountToParse.id);
                                                         }
                                                         return discountToParse;
                                                     }
@@ -1399,7 +1521,8 @@ var CartService = /** @class */ (function (_super) {
                                         cart.discounts = newDiscounts.filter(function (newDiscount) {
                                             return !!newDiscount;
                                         });
-                                        if (!((rule === null || rule === void 0 ? void 0 : rule.type) !== models_1.DiscountRuleType.FREE_SHIPPING && (cart === null || cart === void 0 ? void 0 : cart.items))) return [3 /*break*/, 4];
+                                        hadNonFreeShippingDiscounts = __spreadArray([], __read(rules.values()), false).some(function (rule) { return rule.type !== models_1.DiscountRuleType.FREE_SHIPPING; });
+                                        if (!(hadNonFreeShippingDiscounts && (cart === null || cart === void 0 ? void 0 : cart.items))) return [3 /*break*/, 4];
                                         return [4 /*yield*/, this.refreshAdjustments_(cart)];
                                     case 3:
                                         _a.sent();
@@ -1431,6 +1554,8 @@ var CartService = /** @class */ (function (_super) {
                                 switch (_b.label) {
                                     case 0: return [4 /*yield*/, this.retrieve(cartId, {
                                             relations: [
+                                                "items",
+                                                "region",
                                                 "discounts",
                                                 "discounts.rule",
                                                 "payment_sessions",
@@ -1453,15 +1578,18 @@ var CartService = /** @class */ (function (_super) {
                                         return [4 /*yield*/, cartRepo.save(cart)];
                                     case 4:
                                         updatedCart = _b.sent();
-                                        if (!((_a = updatedCart.payment_sessions) === null || _a === void 0 ? void 0 : _a.length)) return [3 /*break*/, 6];
-                                        return [4 /*yield*/, this.setPaymentSessions(cartId)];
+                                        return [4 /*yield*/, this.refreshAdjustments_(updatedCart)];
                                     case 5:
                                         _b.sent();
-                                        _b.label = 6;
-                                    case 6: return [4 /*yield*/, this.eventBus_
+                                        if (!((_a = cart.payment_sessions) === null || _a === void 0 ? void 0 : _a.length)) return [3 /*break*/, 7];
+                                        return [4 /*yield*/, this.setPaymentSessions(cartId)];
+                                    case 6:
+                                        _b.sent();
+                                        _b.label = 7;
+                                    case 7: return [4 /*yield*/, this.eventBus_
                                             .withTransaction(transactionManager)
                                             .emit(CartService.Events.UPDATED, updatedCart)];
-                                    case 7:
+                                    case 8:
                                         _b.sent();
                                         return [2 /*return*/, updatedCart];
                                 }
@@ -1529,7 +1657,7 @@ var CartService = /** @class */ (function (_super) {
      * @return the resulting cart
      */
     CartService.prototype.authorizePayment = function (cartId, context) {
-        if (context === void 0) { context = {}; }
+        if (context === void 0) { context = { cart_id: "" }; }
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
@@ -1540,55 +1668,62 @@ var CartService = /** @class */ (function (_super) {
                                 switch (_b.label) {
                                     case 0:
                                         cartRepository = transactionManager.getCustomRepository(this.cartRepository_);
-                                        return [4 /*yield*/, this.retrieve(cartId, {
-                                                select: ["total"],
-                                                relations: [
-                                                    "items",
-                                                    "items.adjustments",
-                                                    "region",
-                                                    "payment_sessions",
-                                                ],
-                                            })];
+                                        return [4 /*yield*/, this.retrieveWithTotals(cartId, {
+                                                relations: ["payment_sessions"],
+                                            })
+                                            // If cart total is 0, we don't perform anything payment related
+                                        ];
                                     case 1:
                                         cart = _b.sent();
-                                        if (typeof cart.total === "undefined") {
-                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.UNEXPECTED_STATE, "cart.total should be defined");
-                                        }
-                                        if (!(cart.total <= 0)) return [3 /*break*/, 3];
+                                        if (!(cart.total <= 0)) return [3 /*break*/, 4];
                                         cart.payment_authorized_at = new Date();
-                                        return [4 /*yield*/, cartRepository.save(cart)];
-                                    case 2: return [2 /*return*/, _b.sent()];
+                                        return [4 /*yield*/, cartRepository.save({
+                                                id: cart.id,
+                                                payment_authorized_at: cart.payment_authorized_at,
+                                            })];
+                                    case 2:
+                                        _b.sent();
+                                        return [4 /*yield*/, this.eventBus_
+                                                .withTransaction(transactionManager)
+                                                .emit(CartService.Events.UPDATED, cart)];
                                     case 3:
+                                        _b.sent();
+                                        return [2 /*return*/, cart];
+                                    case 4:
                                         if (!cart.payment_session) {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "You cannot complete a cart without a payment session.");
                                         }
                                         return [4 /*yield*/, this.paymentProviderService_
                                                 .withTransaction(transactionManager)
                                                 .authorizePayment(cart.payment_session, context)];
-                                    case 4:
+                                    case 5:
                                         session = (_b.sent());
                                         return [4 /*yield*/, this.retrieve(cart.id, {
-                                                select: ["total"],
-                                                relations: ["payment_sessions", "items", "items.adjustments"],
+                                                relations: ["payment_sessions"],
                                             })];
-                                    case 5:
+                                    case 6:
                                         freshCart = (_b.sent());
-                                        if (!(session.status === "authorized")) return [3 /*break*/, 7];
+                                        if (!(session.status === "authorized")) return [3 /*break*/, 8];
                                         _a = freshCart;
                                         return [4 /*yield*/, this.paymentProviderService_
                                                 .withTransaction(transactionManager)
-                                                .createPayment(freshCart)];
-                                    case 6:
+                                                .createPayment({
+                                                cart_id: cart.id,
+                                                currency_code: cart.region.currency_code,
+                                                amount: cart.total,
+                                                payment_session: freshCart.payment_session,
+                                            })];
+                                    case 7:
                                         _a.payment = _b.sent();
                                         freshCart.payment_authorized_at = new Date();
-                                        _b.label = 7;
-                                    case 7: return [4 /*yield*/, cartRepository.save(freshCart)];
-                                    case 8:
+                                        _b.label = 8;
+                                    case 8: return [4 /*yield*/, cartRepository.save(freshCart)];
+                                    case 9:
                                         updatedCart = _b.sent();
                                         return [4 /*yield*/, this.eventBus_
                                                 .withTransaction(transactionManager)
                                                 .emit(CartService.Events.UPDATED, updatedCart)];
-                                    case 9:
+                                    case 10:
                                         _b.sent();
                                         return [2 /*return*/, updatedCart];
                                 }
@@ -1600,10 +1735,9 @@ var CartService = /** @class */ (function (_super) {
         });
     };
     /**
-     * Sets a payment method for a cart.
+     * Selects a payment session for a cart and creates a payment object in the external provider system
      * @param cartId - the id of the cart to add payment method to
      * @param providerId - the id of the provider to be set to the cart
-     * @return result of update operation
      */
     CartService.prototype.setPaymentSession = function (cartId, providerId) {
         return __awaiter(this, void 0, void 0, function () {
@@ -1611,52 +1745,95 @@ var CartService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                            var psRepo, cart, paymentSession, updatedCart;
-                            var _this = this;
+                            var psRepo, cart, isProviderPresent, currentlySelectedSession, psRepo_1, cartPaymentSessionIds, paymentSession, sessionInput;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
                                         psRepo = transactionManager.getCustomRepository(this.paymentSessionRepository_);
                                         return [4 /*yield*/, this.retrieveWithTotals(cartId, {
-                                                relations: ["region", "region.payment_providers", "payment_sessions"],
-                                            })
-                                            // The region must have the provider id in its providers array
-                                        ];
+                                                relations: [
+                                                    "customer",
+                                                    "region",
+                                                    "region.payment_providers",
+                                                    "payment_sessions",
+                                                ],
+                                            })];
                                     case 1:
                                         cart = _a.sent();
-                                        // The region must have the provider id in its providers array
-                                        if (providerId !== "system" &&
-                                            !(cart.region.payment_providers.length &&
-                                                cart.region.payment_providers.find(function (_a) {
-                                                    var id = _a.id;
-                                                    return providerId === id;
-                                                }))) {
+                                        isProviderPresent = cart.region.payment_providers.find(function (_a) {
+                                            var id = _a.id;
+                                            return providerId === id;
+                                        });
+                                        if (providerId !== "system" && !isProviderPresent) {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "The payment method is not available in this region");
                                         }
-                                        return [4 /*yield*/, Promise.all(cart.payment_sessions.map(function (paymentSession) { return __awaiter(_this, void 0, void 0, function () {
-                                                return __generator(this, function (_a) {
-                                                    return [2 /*return*/, psRepo.save(__assign(__assign({}, paymentSession), { is_selected: null }))];
-                                                });
-                                            }); }))];
+                                        currentlySelectedSession = cart.payment_sessions.find(function (s) { return s.is_selected; });
+                                        if (!(currentlySelectedSession &&
+                                            currentlySelectedSession.provider_id !== providerId)) return [3 /*break*/, 5];
+                                        psRepo_1 = transactionManager.getCustomRepository(this.paymentSessionRepository_);
+                                        if (!currentlySelectedSession.is_initiated) return [3 /*break*/, 3];
+                                        return [4 /*yield*/, this.paymentProviderService_
+                                                .withTransaction(transactionManager)
+                                                .deleteSession(currentlySelectedSession)];
                                     case 2:
+                                        _a.sent();
+                                        currentlySelectedSession = psRepo_1.create(currentlySelectedSession);
+                                        _a.label = 3;
+                                    case 3:
+                                        currentlySelectedSession.is_initiated = false;
+                                        currentlySelectedSession.is_selected = false;
+                                        return [4 /*yield*/, psRepo_1.save(currentlySelectedSession)];
+                                    case 4:
+                                        _a.sent();
+                                        _a.label = 5;
+                                    case 5:
+                                        cartPaymentSessionIds = cart.payment_sessions.map(function (p) { return p.id; });
+                                        return [4 /*yield*/, psRepo.update({ id: (0, typeorm_1.In)(cartPaymentSessionIds) }, {
+                                                is_selected: null,
+                                                is_initiated: false,
+                                            })];
+                                    case 6:
                                         _a.sent();
                                         paymentSession = cart.payment_sessions.find(function (ps) { return ps.provider_id === providerId; });
                                         if (!paymentSession) {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.UNEXPECTED_STATE, "Could not find payment session");
                                         }
-                                        paymentSession.is_selected = true;
-                                        return [4 /*yield*/, psRepo.save(paymentSession)];
-                                    case 3:
+                                        sessionInput = {
+                                            cart: cart,
+                                            customer: cart.customer,
+                                            amount: cart.total,
+                                            currency_code: cart.region.currency_code,
+                                            provider_id: providerId,
+                                            payment_session_id: paymentSession.id,
+                                        };
+                                        if (!paymentSession.is_initiated) return [3 /*break*/, 8];
+                                        // update the session remotely
+                                        return [4 /*yield*/, this.paymentProviderService_
+                                                .withTransaction(transactionManager)
+                                                .updateSession(paymentSession, sessionInput)];
+                                    case 7:
+                                        // update the session remotely
                                         _a.sent();
-                                        return [4 /*yield*/, this.retrieve(cartId)];
-                                    case 4:
-                                        updatedCart = _a.sent();
+                                        return [3 /*break*/, 10];
+                                    case 8: return [4 /*yield*/, this.paymentProviderService_
+                                            .withTransaction(transactionManager)
+                                            .createSession(sessionInput)];
+                                    case 9:
+                                        // Create the session remotely
+                                        paymentSession = _a.sent();
+                                        _a.label = 10;
+                                    case 10: return [4 /*yield*/, psRepo.update(paymentSession.id, {
+                                            is_selected: true,
+                                            is_initiated: true,
+                                        })];
+                                    case 11:
+                                        _a.sent();
                                         return [4 /*yield*/, this.eventBus_
                                                 .withTransaction(transactionManager)
-                                                .emit(CartService.Events.UPDATED, updatedCart)];
-                                    case 5:
+                                                .emit(CartService.Events.UPDATED, { id: cartId })];
+                                    case 12:
                                         _a.sent();
-                                        return [2 /*return*/, updatedCart];
+                                        return [2 /*return*/];
                                 }
                             });
                         }); }, "SERIALIZABLE")];
@@ -1680,13 +1857,13 @@ var CartService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                            var psRepo, cartId, cart, total, region, seen, paymentProvider, paymentSession;
+                            var psRepo, paymentProviderServiceTx, cartId, cart, total, region, deleteSessionAppropriately, providerSet, alreadyConsumedProviderIds, partialSessionInput, partialPaymentSessionData, paymentProvider, paymentSessionInput, paymentSession;
                             var _this = this;
-                            var _a;
-                            return __generator(this, function (_b) {
-                                switch (_b.label) {
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
                                     case 0:
                                         psRepo = transactionManager.getCustomRepository(this.paymentSessionRepository_);
+                                        paymentProviderServiceTx = this.paymentProviderService_.withTransaction(transactionManager);
                                         cartId = typeof cartOrCartId === "string" ? cartOrCartId : cartOrCartId.id;
                                         return [4 /*yield*/, this.retrieveWithTotals(cartId, {
                                                 relations: [
@@ -1706,64 +1883,119 @@ var CartService = /** @class */ (function (_super) {
                                                 ],
                                             }, { force_taxes: true })];
                                     case 1:
-                                        cart = _b.sent();
+                                        cart = _a.sent();
                                         total = cart.total, region = cart.region;
-                                        if (typeof total === "undefined") {
-                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.UNEXPECTED_STATE, "cart.total must be defined");
-                                        }
-                                        seen = [];
-                                        if (!((_a = cart.payment_sessions) === null || _a === void 0 ? void 0 : _a.length)) return [3 /*break*/, 3];
-                                        return [4 /*yield*/, Promise.all(cart.payment_sessions.map(function (paymentSession) { return __awaiter(_this, void 0, void 0, function () {
+                                        deleteSessionAppropriately = function (session) { return __awaiter(_this, void 0, void 0, function () {
+                                            return __generator(this, function (_a) {
+                                                if (session.is_initiated) {
+                                                    return [2 /*return*/, paymentProviderServiceTx.deleteSession(session)];
+                                                }
+                                                return [2 /*return*/, psRepo.delete(session)];
+                                            });
+                                        }); };
+                                        if (!(total <= 0)) return [3 /*break*/, 3];
+                                        return [4 /*yield*/, Promise.all(cart.payment_sessions.map(function (session) { return __awaiter(_this, void 0, void 0, function () {
                                                 return __generator(this, function (_a) {
-                                                    if (total <= 0 ||
-                                                        !region.payment_providers.find(function (_a) {
-                                                            var id = _a.id;
-                                                            return id === paymentSession.provider_id;
-                                                        })) {
-                                                        return [2 /*return*/, this.paymentProviderService_
-                                                                .withTransaction(transactionManager)
-                                                                .deleteSession(paymentSession)];
-                                                    }
-                                                    else {
-                                                        seen.push(paymentSession.provider_id);
-                                                        return [2 /*return*/, this.paymentProviderService_
-                                                                .withTransaction(transactionManager)
-                                                                .updateSession(paymentSession, cart)];
-                                                    }
-                                                    return [2 /*return*/];
+                                                    return [2 /*return*/, deleteSessionAppropriately(session)];
                                                 });
                                             }); }))];
                                     case 2:
-                                        _b.sent();
-                                        _b.label = 3;
+                                        _a.sent();
+                                        return [2 /*return*/];
                                     case 3:
-                                        if (!(total > 0)) return [3 /*break*/, 8];
-                                        if (!(region.payment_providers.length === 1 && !cart.payment_session)) return [3 /*break*/, 6];
+                                        providerSet = new Set(region.payment_providers.map(function (p) { return p.id; }));
+                                        alreadyConsumedProviderIds = new Set();
+                                        partialSessionInput = {
+                                            cart: cart,
+                                            customer: cart.customer,
+                                            amount: total,
+                                            currency_code: cart.region.currency_code,
+                                        };
+                                        partialPaymentSessionData = {
+                                            cart_id: cartId,
+                                            data: {},
+                                            status: models_1.PaymentSessionStatus.PENDING,
+                                            amount: total,
+                                        };
+                                        return [4 /*yield*/, Promise.all(cart.payment_sessions.map(function (session) { return __awaiter(_this, void 0, void 0, function () {
+                                                var paymentSessionInput, updatedSession;
+                                                return __generator(this, function (_a) {
+                                                    switch (_a.label) {
+                                                        case 0:
+                                                            if (!!providerSet.has(session.provider_id)) return [3 /*break*/, 2];
+                                                            return [4 /*yield*/, deleteSessionAppropriately(session)];
+                                                        case 1: 
+                                                        /**
+                                                         * if the provider does not belong to the region then delete the session.
+                                                         * The deletion occurs locally if the session is not initiated
+                                                         * otherwise the deletion will also occur remotely through the external provider.
+                                                         */
+                                                        return [2 /*return*/, _a.sent()];
+                                                        case 2:
+                                                            /**
+                                                             * if the provider belongs to the region then update or delete the session.
+                                                             * The update occurs locally if it is not selected
+                                                             * otherwise the update will also occur remotely through the external provider.
+                                                             */
+                                                            // We are saving the provider id on which the work below will be done. That way,
+                                                            // when handling the providers from the cart region at a later point below, we do not double the work on the sessions that already
+                                                            // exists for the same provider.
+                                                            alreadyConsumedProviderIds.add(session.provider_id);
+                                                            // Update remotely
+                                                            if (session.is_selected && session.is_initiated) {
+                                                                paymentSessionInput = __assign(__assign({}, partialSessionInput), { provider_id: session.provider_id });
+                                                                return [2 /*return*/, paymentProviderServiceTx.updateSession(session, paymentSessionInput)];
+                                                            }
+                                                            if (!session.is_initiated) return [3 /*break*/, 4];
+                                                            return [4 /*yield*/, paymentProviderServiceTx.deleteSession(session)];
+                                                        case 3:
+                                                            _a.sent();
+                                                            updatedSession = psRepo.create(__assign(__assign({}, partialPaymentSessionData), { is_initiated: false, provider_id: session.provider_id }));
+                                                            return [3 /*break*/, 5];
+                                                        case 4:
+                                                            updatedSession = __assign(__assign({}, session), { amount: total });
+                                                            _a.label = 5;
+                                                        case 5: return [2 /*return*/, psRepo.save(updatedSession)];
+                                                    }
+                                                });
+                                            }); }))
+                                            /**
+                                             * From now on, the sessions have been cleanup. We can now
+                                             * - Set the provider session as selected if it is the only one existing and there is no payment session on the cart
+                                             * - Create a session per provider locally if it does not already exists on the cart as per the previous step
+                                             */
+                                            // If only one provider exists and there is no session on the cart, create the session and select it.
+                                        ];
+                                    case 4:
+                                        _a.sent();
+                                        if (!(region.payment_providers.length === 1 && !cart.payment_session)) return [3 /*break*/, 7];
                                         paymentProvider = region.payment_providers[0];
+                                        paymentSessionInput = __assign(__assign({}, partialSessionInput), { provider_id: paymentProvider.id });
                                         return [4 /*yield*/, this.paymentProviderService_
                                                 .withTransaction(transactionManager)
-                                                .createSession(paymentProvider.id, cart)];
-                                    case 4:
-                                        paymentSession = _b.sent();
-                                        paymentSession.is_selected = true;
-                                        return [4 /*yield*/, psRepo.save(paymentSession)];
+                                                .createSession(paymentSessionInput)];
                                     case 5:
-                                        _b.sent();
-                                        return [3 /*break*/, 8];
-                                    case 6: return [4 /*yield*/, Promise.all(region.payment_providers.map(function (paymentProvider) { return __awaiter(_this, void 0, void 0, function () {
+                                        paymentSession = _a.sent();
+                                        return [4 /*yield*/, psRepo.update(paymentSession.id, {
+                                                is_selected: true,
+                                                is_initiated: true,
+                                            })];
+                                    case 6:
+                                        _a.sent();
+                                        return [2 /*return*/];
+                                    case 7: return [4 /*yield*/, Promise.all(region.payment_providers.map(function (paymentProvider) { return __awaiter(_this, void 0, void 0, function () {
+                                            var paymentSession;
                                             return __generator(this, function (_a) {
-                                                if (!seen.includes(paymentProvider.id)) {
-                                                    return [2 /*return*/, this.paymentProviderService_
-                                                            .withTransaction(transactionManager)
-                                                            .createSession(paymentProvider.id, cart)];
+                                                if (alreadyConsumedProviderIds.has(paymentProvider.id)) {
+                                                    return [2 /*return*/];
                                                 }
-                                                return [2 /*return*/];
+                                                paymentSession = psRepo.create(__assign(__assign({}, partialPaymentSessionData), { provider_id: paymentProvider.id }));
+                                                return [2 /*return*/, psRepo.save(paymentSession)];
                                             });
                                         }); }))];
-                                    case 7:
-                                        _b.sent();
-                                        _b.label = 8;
-                                    case 8: return [2 /*return*/];
+                                    case 8:
+                                        _a.sent();
+                                        return [2 /*return*/];
                                 }
                             });
                         }); })];
@@ -1785,7 +2017,7 @@ var CartService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                            var cart, cartRepo, paymentSession;
+                            var cart, cartRepo, paymentSession, psRepo;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0: return [4 /*yield*/, this.retrieve(cartId, {
@@ -1794,7 +2026,7 @@ var CartService = /** @class */ (function (_super) {
                                     case 1:
                                         cart = _a.sent();
                                         cartRepo = transactionManager.getCustomRepository(this.cartRepository_);
-                                        if (!cart.payment_sessions) return [3 /*break*/, 3];
+                                        if (!cart.payment_sessions) return [3 /*break*/, 5];
                                         paymentSession = cart.payment_sessions.find(function (_a) {
                                             var provider_id = _a.provider_id;
                                             return provider_id === providerId;
@@ -1803,24 +2035,28 @@ var CartService = /** @class */ (function (_super) {
                                             var provider_id = _a.provider_id;
                                             return provider_id !== providerId;
                                         });
-                                        if (!paymentSession) return [3 /*break*/, 3];
-                                        // Delete the session with the provider
+                                        psRepo = transactionManager.getCustomRepository(this.paymentSessionRepository_);
+                                        if (!paymentSession) return [3 /*break*/, 5];
+                                        if (!(paymentSession.is_selected || paymentSession.is_initiated)) return [3 /*break*/, 3];
                                         return [4 /*yield*/, this.paymentProviderService_
                                                 .withTransaction(transactionManager)
                                                 .deleteSession(paymentSession)];
                                     case 2:
-                                        // Delete the session with the provider
                                         _a.sent();
-                                        _a.label = 3;
-                                    case 3: return [4 /*yield*/, cartRepo.save(cart)];
+                                        return [3 /*break*/, 5];
+                                    case 3: return [4 /*yield*/, psRepo.delete(paymentSession)];
                                     case 4:
+                                        _a.sent();
+                                        _a.label = 5;
+                                    case 5: return [4 /*yield*/, cartRepo.save(cart)];
+                                    case 6:
                                         _a.sent();
                                         return [4 /*yield*/, this.eventBus_
                                                 .withTransaction(transactionManager)
-                                                .emit(CartService.Events.UPDATED, cart)];
-                                    case 5:
+                                                .emit(CartService.Events.UPDATED, { id: cart.id })];
+                                    case 7:
                                         _a.sent();
-                                        return [2 /*return*/, cart];
+                                        return [2 /*return*/];
                                 }
                             });
                         }); })];
@@ -1834,7 +2070,7 @@ var CartService = /** @class */ (function (_super) {
      * @param cartId - the id of the cart to remove from
      * @param providerId - the id of the provider whoose payment session
      *    should be removed.
-     * @return {Promise<Cart>} the resulting cart.
+     * @return {Promise<void>} the resulting cart.
      */
     CartService.prototype.refreshPaymentSession = function (cartId, providerId) {
         return __awaiter(this, void 0, void 0, function () {
@@ -1842,37 +2078,47 @@ var CartService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                            var cart, paymentSession, updatedCart;
+                            var cart, paymentSession, psRepo;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.retrieve(cartId, {
+                                    case 0: return [4 /*yield*/, this.retrieveWithTotals(cartId, {
                                             relations: ["payment_sessions"],
                                         })];
                                     case 1:
                                         cart = _a.sent();
-                                        if (!cart.payment_sessions) return [3 /*break*/, 3];
+                                        if (!cart.payment_sessions) return [3 /*break*/, 5];
                                         paymentSession = cart.payment_sessions.find(function (_a) {
                                             var provider_id = _a.provider_id;
                                             return provider_id === providerId;
                                         });
-                                        if (!paymentSession) return [3 /*break*/, 3];
-                                        // Delete the session with the provider
+                                        if (!paymentSession) return [3 /*break*/, 5];
+                                        if (!paymentSession.is_selected) return [3 /*break*/, 3];
                                         return [4 /*yield*/, this.paymentProviderService_
                                                 .withTransaction(transactionManager)
-                                                .refreshSession(paymentSession, cart)];
+                                                .refreshSession(paymentSession, {
+                                                cart: cart,
+                                                customer: cart.customer,
+                                                amount: cart.total,
+                                                currency_code: cart.region.currency_code,
+                                                provider_id: providerId,
+                                            })];
                                     case 2:
-                                        // Delete the session with the provider
                                         _a.sent();
-                                        _a.label = 3;
-                                    case 3: return [4 /*yield*/, this.retrieve(cartId)];
+                                        return [3 /*break*/, 5];
+                                    case 3:
+                                        psRepo = transactionManager.getCustomRepository(this.paymentSessionRepository_);
+                                        return [4 /*yield*/, psRepo.update(paymentSession.id, {
+                                                amount: cart.total,
+                                            })];
                                     case 4:
-                                        updatedCart = _a.sent();
-                                        return [4 /*yield*/, this.eventBus_
-                                                .withTransaction(transactionManager)
-                                                .emit(CartService.Events.UPDATED, updatedCart)];
-                                    case 5:
                                         _a.sent();
-                                        return [2 /*return*/, updatedCart];
+                                        _a.label = 5;
+                                    case 5: return [4 /*yield*/, this.eventBus_
+                                            .withTransaction(transactionManager)
+                                            .emit(CartService.Events.UPDATED, { id: cartId })];
+                                    case 6:
+                                        _a.sent();
+                                        return [2 /*return*/];
                                 }
                             });
                         }); })];
@@ -1905,16 +2151,12 @@ var CartService = /** @class */ (function (_super) {
                             var _b;
                             return __generator(this, function (_c) {
                                 switch (_c.label) {
-                                    case 0: return [4 /*yield*/, this.retrieve(cartId, {
-                                            select: ["subtotal"],
+                                    case 0: return [4 /*yield*/, this.retrieveWithTotals(cartId, {
                                             relations: [
                                                 "shipping_methods",
-                                                "discounts",
-                                                "discounts.rule",
                                                 "shipping_methods.shipping_option",
                                                 "items",
                                                 "items.variant",
-                                                "payment_sessions",
                                                 "items.variant.product",
                                             ],
                                         })];
@@ -2049,28 +2291,31 @@ var CartService = /** @class */ (function (_super) {
                                 var availablePrice;
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
-                                        case 0: return [4 /*yield*/, this.priceSelectionStrategy_
-                                                .withTransaction(transactionManager)
-                                                .calculateVariantPrice(item.variant_id, {
-                                                region_id: region_1.id,
-                                                currency_code: region_1.currency_code,
-                                                quantity: item.quantity,
-                                                customer_id: customer_id || cart.customer_id,
-                                                include_discount_prices: true,
-                                            })
-                                                .catch(function () { return undefined; })];
+                                        case 0:
+                                            if (!item.variant_id) {
+                                                return [2 /*return*/, item];
+                                            }
+                                            return [4 /*yield*/, this.priceSelectionStrategy_
+                                                    .withTransaction(transactionManager)
+                                                    .calculateVariantPrice(item.variant_id, {
+                                                    region_id: region_1.id,
+                                                    currency_code: region_1.currency_code,
+                                                    quantity: item.quantity,
+                                                    customer_id: customer_id || cart.customer_id,
+                                                    include_discount_prices: true,
+                                                })
+                                                    .catch(function () { return undefined; })];
                                         case 1:
                                             availablePrice = _a.sent();
                                             if (!(availablePrice !== undefined &&
-                                                availablePrice.calculatedPrice !== null)) return [3 /*break*/, 2];
-                                            return [2 /*return*/, lineItemServiceTx_2.update(item.id, {
+                                                availablePrice.calculatedPrice !== null)) return [3 /*break*/, 3];
+                                            return [4 /*yield*/, lineItemServiceTx_2.update(item.id, {
                                                     has_shipping: false,
                                                     unit_price: availablePrice.calculatedPrice,
                                                 })];
-                                        case 2: return [4 /*yield*/, lineItemServiceTx_2.delete(item.id)];
-                                        case 3:
-                                            _a.sent();
-                                            return [2 /*return*/];
+                                        case 2: return [2 /*return*/, _a.sent()];
+                                        case 3: return [4 /*yield*/, lineItemServiceTx_2.delete(item.id)];
+                                        case 4: return [2 /*return*/, _a.sent()];
                                     }
                                 });
                             }); }))];
@@ -2280,16 +2525,20 @@ var CartService = /** @class */ (function (_super) {
             });
         });
     };
-    CartService.prototype.createTaxLines = function (id) {
+    CartService.prototype.createTaxLines = function (cartOrId) {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                            var cart, calculationContext;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.retrieve(id, {
+                            var cart, _a, calculationContext;
+                            return __generator(this, function (_b) {
+                                switch (_b.label) {
+                                    case 0:
+                                        if (!(0, cart_1.isCart)(cartOrId)) return [3 /*break*/, 1];
+                                        _a = cartOrId;
+                                        return [3 /*break*/, 3];
+                                    case 1: return [4 /*yield*/, this.retrieve(cartOrId, {
                                             relations: [
                                                 "customer",
                                                 "discounts",
@@ -2303,19 +2552,22 @@ var CartService = /** @class */ (function (_super) {
                                                 "shipping_methods",
                                             ],
                                         })];
-                                    case 1:
-                                        cart = _a.sent();
+                                    case 2:
+                                        _a = _b.sent();
+                                        _b.label = 3;
+                                    case 3:
+                                        cart = _a;
                                         return [4 /*yield*/, this.totalsService_
                                                 .withTransaction(transactionManager)
                                                 .getCalculationContext(cart)];
-                                    case 2:
-                                        calculationContext = _a.sent();
+                                    case 4:
+                                        calculationContext = _b.sent();
                                         return [4 /*yield*/, this.taxProviderService_
                                                 .withTransaction(transactionManager)
                                                 .createTaxLines(cart, calculationContext)];
-                                    case 3:
-                                        _a.sent();
-                                        return [2 /*return*/, cart];
+                                    case 5:
+                                        _b.sent();
+                                        return [2 /*return*/];
                                 }
                             });
                         }); })];
@@ -2359,77 +2611,78 @@ var CartService = /** @class */ (function (_super) {
         });
     };
     CartService.prototype.decorateTotals = function (cart, totalsConfig) {
+        var _a, _b, _c, _d;
+        if (totalsConfig === void 0) { totalsConfig = {}; }
         return __awaiter(this, void 0, void 0, function () {
-            var totalsService, calculationContext, _a, _b, giftCardTotal;
-            var _this = this;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            var manager, newTotalsServiceTx, calculationContext, includeTax, cartItems, cartShippingMethods, taxLinesMaps_1, itemsTotals, shippingTotals, giftCardTotal;
+            return __generator(this, function (_e) {
+                switch (_e.label) {
                     case 0:
-                        totalsService = this.totalsService_;
-                        return [4 /*yield*/, totalsService.getCalculationContext(cart, {
-                                exclude_shipping: true,
-                            })];
+                        manager = (_a = this.transactionManager_) !== null && _a !== void 0 ? _a : this.manager_;
+                        newTotalsServiceTx = this.newTotalsService_.withTransaction(manager);
+                        return [4 /*yield*/, this.totalsService_.getCalculationContext(cart)];
                     case 1:
-                        calculationContext = _c.sent();
-                        _a = cart;
-                        return [4 /*yield*/, Promise.all((cart.items || []).map(function (item) { return __awaiter(_this, void 0, void 0, function () {
-                                var itemTotals;
-                                return __generator(this, function (_a) {
-                                    switch (_a.label) {
-                                        case 0: return [4 /*yield*/, totalsService.getLineItemTotals(item, cart, {
-                                                include_tax: (totalsConfig === null || totalsConfig === void 0 ? void 0 : totalsConfig.force_taxes) || cart.region.automatic_taxes,
-                                                calculation_context: calculationContext,
-                                            })];
-                                        case 1:
-                                            itemTotals = _a.sent();
-                                            return [2 /*return*/, Object.assign(item, itemTotals)];
-                                    }
-                                });
-                            }); }))];
+                        calculationContext = _e.sent();
+                        includeTax = (totalsConfig === null || totalsConfig === void 0 ? void 0 : totalsConfig.force_taxes) || ((_b = cart.region) === null || _b === void 0 ? void 0 : _b.automatic_taxes);
+                        cartItems = __spreadArray([], __read(((_c = cart.items) !== null && _c !== void 0 ? _c : [])), false);
+                        cartShippingMethods = __spreadArray([], __read(((_d = cart.shipping_methods) !== null && _d !== void 0 ? _d : [])), false);
+                        if (!includeTax) return [3 /*break*/, 3];
+                        return [4 /*yield*/, this.taxProviderService_
+                                .withTransaction(manager)
+                                .getTaxLinesMap(cartItems, calculationContext)];
                     case 2:
-                        _a.items = _c.sent();
-                        _b = cart;
-                        return [4 /*yield*/, Promise.all((cart.shipping_methods || []).map(function (shippingMethod) { return __awaiter(_this, void 0, void 0, function () {
-                                var shippingTotals;
-                                return __generator(this, function (_a) {
-                                    switch (_a.label) {
-                                        case 0: return [4 /*yield*/, totalsService.getShippingMethodTotals(shippingMethod, cart, {
-                                                include_tax: (totalsConfig === null || totalsConfig === void 0 ? void 0 : totalsConfig.force_taxes) || cart.region.automatic_taxes,
-                                                calculation_context: calculationContext,
-                                            })];
-                                        case 1:
-                                            shippingTotals = _a.sent();
-                                            return [2 /*return*/, Object.assign(shippingMethod, shippingTotals)];
-                                    }
-                                });
-                            }); }))];
-                    case 3:
-                        _b.shipping_methods = _c.sent();
-                        cart.shipping_total = cart.shipping_methods.reduce(function (acc, method) {
+                        taxLinesMaps_1 = _e.sent();
+                        cartItems.forEach(function (item) {
                             var _a;
-                            return acc + ((_a = method.subtotal) !== null && _a !== void 0 ? _a : 0);
-                        }, 0);
-                        cart.subtotal = cart.items.reduce(function (acc, item) {
+                            if (item.is_return) {
+                                return;
+                            }
+                            item.tax_lines = (_a = taxLinesMaps_1.lineItemsTaxLines[item.id]) !== null && _a !== void 0 ? _a : [];
+                        });
+                        cartShippingMethods.forEach(function (method) {
                             var _a;
-                            return acc + ((_a = item.subtotal) !== null && _a !== void 0 ? _a : 0);
-                        }, 0);
-                        cart.discount_total = cart.items.reduce(function (acc, item) {
-                            var _a;
-                            return acc + ((_a = item.discount_total) !== null && _a !== void 0 ? _a : 0);
-                        }, 0);
-                        cart.item_tax_total = cart.items.reduce(function (acc, item) {
-                            var _a;
-                            return acc + ((_a = item.tax_total) !== null && _a !== void 0 ? _a : 0);
-                        }, 0);
-                        cart.shipping_tax_total = cart.shipping_methods.reduce(function (acc, method) {
-                            var _a;
-                            return acc + ((_a = method.tax_total) !== null && _a !== void 0 ? _a : 0);
-                        }, 0);
-                        return [4 /*yield*/, totalsService.getGiftCardTotal(cart, {
-                                gift_cardable: cart.subtotal - cart.discount_total,
-                            })];
+                            method.tax_lines = (_a = taxLinesMaps_1.shippingMethodsTaxLines[method.id]) !== null && _a !== void 0 ? _a : [];
+                        });
+                        _e.label = 3;
+                    case 3: return [4 /*yield*/, newTotalsServiceTx.getLineItemTotals(cartItems, {
+                            includeTax: includeTax,
+                            calculationContext: calculationContext,
+                        })];
                     case 4:
-                        giftCardTotal = _c.sent();
+                        itemsTotals = _e.sent();
+                        return [4 /*yield*/, newTotalsServiceTx.getShippingMethodTotals(cartShippingMethods, {
+                                discounts: cart.discounts,
+                                includeTax: includeTax,
+                                calculationContext: calculationContext,
+                            })];
+                    case 5:
+                        shippingTotals = _e.sent();
+                        cart.subtotal = 0;
+                        cart.discount_total = 0;
+                        cart.item_tax_total = 0;
+                        cart.shipping_total = 0;
+                        cart.shipping_tax_total = 0;
+                        cart.items = (cart.items || []).map(function (item) {
+                            var _a, _b, _c, _d;
+                            var itemWithTotals = Object.assign(item, (_a = itemsTotals[item.id]) !== null && _a !== void 0 ? _a : {});
+                            cart.subtotal += (_b = itemWithTotals.subtotal) !== null && _b !== void 0 ? _b : 0;
+                            cart.discount_total += (_c = itemWithTotals.discount_total) !== null && _c !== void 0 ? _c : 0;
+                            cart.item_tax_total += (_d = itemWithTotals.tax_total) !== null && _d !== void 0 ? _d : 0;
+                            return itemWithTotals;
+                        });
+                        cart.shipping_methods = (cart.shipping_methods || []).map(function (shippingMethod) {
+                            var _a, _b, _c;
+                            var methodWithTotals = Object.assign(shippingMethod, (_a = shippingTotals[shippingMethod.id]) !== null && _a !== void 0 ? _a : {});
+                            cart.shipping_total += (_b = methodWithTotals.subtotal) !== null && _b !== void 0 ? _b : 0;
+                            cart.shipping_tax_total += (_c = methodWithTotals.tax_total) !== null && _c !== void 0 ? _c : 0;
+                            return methodWithTotals;
+                        });
+                        return [4 /*yield*/, this.newTotalsService_.getGiftCardTotals(cart.subtotal - cart.discount_total, {
+                                region: cart.region,
+                                giftCards: cart.gift_cards,
+                            })];
+                    case 6:
+                        giftCardTotal = _e.sent();
                         cart.gift_card_total = giftCardTotal.total || 0;
                         cart.gift_card_tax_total = giftCardTotal.tax_total || 0;
                         cart.tax_total = cart.item_tax_total + cart.shipping_tax_total;
@@ -2459,6 +2712,7 @@ var CartService = /** @class */ (function (_super) {
                                 .withTransaction(transactionManager)
                                 .delete({
                                 item_id: nonReturnLineIDs,
+                                discount_id: (0, typeorm_1.Not)((0, typeorm_1.IsNull)()),
                             })
                             // potentially create/update line item adjustments
                         ];
@@ -2476,6 +2730,156 @@ var CartService = /** @class */ (function (_super) {
                 }
             });
         });
+    };
+    CartService.prototype.transformQueryForTotals_ = function (config) {
+        var select = config.select, relations = config.relations;
+        if (!select) {
+            return {
+                select: select,
+                relations: relations,
+                totalsToSelect: [],
+            };
+        }
+        var totalFields = [
+            "subtotal",
+            "tax_total",
+            "shipping_total",
+            "discount_total",
+            "gift_card_total",
+            "total",
+        ];
+        var totalsToSelect = select.filter(function (v) {
+            return totalFields.includes(v);
+        });
+        if (totalsToSelect.length > 0) {
+            var relationSet = new Set(relations);
+            relationSet.add("items");
+            relationSet.add("items.tax_lines");
+            relationSet.add("gift_cards");
+            relationSet.add("discounts");
+            relationSet.add("discounts.rule");
+            // relationSet.add("discounts.parent_discount")
+            // relationSet.add("discounts.parent_discount.rule")
+            // relationSet.add("discounts.parent_discount.regions")
+            relationSet.add("shipping_methods");
+            relationSet.add("shipping_address");
+            relationSet.add("region");
+            relationSet.add("region.tax_rates");
+            relations = Array.from(relationSet.values());
+            select = select.filter(function (v) { return !totalFields.includes(v); });
+        }
+        return {
+            relations: relations,
+            select: select,
+            totalsToSelect: totalsToSelect,
+        };
+    };
+    /**
+     * @deprecated Use decorateTotals instead
+     * @param cart
+     * @param totalsToSelect
+     * @param options
+     * @protected
+     */
+    CartService.prototype.decorateTotals_ = function (cart, totalsToSelect, options) {
+        if (options === void 0) { options = { force_taxes: false }; }
+        return __awaiter(this, void 0, void 0, function () {
+            var totals, totalsToSelect_1, totalsToSelect_1_1, key, _a, _b, _c, _d, _e, giftCardBreakdown, _f, e_4_1;
+            var e_4, _g;
+            return __generator(this, function (_h) {
+                switch (_h.label) {
+                    case 0:
+                        totals = {};
+                        _h.label = 1;
+                    case 1:
+                        _h.trys.push([1, 18, 19, 20]);
+                        totalsToSelect_1 = __values(totalsToSelect), totalsToSelect_1_1 = totalsToSelect_1.next();
+                        _h.label = 2;
+                    case 2:
+                        if (!!totalsToSelect_1_1.done) return [3 /*break*/, 17];
+                        key = totalsToSelect_1_1.value;
+                        _a = key;
+                        switch (_a) {
+                            case "total": return [3 /*break*/, 3];
+                            case "shipping_total": return [3 /*break*/, 5];
+                            case "discount_total": return [3 /*break*/, 7];
+                            case "tax_total": return [3 /*break*/, 9];
+                            case "gift_card_total": return [3 /*break*/, 11];
+                            case "subtotal": return [3 /*break*/, 13];
+                        }
+                        return [3 /*break*/, 15];
+                    case 3:
+                        _b = totals;
+                        return [4 /*yield*/, this.totalsService_.getTotal(cart, {
+                                force_taxes: options.force_taxes,
+                            })];
+                    case 4:
+                        _b.total = _h.sent();
+                        return [3 /*break*/, 16];
+                    case 5:
+                        _c = totals;
+                        return [4 /*yield*/, this.totalsService_.getShippingTotal(cart)];
+                    case 6:
+                        _c.shipping_total = _h.sent();
+                        return [3 /*break*/, 16];
+                    case 7:
+                        _d = totals;
+                        return [4 /*yield*/, this.totalsService_.getDiscountTotal(cart)];
+                    case 8:
+                        _d.discount_total = _h.sent();
+                        return [3 /*break*/, 16];
+                    case 9:
+                        _e = totals;
+                        return [4 /*yield*/, this.totalsService_.getTaxTotal(cart, options.force_taxes)];
+                    case 10:
+                        _e.tax_total = _h.sent();
+                        return [3 /*break*/, 16];
+                    case 11: return [4 /*yield*/, this.totalsService_.getGiftCardTotal(cart)];
+                    case 12:
+                        giftCardBreakdown = _h.sent();
+                        totals.gift_card_total = giftCardBreakdown.total;
+                        totals.gift_card_tax_total = giftCardBreakdown.tax_total;
+                        return [3 /*break*/, 16];
+                    case 13:
+                        _f = totals;
+                        return [4 /*yield*/, this.totalsService_.getSubtotal(cart)];
+                    case 14:
+                        _f.subtotal = _h.sent();
+                        return [3 /*break*/, 16];
+                    case 15: return [3 /*break*/, 16];
+                    case 16:
+                        totalsToSelect_1_1 = totalsToSelect_1.next();
+                        return [3 /*break*/, 2];
+                    case 17: return [3 /*break*/, 20];
+                    case 18:
+                        e_4_1 = _h.sent();
+                        e_4 = { error: e_4_1 };
+                        return [3 /*break*/, 20];
+                    case 19:
+                        try {
+                            if (totalsToSelect_1_1 && !totalsToSelect_1_1.done && (_g = totalsToSelect_1.return)) _g.call(totalsToSelect_1);
+                        }
+                        finally { if (e_4) throw e_4.error; }
+                        return [7 /*endfinally*/];
+                    case 20: return [2 /*return*/, Object.assign(cart, totals)];
+                }
+            });
+        });
+    };
+    CartService.prototype.getTotalsRelations = function (config) {
+        var relationSet = new Set(config.relations);
+        relationSet.add("items");
+        relationSet.add("items.tax_lines");
+        relationSet.add("items.adjustments");
+        relationSet.add("gift_cards");
+        relationSet.add("discounts");
+        relationSet.add("discounts.rule");
+        relationSet.add("shipping_methods");
+        relationSet.add("shipping_methods.tax_lines");
+        relationSet.add("shipping_address");
+        relationSet.add("region");
+        relationSet.add("region.tax_rates");
+        return Array.from(relationSet.values());
     };
     CartService.Events = {
         CUSTOMER_UPDATED: "cart.customer_updated",

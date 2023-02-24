@@ -45,87 +45,87 @@ var BatchJobSubscriber = /** @class */ (function () {
         var eventBusService = _a.eventBusService, batchJobService = _a.batchJobService, strategyResolverService = _a.strategyResolverService, manager = _a.manager;
         var _this = this;
         this.preProcessBatchJob = function (data) { return __awaiter(_this, void 0, void 0, function () {
+            var e_1;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.manager_.transaction(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var batchJobServiceTx, batchJob, batchJobStrategy, e_1;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0:
-                                        batchJobServiceTx = this.batchJobService_.withTransaction(manager);
-                                        return [4 /*yield*/, batchJobServiceTx.retrieve(data.id)];
-                                    case 1:
-                                        batchJob = _a.sent();
-                                        batchJobStrategy = this.strategyResolver_.resolveBatchJobByType(batchJob.type);
-                                        _a.label = 2;
-                                    case 2:
-                                        _a.trys.push([2, 5, , 7]);
-                                        return [4 /*yield*/, batchJobStrategy
-                                                .withTransaction(manager)
-                                                .preProcessBatchJob(batchJob.id)];
-                                    case 3:
-                                        _a.sent();
-                                        return [4 /*yield*/, batchJobServiceTx.setPreProcessingDone(batchJob.id)];
-                                    case 4:
-                                        _a.sent();
-                                        return [3 /*break*/, 7];
-                                    case 5:
-                                        e_1 = _a.sent();
-                                        return [4 /*yield*/, this.batchJobService_.setFailed(batchJob.id, e_1.message)];
-                                    case 6:
-                                        _a.sent();
-                                        throw e_1;
-                                    case 7: return [2 /*return*/];
-                                }
-                            });
-                        }); })];
+                    case 0:
+                        _a.trys.push([0, 2, , 4]);
+                        return [4 /*yield*/, this.manager_.transaction(function (manager) { return __awaiter(_this, void 0, void 0, function () {
+                                var batchJobServiceTx, batchJob, batchJobStrategy;
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
+                                        case 0:
+                                            batchJobServiceTx = this.batchJobService_.withTransaction(manager);
+                                            return [4 /*yield*/, batchJobServiceTx.retrieve(data.id)];
+                                        case 1:
+                                            batchJob = _a.sent();
+                                            batchJobStrategy = this.strategyResolver_.resolveBatchJobByType(batchJob.type);
+                                            return [4 /*yield*/, batchJobStrategy
+                                                    .withTransaction(manager)
+                                                    .preProcessBatchJob(batchJob.id)];
+                                        case 2:
+                                            _a.sent();
+                                            return [4 /*yield*/, batchJobServiceTx.setPreProcessingDone(batchJob.id)];
+                                        case 3:
+                                            _a.sent();
+                                            return [2 /*return*/];
+                                    }
+                                });
+                            }); })];
                     case 1:
                         _a.sent();
-                        return [2 /*return*/];
+                        return [3 /*break*/, 4];
+                    case 2:
+                        e_1 = _a.sent();
+                        return [4 /*yield*/, this.batchJobService_.setFailed(data.id, e_1.message)];
+                    case 3:
+                        _a.sent();
+                        throw e_1;
+                    case 4: return [2 /*return*/];
                 }
             });
         }); };
         this.processBatchJob = function (data) { return __awaiter(_this, void 0, void 0, function () {
+            var e_2;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.manager_.transaction(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var batchJobServiceTx, batchJob, batchJobStrategy, e_2;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0:
-                                        batchJobServiceTx = this.batchJobService_.withTransaction(manager);
-                                        return [4 /*yield*/, batchJobServiceTx.retrieve(data.id)];
-                                    case 1:
-                                        batchJob = _a.sent();
-                                        batchJobStrategy = this.strategyResolver_.resolveBatchJobByType(batchJob.type);
-                                        return [4 /*yield*/, batchJobServiceTx.setProcessing(batchJob.id)];
-                                    case 2:
-                                        _a.sent();
-                                        _a.label = 3;
-                                    case 3:
-                                        _a.trys.push([3, 6, , 8]);
-                                        return [4 /*yield*/, batchJobStrategy.withTransaction(manager).processJob(batchJob.id)];
-                                    case 4:
-                                        _a.sent();
-                                        return [4 /*yield*/, batchJobServiceTx.complete(batchJob.id)];
-                                    case 5:
-                                        _a.sent();
-                                        return [3 /*break*/, 8];
-                                    case 6:
-                                        e_2 = _a.sent();
-                                        return [4 /*yield*/, this.batchJobService_.setFailed(batchJob.id, e_2.message)];
-                                    case 7:
-                                        _a.sent();
-                                        throw e_2;
-                                    case 8: return [2 /*return*/];
-                                }
-                            });
-                        }); })];
+                    case 0:
+                        _a.trys.push([0, 2, , 4]);
+                        return [4 /*yield*/, this.manager_.transaction(function (manager) { return __awaiter(_this, void 0, void 0, function () {
+                                var batchJobServiceTx, batchJob, batchJobStrategy;
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
+                                        case 0:
+                                            batchJobServiceTx = this.batchJobService_.withTransaction(manager);
+                                            return [4 /*yield*/, batchJobServiceTx.retrieve(data.id)];
+                                        case 1:
+                                            batchJob = _a.sent();
+                                            batchJobStrategy = this.strategyResolver_.resolveBatchJobByType(batchJob.type);
+                                            return [4 /*yield*/, batchJobServiceTx.setProcessing(batchJob.id)];
+                                        case 2:
+                                            _a.sent();
+                                            return [4 /*yield*/, batchJobStrategy.withTransaction(manager).processJob(batchJob.id)];
+                                        case 3:
+                                            _a.sent();
+                                            return [4 /*yield*/, batchJobServiceTx.complete(batchJob.id)];
+                                        case 4:
+                                            _a.sent();
+                                            return [2 /*return*/];
+                                    }
+                                });
+                            }); })];
                     case 1:
                         _a.sent();
-                        return [2 /*return*/];
+                        return [3 /*break*/, 4];
+                    case 2:
+                        e_2 = _a.sent();
+                        return [4 /*yield*/, this.batchJobService_.setFailed(data.id, e_2.message)];
+                    case 3:
+                        _a.sent();
+                        throw e_2;
+                    case 4: return [2 /*return*/];
                 }
             });
         }); };

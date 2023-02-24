@@ -43,6 +43,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * description: "Retrieves a Cart."
  * parameters:
  *   - (path) id=* {string} The id of the Cart.
+ * x-codegen:
+ *   method: retrieve
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -65,9 +67,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             cart:
- *               $ref: "#/components/schemas/cart"
+ *           $ref: "#/components/schemas/StoreCartsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":
@@ -80,12 +80,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var id, cartService, cart, data;
+    var id, cartService, manager, cart, data;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
                 id = req.params.id;
                 cartService = req.scope.resolve("cartService");
+                manager = req.scope.resolve("manager");
                 return [4 /*yield*/, cartService.retrieve(id, {
                         select: ["id", "customer_id"],
                     })
@@ -97,9 +98,18 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                 if (!(!cart.customer_id ||
                     !cart.email ||
                     cart.customer_id !== req.user.customer_id)) return [3 /*break*/, 3];
-                return [4 /*yield*/, cartService.update(id, {
-                        customer_id: req.user.customer_id,
-                    })];
+                return [4 /*yield*/, manager.transaction(function (transctionManager) { return __awaiter(void 0, void 0, void 0, function () {
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0: return [4 /*yield*/, cartService.withTransaction(transctionManager).update(id, {
+                                        customer_id: req.user.customer_id,
+                                    })];
+                                case 1:
+                                    _a.sent();
+                                    return [2 /*return*/];
+                            }
+                        });
+                    }); })];
             case 2:
                 _a.sent();
                 _a.label = 3;

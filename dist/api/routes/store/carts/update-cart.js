@@ -51,11 +51,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.StorePostCartsCartReq = void 0;
 var class_validator_1 = require("class-validator");
 var _1 = require(".");
+var class_transformer_1 = require("class-transformer");
+var sales_channels_1 = __importDefault(require("../../../../loaders/feature-flags/sales-channels"));
 var common_1 = require("../../../../types/common");
 var feature_flag_decorators_1 = require("../../../../utils/feature-flag-decorators");
 var is_type_1 = require("../../../../utils/validators/is-type");
-var sales_channels_1 = __importDefault(require("../../../../loaders/feature-flags/sales-channels"));
-var class_transformer_1 = require("class-transformer");
 /**
  * @oas [post] /carts/{id}
  * operationId: PostCartsCart
@@ -67,66 +67,9 @@ var class_transformer_1 = require("class-transformer");
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           region_id:
- *             type: string
- *             description: The id of the Region to create the Cart in.
- *           country_code:
- *             type: string
- *             description: "The 2 character ISO country code to create the Cart in."
- *             externalDocs:
- *               url: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements
- *               description: See a list of codes.
- *           email:
- *             type: string
- *             description: "An email to be used on the Cart."
- *             format: email
- *           sales_channel_id:
- *             type: string
- *             description: The ID of the Sales channel to update the Cart with.
- *           billing_address:
- *             description: "The Address to be used for billing purposes."
- *             anyOf:
- *               - $ref: "#/components/schemas/address"
- *                 description: A full billing address object.
- *               - type: string
- *                 description: The billing address ID
- *           shipping_address:
- *             description: "The Address to be used for shipping."
- *             anyOf:
- *               - $ref: "#/components/schemas/address"
- *                 description: A full shipping address object.
- *               - type: string
- *                 description: The shipping address ID
- *           gift_cards:
- *             description: "An array of Gift Card codes to add to the Cart."
- *             type: array
- *             items:
- *               required:
- *                 - code
- *               properties:
- *                 code:
- *                   description: "The code that a Gift Card is identified by."
- *                   type: string
- *           discounts:
- *             description: "An array of Discount codes to add to the Cart."
- *             type: array
- *             items:
- *               required:
- *                 - code
- *               properties:
- *                 code:
- *                   description: "The code that a Discount is identifed by."
- *                   type: string
- *           customer_id:
- *             description: "The ID of the Customer to associate the Cart with."
- *             type: string
- *           context:
- *             description: "An optional object to provide context to the Cart."
- *             type: object
- *             example:
- *               ip: "::1"
- *               user_agent: "Chrome"
+ *         $ref: "#/components/schemas/StorePostCartsCartReq"
+ * x-codegen:
+ *   method: update
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -155,9 +98,7 @@ var class_transformer_1 = require("class-transformer");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             cart:
- *               $ref: "#/components/schemas/cart"
+ *           $ref: "#/components/schemas/StoreCartsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":
@@ -171,13 +112,17 @@ var class_transformer_1 = require("class-transformer");
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var id, validated, cartService, manager, data;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
+    var _a;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
             case 0:
                 id = req.params.id;
                 validated = req.validatedBody;
                 cartService = req.scope.resolve("cartService");
                 manager = req.scope.resolve("manager");
+                if ((_a = req.user) === null || _a === void 0 ? void 0 : _a.customer_id) {
+                    validated.customer_id = req.user.customer_id;
+                }
                 return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
                         var updated;
                         var _a;
@@ -205,13 +150,13 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                         });
                     }); })];
             case 1:
-                _a.sent();
+                _b.sent();
                 return [4 /*yield*/, cartService.retrieveWithTotals(id, {
                         select: _1.defaultStoreCartFields,
                         relations: _1.defaultStoreCartRelations,
                     })];
             case 2:
-                data = _a.sent();
+                data = _b.sent();
                 res.json({ cart: data });
                 return [2 /*return*/];
         }
@@ -235,6 +180,72 @@ var Discount = /** @class */ (function () {
     ], Discount.prototype, "code", void 0);
     return Discount;
 }());
+/**
+ * @schema StorePostCartsCartReq
+ * type: object
+ * properties:
+ *   region_id:
+ *     type: string
+ *     description: The id of the Region to create the Cart in.
+ *   country_code:
+ *     type: string
+ *     description: "The 2 character ISO country code to create the Cart in."
+ *     externalDocs:
+ *       url: https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements
+ *       description: See a list of codes.
+ *   email:
+ *     type: string
+ *     description: "An email to be used on the Cart."
+ *     format: email
+ *   sales_channel_id:
+ *     type: string
+ *     description: The ID of the Sales channel to update the Cart with.
+ *   billing_address:
+ *     description: "The Address to be used for billing purposes."
+ *     anyOf:
+ *       - $ref: "#/components/schemas/Address"
+ *         description: A full billing address object.
+ *       - type: string
+ *         description: The billing address ID
+ *   shipping_address:
+ *     description: "The Address to be used for shipping."
+ *     anyOf:
+ *       - $ref: "#/components/schemas/Address"
+ *         description: A full shipping address object.
+ *       - type: string
+ *         description: The shipping address ID
+ *   gift_cards:
+ *     description: "An array of Gift Card codes to add to the Cart."
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - code
+ *       properties:
+ *         code:
+ *           description: "The code that a Gift Card is identified by."
+ *           type: string
+ *   discounts:
+ *     description: "An array of Discount codes to add to the Cart."
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - code
+ *       properties:
+ *         code:
+ *           description: "The code that a Discount is identifed by."
+ *           type: string
+ *   customer_id:
+ *     description: "The ID of the Customer to associate the Cart with."
+ *     type: string
+ *   context:
+ *     description: "An optional object to provide context to the Cart."
+ *     type: object
+ *     example:
+ *       ip: "::1"
+ *       user_agent: "Chrome"
+ */
 var StorePostCartsCartReq = /** @class */ (function () {
     function StorePostCartsCartReq() {
     }

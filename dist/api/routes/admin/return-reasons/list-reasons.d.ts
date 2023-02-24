@@ -4,6 +4,8 @@
  * summary: "List Return Reasons"
  * description: "Retrieves a list of Return Reasons."
  * x-authenticated: true
+ * x-codegen:
+ *   method: list
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -31,11 +33,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             return_reasons:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/return_reason"
+ *           $ref: "#/components/schemas/AdminReturnReasonsListRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

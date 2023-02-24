@@ -1,5 +1,6 @@
 import { Cart, CartType } from "../models/cart";
 import { AddressPayload, DateComparisonOperator, StringComparisonOperator } from "./common";
+import { Region } from "../models";
 export declare function isCart(object: any): object is Cart;
 export declare class FilterableCartProps {
     id?: string | string[] | StringComparisonOperator;
@@ -14,6 +15,12 @@ export declare type LineItemUpdate = {
     region_id?: string;
     variant_id?: string;
 };
+export declare type LineItemValidateData = {
+    variant?: {
+        product_id: string;
+    };
+    variant_id: string;
+};
 declare class GiftCard {
     code: string;
 }
@@ -22,6 +29,7 @@ declare class Discount {
 }
 export declare type CartCreateProps = {
     region_id?: string;
+    region?: Region;
     email?: string;
     billing_address_id?: string;
     billing_address?: Partial<AddressPayload>;

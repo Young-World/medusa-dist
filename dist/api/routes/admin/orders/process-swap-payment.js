@@ -1,4 +1,19 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -36,7 +51,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var _1 = require(".");
+exports.AdminPostOrdersOrderSwapsSwapProcessPaymentParams = void 0;
+var common_1 = require("../../../../types/common");
 /**
  * @oas [post] /orders/{id}/swaps/{swap_id}/process-payment
  * operationId: "PostOrdersOrderSwapsSwapProcessPayment"
@@ -46,6 +62,11 @@ var _1 = require(".");
  * parameters:
  *   - (path) id=* {string} The ID of the Order.
  *   - (path) swap_id=* {string} The ID of the Swap.
+ *   - (query) expand {string} Comma separated list of relations to include in the result.
+ *   - (query) fields {string} Comma separated list of fields to include in the result.
+ * x-codegen:
+ *   method: processSwapPayment
+ *   params: AdminPostOrdersOrderSwapsSwapProcessPaymentParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -73,9 +94,7 @@ var _1 = require(".");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/order"
+ *           $ref: "#/components/schemas/AdminOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -90,7 +109,7 @@ var _1 = require(".");
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, id, swap_id, orderService, swapService, entityManager;
+    var _a, id, swap_id, orderService, swapService, entityManager, order;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
@@ -99,27 +118,34 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                 swapService = req.scope.resolve("swapService");
                 entityManager = req.scope.resolve("manager");
                 return [4 /*yield*/, entityManager.transaction(function (manager) { return __awaiter(void 0, void 0, void 0, function () {
-                        var order;
                         return __generator(this, function (_a) {
                             switch (_a.label) {
                                 case 0: return [4 /*yield*/, swapService.withTransaction(manager).processDifference(swap_id)];
                                 case 1:
                                     _a.sent();
-                                    return [4 /*yield*/, orderService.withTransaction(manager).retrieve(id, {
-                                            select: _1.defaultAdminOrdersFields,
-                                            relations: _1.defaultAdminOrdersRelations,
-                                        })];
-                                case 2:
-                                    order = _a.sent();
-                                    res.json({ order: order });
                                     return [2 /*return*/];
                             }
                         });
                     }); })];
             case 1:
                 _b.sent();
+                return [4 /*yield*/, orderService.retrieveWithTotals(id, req.retrieveConfig, {
+                        includes: req.includes,
+                    })];
+            case 2:
+                order = _b.sent();
+                res.json({ order: order });
                 return [2 /*return*/];
         }
     });
 }); });
+// eslint-disable-next-line max-len
+var AdminPostOrdersOrderSwapsSwapProcessPaymentParams = /** @class */ (function (_super) {
+    __extends(AdminPostOrdersOrderSwapsSwapProcessPaymentParams, _super);
+    function AdminPostOrdersOrderSwapsSwapProcessPaymentParams() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return AdminPostOrdersOrderSwapsSwapProcessPaymentParams;
+}(common_1.FindParams));
+exports.AdminPostOrdersOrderSwapsSwapProcessPaymentParams = AdminPostOrdersOrderSwapsSwapProcessPaymentParams;
 //# sourceMappingURL=process-swap-payment.js.map

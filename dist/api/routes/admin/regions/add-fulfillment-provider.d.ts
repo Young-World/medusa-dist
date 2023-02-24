@@ -10,12 +10,9 @@
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - provider_id
- *         properties:
- *           provider_id:
- *             description: "The ID of the Fulfillment Provider to add."
- *             type: string
+ *         $ref: "#/components/schemas/AdminPostRegionsRegionFulfillmentProvidersReq"
+ * x-codegen:
+ *   method: addFulfillmentProvider
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -49,9 +46,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             region:
- *               $ref: "#/components/schemas/region"
+ *           $ref: "#/components/schemas/AdminRegionsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -67,6 +62,16 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostRegionsRegionFulfillmentProvidersReq
+ * type: object
+ * required:
+ *   - provider_id
+ * properties:
+ *   provider_id:
+ *     description: "The ID of the Fulfillment Provider to add."
+ *     type: string
+ */
 export declare class AdminPostRegionsRegionFulfillmentProvidersReq {
     provider_id: string;
 }

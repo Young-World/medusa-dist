@@ -1,15 +1,4 @@
 "use strict";
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
-};
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -60,7 +49,6 @@ exports.AdminPostGiftCardsReq = void 0;
 var class_validator_1 = require("class-validator");
 var _1 = require(".");
 var class_transformer_1 = require("class-transformer");
-var validator_1 = require("../../../../utils/validator");
 /**
  * @oas [post] /gift-cards
  * operationId: "PostGiftCards"
@@ -71,25 +59,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - region_id
- *         properties:
- *           value:
- *             type: integer
- *             description: The value (excluding VAT) that the Gift Card should represent.
- *           is_disabled:
- *             type: boolean
- *             description: Whether the Gift Card is disabled on creation. You will have to enable it later to make it available to Customers.
- *           ends_at:
- *             type: string
- *             format: date-time
- *             description: The time at which the Gift Card should no longer be available.
- *           region_id:
- *             description: The ID of the Region in which the Gift Card can be used.
- *             type: string
- *           metadata:
- *             description: An optional set of key-value pairs to hold additional information.
- *             type: object
+ *         $ref: "#/components/schemas/AdminPostGiftCardsReq"
+ * x-codegen:
+ *   method: create
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -123,9 +95,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             gift_card:
- *               $ref: "#/components/schemas/gift_card"
+ *           $ref: "#/components/schemas/AdminGiftCardsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -140,35 +110,60 @@ var validator_1 = require("../../../../utils/validator");
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var validated, giftCardService, manager, newly, giftCard;
+    var validatedBody, giftCardService, manager, newly, giftCard;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, (0, validator_1.validator)(AdminPostGiftCardsReq, req.body)];
-            case 1:
-                validated = _a.sent();
+            case 0:
+                validatedBody = req.validatedBody;
+                validatedBody.balance = validatedBody.value;
                 giftCardService = req.scope.resolve("giftCardService");
                 manager = req.scope.resolve("manager");
                 return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
                         return __generator(this, function (_a) {
                             switch (_a.label) {
-                                case 0: return [4 /*yield*/, giftCardService.withTransaction(transactionManager).create(__assign(__assign({}, validated), { balance: validated.value }))];
+                                case 0: return [4 /*yield*/, giftCardService
+                                        .withTransaction(transactionManager)
+                                        .create(validatedBody)];
                                 case 1: return [2 /*return*/, _a.sent()];
                             }
                         });
                     }); })];
-            case 2:
+            case 1:
                 newly = _a.sent();
                 return [4 /*yield*/, giftCardService.retrieve(newly.id, {
                         select: _1.defaultAdminGiftCardFields,
                         relations: _1.defaultAdminGiftCardRelations,
                     })];
-            case 3:
+            case 2:
                 giftCard = _a.sent();
                 res.status(200).json({ gift_card: giftCard });
                 return [2 /*return*/];
         }
     });
 }); });
+/**
+ * @schema AdminPostGiftCardsReq
+ * type: object
+ * required:
+ *   - region_id
+ * properties:
+ *   value:
+ *     type: integer
+ *     description: The value (excluding VAT) that the Gift Card should represent.
+ *   is_disabled:
+ *     type: boolean
+ *     description: Whether the Gift Card is disabled on creation. You will have to enable it later to make it available to Customers.
+ *   ends_at:
+ *     type: string
+ *     format: date-time
+ *     description: The time at which the Gift Card should no longer be available.
+ *   region_id:
+ *     description: The ID of the Region in which the Gift Card can be used.
+ *     type: string
+ *   metadata:
+ *     description: An optional set of key-value pairs to hold additional information.
+ *     type: object
+ */
 var AdminPostGiftCardsReq = /** @class */ (function () {
     function AdminPostGiftCardsReq() {
     }

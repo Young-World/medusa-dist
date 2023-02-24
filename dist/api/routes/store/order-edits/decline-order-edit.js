@@ -59,17 +59,16 @@ var order_edit_1 = require("../../../../types/order-edit");
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           declined_reason:
- *             type: string
- *             description: The reason for declining the OrderEdit.
+ *         $ref: "#/components/schemas/StorePostOrderEditsOrderEditDecline"
+ * x-codegen:
+ *   method: decline
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
  *     source: |
  *       import Medusa from "@medusajs/medusa-js"
  *       const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
- *       medusa.orderEdit.decline(orderEditId)
+ *       medusa.orderEdits.decline(order_edit_id)
  *         .then(({ order_edit }) => {
  *           console.log(order_edit.id);
  *         })
@@ -85,9 +84,7 @@ var order_edit_1 = require("../../../../types/order-edit");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order_edit:
- *               $ref: "#/components/schemas/order_edit"
+ *           $ref: "#/components/schemas/StoreOrderEditsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -113,7 +110,7 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                             switch (_a.label) {
                                 case 0: return [4 /*yield*/, orderEditService.withTransaction(manager).decline(id, {
                                         declinedReason: validatedBody.declined_reason,
-                                        loggedInUserId: userId,
+                                        declinedBy: userId,
                                     })];
                                 case 1:
                                     _a.sent();
@@ -137,6 +134,14 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema StorePostOrderEditsOrderEditDecline
+ * type: object
+ * properties:
+ *   declined_reason:
+ *     type: string
+ *     description: The reason for declining the OrderEdit.
+ */
 var StorePostOrderEditsOrderEditDecline = /** @class */ (function () {
     function StorePostOrderEditsOrderEditDecline() {
     }

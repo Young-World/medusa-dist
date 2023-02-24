@@ -1,15 +1,16 @@
 import { DeepPartial, EntityManager } from "typeorm";
-import { FindConfig } from "../types/common";
-import { OrderEditRepository } from "../repositories/order-edit";
-import { OrderEdit } from "../models";
 import { TransactionBaseService } from "../interfaces";
-import { EventBusService, LineItemAdjustmentService, LineItemService, OrderEditItemChangeService, OrderService, TaxProviderService, TotalsService } from "./index";
+import { OrderEdit } from "../models";
+import { OrderEditRepository } from "../repositories/order-edit";
+import { FindConfig, Selector } from "../types/common";
 import { AddOrderEditLineItemInput, CreateOrderEditInput } from "../types/order-edit";
+import { EventBusService, LineItemAdjustmentService, LineItemService, NewTotalsService, OrderEditItemChangeService, OrderService, TaxProviderService, TotalsService } from "./index";
 declare type InjectedDependencies = {
     manager: EntityManager;
     orderEditRepository: typeof OrderEditRepository;
     orderService: OrderService;
     totalsService: TotalsService;
+    newTotalsService: NewTotalsService;
     lineItemService: LineItemService;
     eventBusService: EventBusService;
     taxProviderService: TaxProviderService;
@@ -30,35 +31,26 @@ export default class OrderEditService extends TransactionBaseService {
     protected readonly orderEditRepository_: typeof OrderEditRepository;
     protected readonly orderService_: OrderService;
     protected readonly totalsService_: TotalsService;
+    protected readonly newTotalsService_: NewTotalsService;
     protected readonly lineItemService_: LineItemService;
     protected readonly eventBusService_: EventBusService;
     protected readonly taxProviderService_: TaxProviderService;
     protected readonly lineItemAdjustmentService_: LineItemAdjustmentService;
     protected readonly orderEditItemChangeService_: OrderEditItemChangeService;
-    constructor({ manager, orderEditRepository, orderService, lineItemService, eventBusService, totalsService, orderEditItemChangeService, lineItemAdjustmentService, taxProviderService, }: InjectedDependencies);
+    constructor({ manager, orderEditRepository, orderService, lineItemService, eventBusService, totalsService, newTotalsService, orderEditItemChangeService, lineItemAdjustmentService, taxProviderService, }: InjectedDependencies);
     retrieve(orderEditId: string, config?: FindConfig<OrderEdit>): Promise<OrderEdit>;
-    /**
-     * Compute and return the different totals from the order edit id
-     * @param orderEditId
-     */
-    getTotals(orderEditId: string): Promise<{
-        shipping_total: number;
-        gift_card_total: number;
-        gift_card_tax_total: number;
-        discount_total: number;
-        tax_total: number | null;
-        subtotal: number;
-        difference_due: number;
-        total: number;
-    }>;
+    listAndCount(selector: Selector<OrderEdit> & {
+        q?: string;
+    }, config?: FindConfig<OrderEdit>): Promise<[OrderEdit[], number]>;
+    list(selector: Selector<OrderEdit>, config?: FindConfig<OrderEdit>): Promise<OrderEdit[]>;
     create(data: CreateOrderEditInput, context: {
-        loggedInUserId: string;
+        createdBy: string;
     }): Promise<OrderEdit>;
     update(orderEditId: string, data: DeepPartial<OrderEdit>): Promise<OrderEdit>;
     delete(id: string): Promise<void>;
     decline(orderEditId: string, context: {
         declinedReason?: string;
-        loggedInUserId?: string;
+        declinedBy?: string;
     }): Promise<OrderEdit>;
     /**
      * Create or update order edit item change line item and apply the quantity
@@ -72,18 +64,20 @@ export default class OrderEditService extends TransactionBaseService {
         quantity: number;
     }): Promise<void>;
     removeLineItem(orderEditId: string, lineItemId: string): Promise<void>;
-    refreshAdjustments(orderEditId: string): Promise<void>;
+    refreshAdjustments(orderEditId: string, config?: {
+        preserveCustomAdjustments: boolean;
+    }): Promise<void>;
     decorateTotals(orderEdit: OrderEdit): Promise<OrderEdit>;
     addLineItem(orderEditId: string, data: AddOrderEditLineItemInput): Promise<void>;
     deleteItemChange(orderEditId: string, itemChangeId: string): Promise<void>;
     requestConfirmation(orderEditId: string, context?: {
-        loggedInUserId?: string;
+        requestedBy?: string;
     }): Promise<OrderEdit>;
     cancel(orderEditId: string, context?: {
-        loggedInUserId?: string;
+        canceledBy?: string;
     }): Promise<OrderEdit>;
     confirm(orderEditId: string, context?: {
-        loggedInUserId?: string;
+        confirmedBy?: string;
     }): Promise<OrderEdit>;
     protected retrieveActive(orderId: string, config?: FindConfig<OrderEdit>): Promise<OrderEdit | undefined>;
     protected deleteClonedItems(orderEditId: string): Promise<void>;

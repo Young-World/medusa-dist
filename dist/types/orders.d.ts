@@ -1,6 +1,12 @@
 import { Order, Payment } from "../models";
 import { AddressPayload, DateComparisonOperator } from "./common";
 export declare function isOrder(object: any): object is Order;
+export declare type TotalsContext = {
+    force_taxes?: boolean;
+    includes?: {
+        returnable_items?: boolean;
+    };
+};
 declare enum OrderStatus {
     pending = "pending",
     completed = "completed",

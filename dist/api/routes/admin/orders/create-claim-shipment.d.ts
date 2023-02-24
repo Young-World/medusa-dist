@@ -1,3 +1,4 @@
+import { FindParams } from "../../../../types/common";
 /**
  * @oas [post] /orders/{id}/claims/{claim_id}/shipments
  * operationId: "PostOrdersOrderClaimsClaimShipments"
@@ -7,21 +8,16 @@
  * parameters:
  *   - (path) id=* {string} The ID of the Order.
  *   - (path) claim_id=* {string} The ID of the Claim.
+ *   - (query) expand {string} Comma separated list of relations to include in the result.
+ *   - (query) fields {string} Comma separated list of fields to include in the result.
  * requestBody:
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - fulfillment_id
- *         properties:
- *           fulfillment_id:
- *             description: The ID of the Fulfillment.
- *             type: string
- *           tracking_numbers:
- *             description: The tracking numbers for the shipment.
- *             type: array
- *             items:
- *               type: string
+ *         $ref: "#/components/schemas/AdminPostOrdersOrderClaimsClaimShipmentsReq"
+ * x-codegen:
+ *   method: createClaimShipment
+ *   params: AdminPostOrdersOrderClaimsClaimShipmentsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -55,9 +51,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/order"
+ *           $ref: "#/components/schemas/AdminOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -73,7 +67,24 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostOrdersOrderClaimsClaimShipmentsReq
+ * type: object
+ * required:
+ *   - fulfillment_id
+ * properties:
+ *   fulfillment_id:
+ *     description: The ID of the Fulfillment.
+ *     type: string
+ *   tracking_numbers:
+ *     description: The tracking numbers for the shipment.
+ *     type: array
+ *     items:
+ *       type: string
+ */
 export declare class AdminPostOrdersOrderClaimsClaimShipmentsReq {
     fulfillment_id: string;
     tracking_numbers?: string[];
+}
+export declare class AdminPostOrdersOrderClaimsClaimShipmentsParams extends FindParams {
 }

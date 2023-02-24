@@ -39,6 +39,7 @@ var upload = (0, multer_1.default)({ dest: "uploads/" });
 exports.default = (function (app) {
     app.use("/uploads", route);
     route.post("/", upload.array("files"), middlewares_1.default.wrap(require("./create-upload").default));
+    route.post("/protected", upload.array("files"), middlewares_1.default.wrap(require("./create-protected-upload").default));
     route.delete("/", (0, middlewares_1.transformBody)(delete_upload_1.AdminDeleteUploadsReq), middlewares_1.default.wrap(require("./delete-upload").default));
     route.post("/download-url", (0, middlewares_1.transformBody)(get_download_url_1.AdminPostUploadsDownloadUrlReq), middlewares_1.default.wrap(require("./get-download-url").default));
     return app;

@@ -61,6 +61,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * parameters:
  *   - (path) id=* {string} The ID of the Price List that the Money Amounts that will be deleted belongs to.
  *   - (path) product_id=* {string} The ID of the product from which the money amount will be deleted.
+ * x-codegen:
+ *   method: deleteProductPrices
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -88,20 +90,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *              ids:
- *               type: array
- *               description: The price ids that have been deleted.
- *               items:
- *                 type: string
- *              object:
- *                type: string
- *                description: The type of the object that was deleted.
- *                default: money-amount
- *              deleted:
- *                type: boolean
- *                description: Whether or not the items were deleted.
- *                default: true
+ *           $ref: "#/components/schemas/AdminPriceListDeleteProductPricesRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

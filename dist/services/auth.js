@@ -219,31 +219,31 @@ var AuthService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                            var customerPasswordHash, passwordsMatch, customer, error_4;
+                            var customer, passwordsMatch, customer_1, error_4;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
                                         _a.trys.push([0, 5, , 6]);
                                         return [4 /*yield*/, this.customerService_
                                                 .withTransaction(transactionManager)
-                                                .retrieveByEmail(email, {
-                                                select: ["password_hash"],
+                                                .retrieveRegisteredByEmail(email, {
+                                                select: ["id", "password_hash"],
                                             })];
                                     case 1:
-                                        customerPasswordHash = _a.sent();
-                                        if (!customerPasswordHash.password_hash) return [3 /*break*/, 4];
-                                        return [4 /*yield*/, this.comparePassword_(password, customerPasswordHash.password_hash)];
+                                        customer = _a.sent();
+                                        if (!customer.password_hash) return [3 /*break*/, 4];
+                                        return [4 /*yield*/, this.comparePassword_(password, customer.password_hash)];
                                     case 2:
                                         passwordsMatch = _a.sent();
                                         if (!passwordsMatch) return [3 /*break*/, 4];
                                         return [4 /*yield*/, this.customerService_
                                                 .withTransaction(transactionManager)
-                                                .retrieveByEmail(email)];
+                                                .retrieveRegisteredByEmail(email)];
                                     case 3:
-                                        customer = _a.sent();
+                                        customer_1 = _a.sent();
                                         return [2 /*return*/, {
                                                 success: true,
-                                                customer: customer,
+                                                customer: customer_1,
                                             }];
                                     case 4: return [3 /*break*/, 6];
                                     case 5:

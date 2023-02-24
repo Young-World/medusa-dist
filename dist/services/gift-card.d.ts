@@ -1,7 +1,7 @@
 import { EntityManager } from "typeorm";
 import { EventBusService } from ".";
 import { TransactionBaseService } from "../interfaces";
-import { GiftCard } from "../models";
+import { GiftCard, Region } from "../models";
 import { GiftCardRepository } from "../repositories/gift-card";
 import { GiftCardTransactionRepository } from "../repositories/gift-card-transaction";
 import { FindConfig, QuerySelector, Selector } from "../types/common";
@@ -52,6 +52,12 @@ declare class GiftCardService extends TransactionBaseService {
      * @return the result of the create operation
      */
     create(giftCard: CreateGiftCardInput): Promise<GiftCard>;
+    /**
+    * The tax_rate of the giftcard can depend on whether regions tax gift cards, an input
+    * provided by the user or the tax rate. Based on these conditions, tax_rate changes.
+    * @return the tax rate for the gift card
+    */
+    protected static resolveTaxRate(giftCardTaxRate: number | null, region: Region): number | null;
     protected retrieve_(selector: Selector<GiftCard>, config?: FindConfig<GiftCard>): Promise<GiftCard>;
     /**
      * Gets a gift card by id.

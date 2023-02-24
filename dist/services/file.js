@@ -65,6 +65,13 @@ var DefaultFileService = /** @class */ (function (_super) {
             });
         });
     };
+    DefaultFileService.prototype.uploadProtected = function (fileData) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.UNEXPECTED_STATE, "Please add a file service plugin in order to manipulate files in Medusa");
+            });
+        });
+    };
     DefaultFileService.prototype.delete = function (fileData) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {

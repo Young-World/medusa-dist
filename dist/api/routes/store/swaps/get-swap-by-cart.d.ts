@@ -5,6 +5,8 @@
  * description: "Retrieves a Swap by the id of the Cart used to confirm the Swap."
  * parameters:
  *   - (path) cart_id {string} The id of the Cart
+ * x-codegen:
+ *   method: retrieveByCartId
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -27,9 +29,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             swap:
- *               $ref: "#/components/schemas/swap"
+ *           $ref: "#/components/schemas/StoreSwapsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":

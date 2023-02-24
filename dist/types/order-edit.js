@@ -8,6 +8,7 @@ exports.defaultOrderEditRelations = [
     "items",
     "items.adjustments",
     "items.tax_lines",
+    "payment_collection",
 ];
 exports.defaultOrderEditFields = [
     "id",
@@ -15,6 +16,7 @@ exports.defaultOrderEditFields = [
     "changes",
     "order_id",
     "created_by",
+    "created_at",
     "requested_by",
     "requested_at",
     "confirmed_by",
@@ -25,6 +27,7 @@ exports.defaultOrderEditFields = [
     "canceled_by",
     "canceled_at",
     "internal_note",
+    "payment_collection_id",
 ];
 exports.storeOrderEditNotAllowedFieldsAndRelations = [
     "internal_note",

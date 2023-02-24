@@ -8,6 +8,8 @@
  *   - (path) id=* {string} The ID of the Customer.
  *   - (query) expand {string} (Comma separated) Which fields should be expanded in the customer.
  *   - (query) fields {string} (Comma separated) Which fields should be included in the customer.
+ * x-codegen:
+ *   method: retrieve
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -35,9 +37,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             customer:
- *               $ref: "#/components/schemas/customer"
+ *           $ref: "#/components/schemas/AdminCustomersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

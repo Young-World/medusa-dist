@@ -78,14 +78,17 @@ var awilix_1 = require("awilix");
 var express_1 = __importDefault(require("express"));
 var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 var medusa_test_utils_1 = require("medusa-test-utils");
+var querystring_1 = __importDefault(require("querystring"));
 require("reflect-metadata");
 var supertest_1 = __importDefault(require("supertest"));
-var querystring_1 = __importDefault(require("querystring"));
 var api_1 = __importDefault(require("../loaders/api"));
-var passport_1 = __importDefault(require("../loaders/passport"));
 var feature_flags_1 = __importStar(require("../loaders/feature-flags"));
+var module_1 = require("../loaders/module");
+var passport_1 = __importDefault(require("../loaders/passport"));
 var services_1 = __importDefault(require("../loaders/services"));
 var strategies_1 = __importDefault(require("../loaders/strategies"));
+var module_definitions_1 = __importDefault(require("../loaders/module-definitions"));
+var module_2 = __importDefault(require("../loaders/module"));
 var adminSessionOpts = {
     cookieName: "session",
     secret: "test",
@@ -96,6 +99,7 @@ var clientSessionOpts = {
     secret: "test",
 };
 exports.clientSessionOpts = clientSessionOpts;
+var moduleResolutions = (0, module_definitions_1.default)({});
 var config = {
     projectConfig: {
         jwt_secret: "supersecret",
@@ -103,10 +107,12 @@ var config = {
         admin_cors: "",
         store_cors: "",
     },
+    moduleResolutions: moduleResolutions,
 };
 var testApp = (0, express_1.default)();
 var container = (0, awilix_1.createContainer)();
 container.register("featureFlagRouter", (0, awilix_1.asValue)(feature_flags_1.featureFlagRouter));
+container.register("modulesHelper", (0, awilix_1.asValue)(module_1.moduleHelper));
 container.register("configModule", (0, awilix_1.asValue)(config));
 container.register({
     logger: (0, awilix_1.asValue)({
@@ -127,6 +133,7 @@ testApp.use(function (req, res, next) {
 (0, services_1.default)({ container: container, configModule: config });
 (0, strategies_1.default)({ container: container, configModule: config });
 (0, passport_1.default)({ app: testApp, container: container, configModule: config });
+(0, module_2.default)({ container: container, configModule: config });
 testApp.use(function (req, res, next) {
     req.scope = container.createScope();
     next();
@@ -136,7 +143,7 @@ var supertestRequest = (0, supertest_1.default)(testApp);
 function request(method, url, opts) {
     if (opts === void 0) { opts = {}; }
     return __awaiter(this, void 0, void 0, function () {
-        var payload, query, _a, headers, _b, flags, queryParams, req, name, res, e_1;
+        var payload, query, _a, headers, _b, flags, queryParams, req, adminSession, name_1, res, e_1;
         return __generator(this, function (_c) {
             switch (_c.label) {
                 case 0:
@@ -148,24 +155,25 @@ function request(method, url, opts) {
                     req = supertestRequest[method.toLowerCase()]("".concat(url).concat(queryParams ? "?" + queryParams : ""));
                     headers.Cookie = headers.Cookie || "";
                     if (opts.adminSession) {
-                        if (opts.adminSession.jwt) {
-                            opts.adminSession.jwt = jsonwebtoken_1.default.sign(opts.adminSession.jwt, config.projectConfig.jwt_secret, {
+                        adminSession = __assign({}, opts.adminSession);
+                        if (adminSession.jwt) {
+                            adminSession.jwt = jsonwebtoken_1.default.sign(adminSession.jwt, config.projectConfig.jwt_secret, {
                                 expiresIn: "30m",
                             });
                         }
-                        headers.Cookie = JSON.stringify(opts.adminSession) || "";
+                        headers.Cookie = JSON.stringify(adminSession) || "";
                     }
                     if (opts.clientSession) {
                         if (opts.clientSession.jwt) {
-                            opts.clientSession.jwt = jsonwebtoken_1.default.sign(opts.clientSession.jwt, config.projectConfig.jwt_secret, {
+                            opts.clientSession.jwt_store = jsonwebtoken_1.default.sign(opts.clientSession.jwt, config.projectConfig.jwt_secret, {
                                 expiresIn: "30d",
                             });
                         }
                         headers.Cookie = JSON.stringify(opts.clientSession) || "";
                     }
-                    for (name in headers) {
-                        if ({}.hasOwnProperty.call(headers, name)) {
-                            req.set(name, headers[name]);
+                    for (name_1 in headers) {
+                        if ({}.hasOwnProperty.call(headers, name_1)) {
+                            req.set(name_1, headers[name_1]);
                         }
                     }
                     if (payload && !req.get("content-type")) {

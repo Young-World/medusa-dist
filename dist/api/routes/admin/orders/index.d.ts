@@ -1,21 +1,47 @@
 import "reflect-metadata";
 import { Order } from "../../../..";
-import { DeleteResponse, PaginatedResponse } from "../../../../types/common";
+import { PaginatedResponse } from "../../../../types/common";
 import { FlagRouter } from "../../../../utils/flag-router";
 declare const _default: (app: any, featureFlagRouter: FlagRouter) => any;
 export default _default;
+/**
+ * @schema AdminOrdersRes
+ * type: object
+ * properties:
+ *   order:
+ *     $ref: "#/components/schemas/Order"
+ */
 export declare type AdminOrdersRes = {
     order: Order;
 };
-export declare type AdminDeleteRes = DeleteResponse;
+/**
+ * @schema AdminOrdersListRes
+ * type: object
+ * properties:
+ *   orders:
+ *     type: array
+ *     items:
+ *       $ref: "#/components/schemas/Order"
+ *   count:
+ *     type: integer
+ *     description: The total number of items available
+ *   offset:
+ *     type: integer
+ *     description: The number of items skipped before these items
+ *   limit:
+ *     type: integer
+ *     description: The number of items per page
+ */
 export declare type AdminOrdersListRes = PaginatedResponse & {
     orders: Order[];
 };
 export declare const defaultAdminOrdersRelations: string[];
 export declare const defaultAdminOrdersFields: (keyof Order)[];
-export declare const allowedAdminOrdersFields: string[];
-export declare const allowedAdminOrdersRelations: string[];
 export declare const filterableAdminOrdersFields: string[];
+export declare const AvailableOrderIncludesFields: {
+    RETURNABLE_ITEMS: string;
+};
+export declare const allowedOrderIncludesFields: string[];
 export * from "./add-shipping-method";
 export * from "./archive-order";
 export * from "./cancel-claim";

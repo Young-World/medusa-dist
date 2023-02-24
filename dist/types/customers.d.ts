@@ -1,6 +1,7 @@
 import { AddressPayload } from "./common";
 export declare class AdminListCustomerSelector {
     q?: string;
+    has_account?: boolean;
     groups?: string[];
 }
 export declare type CreateCustomerInput = {

@@ -66,37 +66,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           email:
- *             type: string
- *             description: The Customer's email.
- *             format: email
- *           first_name:
- *             type: string
- *             description:  The Customer's first name.
- *           last_name:
- *             type: string
- *             description:  The Customer's last name.
- *           phone:
- *             type: string
- *             description: The Customer's phone number.
- *           password:
- *             type: string
- *             description: The Customer's password.
- *             format: password
- *           groups:
- *             type: array
- *             items:
- *               required:
- *                 - id
- *               properties:
- *                 id:
- *                   description: The ID of a customer group
- *                   type: string
- *             description: A list of customer groups to which the customer belongs.
- *           metadata:
- *             description: An optional set of key-value pairs to hold additional information.
- *             type: object
+ *         $ref: "#/components/schemas/AdminPostCustomersCustomerReq"
+ * x-codegen:
+ *   method: update
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -130,9 +102,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             customer:
- *               $ref: "#/components/schemas/customer"
+ *           $ref: "#/components/schemas/AdminCustomersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -204,6 +174,42 @@ var Group = /** @class */ (function () {
     ], Group.prototype, "id", void 0);
     return Group;
 }());
+/**
+ * @schema AdminPostCustomersCustomerReq
+ * type: object
+ * properties:
+ *   email:
+ *     type: string
+ *     description: The Customer's email.
+ *     format: email
+ *   first_name:
+ *     type: string
+ *     description:  The Customer's first name.
+ *   last_name:
+ *     type: string
+ *     description:  The Customer's last name.
+ *   phone:
+ *     type: string
+ *     description: The Customer's phone number.
+ *   password:
+ *     type: string
+ *     description: The Customer's password.
+ *     format: password
+ *   groups:
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - id
+ *       properties:
+ *         id:
+ *           description: The ID of a customer group
+ *           type: string
+ *     description: A list of customer groups to which the customer belongs.
+ *   metadata:
+ *     description: An optional set of key-value pairs to hold additional information.
+ *     type: object
+ */
 var AdminPostCustomersCustomerReq = /** @class */ (function () {
     function AdminPostCustomersCustomerReq() {
     }

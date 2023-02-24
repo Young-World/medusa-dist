@@ -39,11 +39,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * @oas [delete] /invites/{invite_id}
  * operationId: "DeleteInvitesInvite"
- * summary: "Create an Invite"
- * description: "Creates an Invite and triggers an 'invite' created event"
+ * summary: "Delete an Invite"
+ * description: "Deletes an Invite"
  * x-authenticated: true
  * parameters:
  *   - (path) invite_id=* {string} The ID of the Invite
+ * x-codegen:
+ *   method: delete
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -71,18 +73,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             id:
- *               type: string
- *               description: The ID of the deleted Invite.
- *             object:
- *               type: string
- *               description: The type of the object that was deleted.
- *               format: invite
- *             deleted:
- *               type: boolean
- *               description: Whether or not the Invite was deleted.
- *               default: true
+ *           $ref: "#/components/schemas/AdminInviteDeleteRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

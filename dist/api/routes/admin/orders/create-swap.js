@@ -1,4 +1,19 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -45,12 +60,11 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AdminPostOrdersOrderSwapsReq = void 0;
+exports.AdminPostOrdersOrderSwapsParams = exports.AdminPostOrdersOrderSwapsReq = void 0;
 var class_validator_1 = require("class-validator");
-var _1 = require(".");
 var medusa_core_utils_1 = require("medusa-core-utils");
 var class_transformer_1 = require("class-transformer");
-var validator_1 = require("../../../../utils/validator");
+var common_1 = require("../../../../types/common");
 /**
  * @oas [post] /order/{id}/swaps
  * operationId: "PostOrdersOrderSwaps"
@@ -59,80 +73,16 @@ var validator_1 = require("../../../../utils/validator");
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {string} The ID of the Order.
+ *   - (query) expand {string} (Comma separated) Which fields should be expanded the order of the result.
+ *   - (query) fields {string} (Comma separated) Which fields should be included the order of the result.
  * requestBody:
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - return_items
- *         properties:
- *           return_items:
- *             description: The Line Items to return as part of the Swap.
- *             type: array
- *             items:
- *               required:
- *                 - item_id
- *                 - quantity
- *               properties:
- *                 item_id:
- *                   description: The ID of the Line Item that will be claimed.
- *                   type: string
- *                 quantity:
- *                   description: The number of items that will be returned
- *                   type: integer
- *                 reason_id:
- *                   description: The ID of the Return Reason to use.
- *                   type: string
- *                 note:
- *                   description: An optional note with information about the Return.
- *                   type: string
- *           return_shipping:
- *             description: How the Swap will be returned.
- *             type: object
- *             required:
- *               - option_id
- *             properties:
- *               option_id:
- *                 type: string
- *                 description: The ID of the Shipping Option to create the Shipping Method from.
- *               price:
- *                 type: integer
- *                 description: The price to charge for the Shipping Method.
- *           additional_items:
- *             description: The new items to send to the Customer.
- *             type: array
- *             items:
- *               required:
- *                 - variant_id
- *                 - quantity
- *               properties:
- *                 variant_id:
- *                   description: The ID of the Product Variant to ship.
- *                   type: string
- *                 quantity:
- *                   description: The quantity of the Product Variant to ship.
- *                   type: integer
- *           custom_shipping_options:
- *             description: The custom shipping options to potentially create a Shipping Method from.
- *             type: array
- *             items:
- *               required:
- *                 - option_id
- *                 - price
- *               properties:
- *                 option_id:
- *                   description: The ID of the Shipping Option to override with a custom price.
- *                   type: string
- *                 price:
- *                   description: The custom price of the Shipping Option.
- *                   type: integer
- *           no_notification:
- *             description: If set to true no notification will be send related to this Swap.
- *             type: boolean
- *           allow_backorder:
- *             description: If true, swaps can be completed with items out of stock
- *             type: boolean
- *             default: true
+ *         $ref: "#/components/schemas/AdminPostOrdersOrderSwapsReq"
+ * x-codegen:
+ *   method: createSwap
+ *   queryParams: AdminPostOrdersOrderSwapsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -176,9 +126,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/order"
+ *           $ref: "#/components/schemas/AdminOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -198,18 +146,16 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         switch (_b.label) {
             case 0:
                 id = req.params.id;
-                return [4 /*yield*/, (0, validator_1.validator)(AdminPostOrdersOrderSwapsReq, req.body)];
-            case 1:
-                validated = _b.sent();
+                validated = req.validatedBody;
                 idempotencyKeyService = req.scope.resolve("idempotencyKeyService");
                 orderService = req.scope.resolve("orderService");
                 swapService = req.scope.resolve("swapService");
                 returnService = req.scope.resolve("returnService");
                 manager = req.scope.resolve("manager");
                 headerKey = req.get("Idempotency-Key") || "";
-                _b.label = 2;
-            case 2:
-                _b.trys.push([2, 4, , 5]);
+                _b.label = 1;
+            case 1:
+                _b.trys.push([1, 3, , 4]);
                 return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
                         return __generator(this, function (_a) {
                             switch (_a.label) {
@@ -222,32 +168,32 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                             }
                         });
                     }); })];
-            case 3:
+            case 2:
                 _b.sent();
-                return [3 /*break*/, 5];
-            case 4:
+                return [3 /*break*/, 4];
+            case 3:
                 error_1 = _b.sent();
                 res.status(409).send("Failed to create idempotency key");
                 return [2 /*return*/];
-            case 5:
+            case 4:
                 res.setHeader("Access-Control-Expose-Headers", "Idempotency-Key");
                 res.setHeader("Idempotency-Key", idempotencyKey.idempotency_key);
                 inProgress = true;
                 err = false;
-                _b.label = 6;
-            case 6:
-                if (!inProgress) return [3 /*break*/, 15];
+                _b.label = 5;
+            case 5:
+                if (!inProgress) return [3 /*break*/, 14];
                 _a = idempotencyKey.recovery_point;
                 switch (_a) {
-                    case "started": return [3 /*break*/, 7];
-                    case "swap_created": return [3 /*break*/, 9];
-                    case "finished": return [3 /*break*/, 11];
+                    case "started": return [3 /*break*/, 6];
+                    case "swap_created": return [3 /*break*/, 8];
+                    case "finished": return [3 /*break*/, 10];
                 }
-                return [3 /*break*/, 12];
-            case 7: return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
-                    var _a, key, error;
-                    return __generator(this, function (_b) {
-                        switch (_b.label) {
+                return [3 /*break*/, 11];
+            case 6: return [4 /*yield*/, manager
+                    .transaction("SERIALIZABLE", function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
                             case 0: return [4 /*yield*/, idempotencyKeyService
                                     .withTransaction(transactionManager)
                                     .workStage(idempotencyKey.idempotency_key, function (manager) { return __awaiter(void 0, void 0, void 0, function () {
@@ -256,9 +202,9 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                         switch (_a.label) {
                                             case 0: return [4 /*yield*/, orderService
                                                     .withTransaction(manager)
-                                                    .retrieve(id, {
-                                                    select: ["refunded_total", "total"],
+                                                    .retrieveWithTotals(id, {
                                                     relations: [
+                                                        "cart",
                                                         "items",
                                                         "items.tax_lines",
                                                         "swaps",
@@ -299,28 +245,25 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                     });
                                 }); })];
                             case 1:
-                                _a = _b.sent(), key = _a.key, error = _a.error;
-                                if (error) {
-                                    inProgress = false;
-                                    err = error;
-                                }
-                                else {
-                                    idempotencyKey = key;
-                                }
+                                idempotencyKey = _a.sent();
                                 return [2 /*return*/];
                         }
                     });
-                }); })];
-            case 8:
+                }); })
+                    .catch(function (e) {
+                    inProgress = false;
+                    err = e;
+                })];
+            case 7:
                 _b.sent();
-                return [3 /*break*/, 14];
-            case 9: return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
-                    var _a, key, error;
-                    return __generator(this, function (_b) {
-                        switch (_b.label) {
+                return [3 /*break*/, 13];
+            case 8: return [4 /*yield*/, manager
+                    .transaction("SERIALIZABLE", function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
                             case 0: return [4 /*yield*/, idempotencyKeyService
                                     .withTransaction(transactionManager)
-                                    .workStage(idempotencyKey.idempotency_key, function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
+                                    .workStage(idempotencyKey.idempotency_key, function (manager) { return __awaiter(void 0, void 0, void 0, function () {
                                     var swaps, order;
                                     return __generator(this, function (_a) {
                                         switch (_a.label) {
@@ -336,9 +279,8 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                                 }
                                                 return [4 /*yield*/, orderService
                                                         .withTransaction(transactionManager)
-                                                        .retrieve(id, {
-                                                        select: _1.defaultAdminOrdersFields,
-                                                        relations: _1.defaultAdminOrdersRelations,
+                                                        .retrieveWithTotals(id, req.retrieveConfig, {
+                                                        includes: req.includes,
                                                     })];
                                             case 2:
                                                 order = _a.sent();
@@ -350,28 +292,25 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                     });
                                 }); })];
                             case 1:
-                                _a = _b.sent(), key = _a.key, error = _a.error;
-                                if (error) {
-                                    inProgress = false;
-                                    err = error;
-                                }
-                                else {
-                                    idempotencyKey = key;
-                                }
+                                idempotencyKey = _a.sent();
                                 return [2 /*return*/];
                         }
                     });
-                }); })];
-            case 10:
+                }); })
+                    .catch(function (e) {
+                    inProgress = false;
+                    err = e;
+                })];
+            case 9:
                 _b.sent();
-                return [3 /*break*/, 14];
-            case 11:
+                return [3 /*break*/, 13];
+            case 10:
                 {
                     inProgress = false;
-                    return [3 /*break*/, 14];
+                    return [3 /*break*/, 13];
                 }
-                _b.label = 12;
-            case 12: return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
+                _b.label = 11;
+            case 11: return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, idempotencyKeyService
@@ -387,11 +326,11 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                         }
                     });
                 }); })];
-            case 13:
+            case 12:
                 _b.sent();
-                return [3 /*break*/, 14];
-            case 14: return [3 /*break*/, 6];
-            case 15:
+                return [3 /*break*/, 13];
+            case 13: return [3 /*break*/, 5];
+            case 14:
                 if (err) {
                     throw err;
                 }
@@ -400,6 +339,83 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostOrdersOrderSwapsReq
+ * type: object
+ * required:
+ *   - return_items
+ * properties:
+ *   return_items:
+ *     description: The Line Items to return as part of the Swap.
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - item_id
+ *         - quantity
+ *       properties:
+ *         item_id:
+ *           description: The ID of the Line Item that will be claimed.
+ *           type: string
+ *         quantity:
+ *           description: The number of items that will be returned
+ *           type: integer
+ *         reason_id:
+ *           description: The ID of the Return Reason to use.
+ *           type: string
+ *         note:
+ *           description: An optional note with information about the Return.
+ *           type: string
+ *   return_shipping:
+ *     description: How the Swap will be returned.
+ *     type: object
+ *     required:
+ *       - option_id
+ *     properties:
+ *       option_id:
+ *         type: string
+ *         description: The ID of the Shipping Option to create the Shipping Method from.
+ *       price:
+ *         type: integer
+ *         description: The price to charge for the Shipping Method.
+ *   additional_items:
+ *     description: The new items to send to the Customer.
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - variant_id
+ *         - quantity
+ *       properties:
+ *         variant_id:
+ *           description: The ID of the Product Variant to ship.
+ *           type: string
+ *         quantity:
+ *           description: The quantity of the Product Variant to ship.
+ *           type: integer
+ *   custom_shipping_options:
+ *     description: The custom shipping options to potentially create a Shipping Method from.
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - option_id
+ *         - price
+ *       properties:
+ *         option_id:
+ *           description: The ID of the Shipping Option to override with a custom price.
+ *           type: string
+ *         price:
+ *           description: The custom price of the Shipping Option.
+ *           type: integer
+ *   no_notification:
+ *     description: If set to true no notification will be send related to this Swap.
+ *     type: boolean
+ *   allow_backorder:
+ *     description: If true, swaps can be completed with items out of stock
+ *     type: boolean
+ *     default: true
+ */
 var AdminPostOrdersOrderSwapsReq = /** @class */ (function () {
     function AdminPostOrdersOrderSwapsReq() {
         this.custom_shipping_options = [];
@@ -517,4 +533,12 @@ var AdditionalItem = /** @class */ (function () {
     ], AdditionalItem.prototype, "quantity", void 0);
     return AdditionalItem;
 }());
+var AdminPostOrdersOrderSwapsParams = /** @class */ (function (_super) {
+    __extends(AdminPostOrdersOrderSwapsParams, _super);
+    function AdminPostOrdersOrderSwapsParams() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return AdminPostOrdersOrderSwapsParams;
+}(common_1.FindParams));
+exports.AdminPostOrdersOrderSwapsParams = AdminPostOrdersOrderSwapsParams;
 //# sourceMappingURL=create-swap.js.map

@@ -116,11 +116,10 @@ var medusa_core_utils_1 = require("medusa-core-utils");
 var interfaces_1 = require("../interfaces");
 var sales_channels_1 = __importDefault(require("../loaders/feature-flags/sales-channels"));
 var utils_1 = require("../utils");
-var exception_formatter_1 = require("../utils/exception-formatter");
 var ProductService = /** @class */ (function (_super) {
     __extends(ProductService, _super);
     function ProductService(_a) {
-        var manager = _a.manager, productOptionRepository = _a.productOptionRepository, productRepository = _a.productRepository, productVariantRepository = _a.productVariantRepository, eventBusService = _a.eventBusService, productVariantService = _a.productVariantService, productTypeRepository = _a.productTypeRepository, productTagRepository = _a.productTagRepository, imageRepository = _a.imageRepository, searchService = _a.searchService, featureFlagRouter = _a.featureFlagRouter;
+        var manager = _a.manager, productOptionRepository = _a.productOptionRepository, productRepository = _a.productRepository, productVariantRepository = _a.productVariantRepository, eventBusService = _a.eventBusService, productVariantService = _a.productVariantService, productTypeRepository = _a.productTypeRepository, productTagRepository = _a.productTagRepository, productCategoryRepository = _a.productCategoryRepository, imageRepository = _a.imageRepository, searchService = _a.searchService, featureFlagRouter = _a.featureFlagRouter;
         var _this = 
         // eslint-disable-next-line prefer-rest-params
         _super.call(this, arguments[0]) || this;
@@ -130,6 +129,7 @@ var ProductService = /** @class */ (function (_super) {
         _this.productVariantRepository_ = productVariantRepository;
         _this.eventBus_ = eventBusService;
         _this.productVariantService_ = productVariantService;
+        _this.productCategoryRepository_ = productCategoryRepository;
         _this.productTypeRepository_ = productTypeRepository;
         _this.productTagRepository_ = productTagRepository;
         _this.imageRepository_ = imageRepository;
@@ -146,7 +146,6 @@ var ProductService = /** @class */ (function (_super) {
      * @return the result of the find operation
      */
     ProductService.prototype.list = function (selector, config) {
-        if (selector === void 0) { selector = {}; }
         if (config === void 0) { config = {
             relations: [],
             skip: 0,
@@ -154,20 +153,13 @@ var ProductService = /** @class */ (function (_super) {
             include_discount_prices: false,
         }; }
         return __awaiter(this, void 0, void 0, function () {
-            var manager, productRepo, _a, q, query, relations, _b, products;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
-                    case 0:
-                        manager = this.manager_;
-                        productRepo = manager.getCustomRepository(this.productRepository_);
-                        _a = this.prepareListQuery_(selector, config), q = _a.q, query = _a.query, relations = _a.relations;
-                        if (!q) return [3 /*break*/, 2];
-                        return [4 /*yield*/, productRepo.getFreeTextSearchResultsAndCount(q, query, relations)];
+            var _a, products;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0: return [4 /*yield*/, this.listAndCount(selector, config)];
                     case 1:
-                        _b = __read.apply(void 0, [_c.sent(), 1]), products = _b[0];
+                        _a = __read.apply(void 0, [_b.sent(), 1]), products = _a[0];
                         return [2 /*return*/, products];
-                    case 2: return [4 /*yield*/, productRepo.findWithRelations(relations, query)];
-                    case 3: return [2 /*return*/, _c.sent()];
                 }
             });
         });
@@ -243,7 +235,11 @@ var ProductService = /** @class */ (function (_super) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.retrieve_({ id: productId }, config)];
+                    case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(productId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"productId\" must be defined");
+                        }
+                        return [4 /*yield*/, this.retrieve_({ id: productId }, config)];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
@@ -261,7 +257,11 @@ var ProductService = /** @class */ (function (_super) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.retrieve_({ handle: productHandle }, config)];
+                    case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(productHandle)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"productHandle\" must be defined");
+                        }
+                        return [4 /*yield*/, this.retrieve_({ handle: productHandle }, config)];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
@@ -279,7 +279,11 @@ var ProductService = /** @class */ (function (_super) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.retrieve_({ external_id: externalId }, config)];
+                    case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(externalId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"externalId\" must be defined");
+                        }
+                        return [4 /*yield*/, this.retrieve_({ external_id: externalId }, config)];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
@@ -409,6 +413,28 @@ var ProductService = /** @class */ (function (_super) {
         });
     };
     /**
+     * Check if the product is assigned to at least one of the provided sales channels.
+     *
+     * @param id - product id
+     * @param salesChannelIds - an array of sales channel ids
+     */
+    ProductService.prototype.isProductInSalesChannels = function (id, salesChannelIds) {
+        return __awaiter(this, void 0, void 0, function () {
+            var product, productsSalesChannels;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.retrieve_({ id: id }, { relations: ["sales_channels"] })
+                        // TODO: reimplement this to use db level check
+                    ];
+                    case 1:
+                        product = _a.sent();
+                        productsSalesChannels = product.sales_channels.map(function (channel) { return channel.id; });
+                        return [2 /*return*/, productsSalesChannels.some(function (id) { return salesChannelIds.includes(id); })];
+                }
+            });
+        });
+    };
+    /**
      * Creates a product.
      * @param productObject - the product to create
      * @return resolves to the creation result.
@@ -419,7 +445,7 @@ var ProductService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var productRepo, productTagRepo, productTypeRepo, imageRepo, optionRepo, options, tags, type, images, salesChannels, rest, product_1, _a, _b, _c, salesChannelIds, _d, result, error_1;
+                            var productRepo, productTagRepo, productTypeRepo, imageRepo, optionRepo, options, tags, type, images, salesChannels, categories, rest, product, _a, _b, _c, salesChannelIds, categoryIds, categoryRecords, _d, result;
                             var _this = this;
                             var _e;
                             return __generator(this, function (_f) {
@@ -430,7 +456,7 @@ var ProductService = /** @class */ (function (_super) {
                                         productTypeRepo = manager.getCustomRepository(this.productTypeRepository_);
                                         imageRepo = manager.getCustomRepository(this.imageRepository_);
                                         optionRepo = manager.getCustomRepository(this.productOptionRepository_);
-                                        options = productObject.options, tags = productObject.tags, type = productObject.type, images = productObject.images, salesChannels = productObject.sales_channels, rest = __rest(productObject, ["options", "tags", "type", "images", "sales_channels"]);
+                                        options = productObject.options, tags = productObject.tags, type = productObject.type, images = productObject.images, salesChannels = productObject.sales_channels, categories = productObject.categories, rest = __rest(productObject, ["options", "tags", "type", "images", "sales_channels", "categories"]);
                                         if (!rest.thumbnail && (images === null || images === void 0 ? void 0 : images.length)) {
                                             rest.thumbnail = images[0];
                                         }
@@ -438,50 +464,55 @@ var ProductService = /** @class */ (function (_super) {
                                         if (rest.is_giftcard) {
                                             rest.discountable = false;
                                         }
-                                        _f.label = 1;
-                                    case 1:
-                                        _f.trys.push([1, 12, , 13]);
-                                        product_1 = productRepo.create(rest);
-                                        if (!(images === null || images === void 0 ? void 0 : images.length)) return [3 /*break*/, 3];
-                                        _a = product_1;
+                                        product = productRepo.create(rest);
+                                        if (!(images === null || images === void 0 ? void 0 : images.length)) return [3 /*break*/, 2];
+                                        _a = product;
                                         return [4 /*yield*/, imageRepo.upsertImages(images)];
-                                    case 2:
+                                    case 1:
                                         _a.images = _f.sent();
-                                        _f.label = 3;
-                                    case 3:
-                                        if (!(tags === null || tags === void 0 ? void 0 : tags.length)) return [3 /*break*/, 5];
-                                        _b = product_1;
+                                        _f.label = 2;
+                                    case 2:
+                                        if (!(tags === null || tags === void 0 ? void 0 : tags.length)) return [3 /*break*/, 4];
+                                        _b = product;
                                         return [4 /*yield*/, productTagRepo.upsertTags(tags)];
-                                    case 4:
+                                    case 3:
                                         _b.tags = _f.sent();
-                                        _f.label = 5;
-                                    case 5:
-                                        if (!(typeof type !== "undefined")) return [3 /*break*/, 7];
-                                        _c = product_1;
+                                        _f.label = 4;
+                                    case 4:
+                                        if (!(typeof type !== "undefined")) return [3 /*break*/, 6];
+                                        _c = product;
                                         return [4 /*yield*/, productTypeRepo.upsertType(type)];
-                                    case 6:
+                                    case 5:
                                         _c.type_id = ((_e = (_f.sent())) === null || _e === void 0 ? void 0 : _e.id) || null;
-                                        _f.label = 7;
-                                    case 7:
+                                        _f.label = 6;
+                                    case 6:
                                         if (this.featureFlagRouter_.isFeatureEnabled(sales_channels_1.default.key)) {
-                                            if ((0, utils_1.isDefined)(salesChannels)) {
-                                                product_1.sales_channels = [];
+                                            if ((0, medusa_core_utils_1.isDefined)(salesChannels)) {
+                                                product.sales_channels = [];
                                                 if (salesChannels === null || salesChannels === void 0 ? void 0 : salesChannels.length) {
                                                     salesChannelIds = salesChannels === null || salesChannels === void 0 ? void 0 : salesChannels.map(function (sc) { return sc.id; });
-                                                    product_1.sales_channels = salesChannelIds === null || salesChannelIds === void 0 ? void 0 : salesChannelIds.map(function (id) { return ({ id: id }); });
+                                                    product.sales_channels = salesChannelIds === null || salesChannelIds === void 0 ? void 0 : salesChannelIds.map(function (id) { return ({ id: id }); });
                                                 }
                                             }
                                         }
-                                        return [4 /*yield*/, productRepo.save(product_1)];
-                                    case 8:
-                                        product_1 = _f.sent();
-                                        _d = product_1;
+                                        if ((0, medusa_core_utils_1.isDefined)(categories)) {
+                                            product.categories = [];
+                                            if (categories === null || categories === void 0 ? void 0 : categories.length) {
+                                                categoryIds = categories.map(function (c) { return c.id; });
+                                                categoryRecords = categoryIds.map(function (id) { return ({ id: id }); });
+                                                product.categories = categoryRecords;
+                                            }
+                                        }
+                                        return [4 /*yield*/, productRepo.save(product)];
+                                    case 7:
+                                        product = _f.sent();
+                                        _d = product;
                                         return [4 /*yield*/, Promise.all((options !== null && options !== void 0 ? options : []).map(function (option) { return __awaiter(_this, void 0, void 0, function () {
                                                 var res;
                                                 return __generator(this, function (_a) {
                                                     switch (_a.label) {
                                                         case 0:
-                                                            res = optionRepo.create(__assign(__assign({}, option), { product_id: product_1.id }));
+                                                            res = optionRepo.create(__assign(__assign({}, option), { product_id: product.id }));
                                                             return [4 /*yield*/, optionRepo.save(res)];
                                                         case 1:
                                                             _a.sent();
@@ -489,25 +520,21 @@ var ProductService = /** @class */ (function (_super) {
                                                     }
                                                 });
                                             }); }))];
-                                    case 9:
+                                    case 8:
                                         _d.options = _f.sent();
-                                        return [4 /*yield*/, this.retrieve(product_1.id, {
+                                        return [4 /*yield*/, this.retrieve(product.id, {
                                                 relations: ["options"],
                                             })];
-                                    case 10:
+                                    case 9:
                                         result = _f.sent();
                                         return [4 /*yield*/, this.eventBus_
                                                 .withTransaction(manager)
                                                 .emit(ProductService.Events.CREATED, {
                                                 id: result.id,
                                             })];
-                                    case 11:
+                                    case 10:
                                         _f.sent();
                                         return [2 /*return*/, result];
-                                    case 12:
-                                        error_1 = _f.sent();
-                                        throw (0, exception_formatter_1.formatException)(error_1);
-                                    case 13: return [2 /*return*/];
                                 }
                             });
                         }); })];
@@ -531,25 +558,25 @@ var ProductService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var productRepo, productVariantRepo, productTagRepo, productTypeRepo, imageRepo, relations, product, variants, metadata, images, tags, type, salesChannels, rest, _a, _b, _c, salesChannelIds, _loop_1, _d, _e, variant, e_1_1, newVariants, _loop_2, this_1, _f, _g, _h, i, newVariant, e_2_1, _j, _k, _l, key, value, result;
-                            var e_1, _m, e_2, _o, e_3, _p;
-                            var _q;
-                            return __generator(this, function (_r) {
-                                switch (_r.label) {
+                            var productRepo, productVariantRepo, productTagRepo, productTypeRepo, imageRepo, relations, product, metadata, images, tags, type, salesChannels, categories, rest, _a, _b, _c, categoryIds, categoryRecords, salesChannelIds, _d, _e, _f, key, value, result;
+                            var e_1, _g;
+                            var _h;
+                            return __generator(this, function (_j) {
+                                switch (_j.label) {
                                     case 0:
                                         productRepo = manager.getCustomRepository(this.productRepository_);
                                         productVariantRepo = manager.getCustomRepository(this.productVariantRepository_);
                                         productTagRepo = manager.getCustomRepository(this.productTagRepository_);
                                         productTypeRepo = manager.getCustomRepository(this.productTypeRepository_);
                                         imageRepo = manager.getCustomRepository(this.imageRepository_);
-                                        relations = ["variants", "tags", "images"];
+                                        relations = ["tags", "images"];
                                         if (this.featureFlagRouter_.isFeatureEnabled(sales_channels_1.default.key)) {
-                                            if ((0, utils_1.isDefined)(update.sales_channels)) {
+                                            if ((0, medusa_core_utils_1.isDefined)(update.sales_channels)) {
                                                 relations.push("sales_channels");
                                             }
                                         }
                                         else {
-                                            if ((0, utils_1.isDefined)(update.sales_channels)) {
+                                            if ((0, medusa_core_utils_1.isDefined)(update.sales_channels)) {
                                                 throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "the property sales_channels should no appears as part of the payload");
                                             }
                                         }
@@ -557,8 +584,8 @@ var ProductService = /** @class */ (function (_super) {
                                                 relations: relations,
                                             })];
                                     case 1:
-                                        product = _r.sent();
-                                        variants = update.variants, metadata = update.metadata, images = update.images, tags = update.tags, type = update.type, salesChannels = update.sales_channels, rest = __rest(update, ["variants", "metadata", "images", "tags", "type", "sales_channels"]);
+                                        product = _j.sent();
+                                        metadata = update.metadata, images = update.images, tags = update.tags, type = update.type, salesChannels = update.sales_channels, categories = update.categories, rest = __rest(update, ["metadata", "images", "tags", "type", "sales_channels", "categories"]);
                                         if (!product.thumbnail && !update.thumbnail && (images === null || images === void 0 ? void 0 : images.length)) {
                                             product.thumbnail = images[0];
                                         }
@@ -566,8 +593,8 @@ var ProductService = /** @class */ (function (_super) {
                                         _a = product;
                                         return [4 /*yield*/, imageRepo.upsertImages(images)];
                                     case 2:
-                                        _a.images = _r.sent();
-                                        _r.label = 3;
+                                        _a.images = _j.sent();
+                                        _j.label = 3;
                                     case 3:
                                         if (metadata) {
                                             product.metadata = (0, utils_1.setMetadata)(product, metadata);
@@ -576,18 +603,26 @@ var ProductService = /** @class */ (function (_super) {
                                         _b = product;
                                         return [4 /*yield*/, productTypeRepo.upsertType(type)];
                                     case 4:
-                                        _b.type_id = ((_q = (_r.sent())) === null || _q === void 0 ? void 0 : _q.id) || null;
-                                        _r.label = 5;
+                                        _b.type_id = ((_h = (_j.sent())) === null || _h === void 0 ? void 0 : _h.id) || null;
+                                        _j.label = 5;
                                     case 5:
                                         if (!tags) return [3 /*break*/, 7];
                                         _c = product;
                                         return [4 /*yield*/, productTagRepo.upsertTags(tags)];
                                     case 6:
-                                        _c.tags = _r.sent();
-                                        _r.label = 7;
+                                        _c.tags = _j.sent();
+                                        _j.label = 7;
                                     case 7:
+                                        if ((0, medusa_core_utils_1.isDefined)(categories)) {
+                                            product.categories = [];
+                                            if (categories === null || categories === void 0 ? void 0 : categories.length) {
+                                                categoryIds = categories.map(function (c) { return c.id; });
+                                                categoryRecords = categoryIds.map(function (id) { return ({ id: id }); });
+                                                product.categories = categoryRecords;
+                                            }
+                                        }
                                         if (this.featureFlagRouter_.isFeatureEnabled(sales_channels_1.default.key)) {
-                                            if ((0, utils_1.isDefined)(salesChannels)) {
+                                            if ((0, medusa_core_utils_1.isDefined)(salesChannels)) {
                                                 product.sales_channels = [];
                                                 if (salesChannels === null || salesChannels === void 0 ? void 0 : salesChannels.length) {
                                                     salesChannelIds = salesChannels === null || salesChannels === void 0 ? void 0 : salesChannels.map(function (sc) { return sc.id; });
@@ -595,136 +630,32 @@ var ProductService = /** @class */ (function (_super) {
                                                 }
                                             }
                                         }
-                                        if (!variants) return [3 /*break*/, 24];
-                                        _loop_1 = function (variant) {
-                                            var exists;
-                                            return __generator(this, function (_s) {
-                                                switch (_s.label) {
-                                                    case 0:
-                                                        exists = variants.find(function (v) { return v.id && variant.id === v.id; });
-                                                        if (!!exists) return [3 /*break*/, 2];
-                                                        return [4 /*yield*/, productVariantRepo.remove(variant)];
-                                                    case 1:
-                                                        _s.sent();
-                                                        _s.label = 2;
-                                                    case 2: return [2 /*return*/];
-                                                }
-                                            });
-                                        };
-                                        _r.label = 8;
-                                    case 8:
-                                        _r.trys.push([8, 13, 14, 15]);
-                                        _d = __values(product.variants), _e = _d.next();
-                                        _r.label = 9;
-                                    case 9:
-                                        if (!!_e.done) return [3 /*break*/, 12];
-                                        variant = _e.value;
-                                        return [5 /*yield**/, _loop_1(variant)];
-                                    case 10:
-                                        _r.sent();
-                                        _r.label = 11;
-                                    case 11:
-                                        _e = _d.next();
-                                        return [3 /*break*/, 9];
-                                    case 12: return [3 /*break*/, 15];
-                                    case 13:
-                                        e_1_1 = _r.sent();
-                                        e_1 = { error: e_1_1 };
-                                        return [3 /*break*/, 15];
-                                    case 14:
                                         try {
-                                            if (_e && !_e.done && (_m = _d.return)) _m.call(_d);
-                                        }
-                                        finally { if (e_1) throw e_1.error; }
-                                        return [7 /*endfinally*/];
-                                    case 15:
-                                        newVariants = [];
-                                        _loop_2 = function (i, newVariant) {
-                                            var variant_rank, variant, saved, created;
-                                            return __generator(this, function (_t) {
-                                                switch (_t.label) {
-                                                    case 0:
-                                                        variant_rank = i;
-                                                        if (!newVariant.id) return [3 /*break*/, 2];
-                                                        variant = product.variants.find(function (v) { return v.id === newVariant.id; });
-                                                        if (!variant) {
-                                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Variant with id: ".concat(newVariant.id, " is not associated with this product"));
-                                                        }
-                                                        return [4 /*yield*/, this_1.productVariantService_
-                                                                .withTransaction(manager)
-                                                                .update(variant, __assign(__assign({}, newVariant), { variant_rank: variant_rank, product_id: variant.product_id }))];
-                                                    case 1:
-                                                        saved = _t.sent();
-                                                        newVariants.push(saved);
-                                                        return [3 /*break*/, 4];
-                                                    case 2: return [4 /*yield*/, this_1.productVariantService_
-                                                            .withTransaction(manager)
-                                                            .create(product.id, __assign(__assign({}, newVariant), { variant_rank: variant_rank, options: newVariant.options || [], prices: newVariant.prices || [] }))];
-                                                    case 3:
-                                                        created = _t.sent();
-                                                        newVariants.push(created);
-                                                        _t.label = 4;
-                                                    case 4: return [2 /*return*/];
-                                                }
-                                            });
-                                        };
-                                        this_1 = this;
-                                        _r.label = 16;
-                                    case 16:
-                                        _r.trys.push([16, 21, 22, 23]);
-                                        _f = __values(variants.entries()), _g = _f.next();
-                                        _r.label = 17;
-                                    case 17:
-                                        if (!!_g.done) return [3 /*break*/, 20];
-                                        _h = __read(_g.value, 2), i = _h[0], newVariant = _h[1];
-                                        return [5 /*yield**/, _loop_2(i, newVariant)];
-                                    case 18:
-                                        _r.sent();
-                                        _r.label = 19;
-                                    case 19:
-                                        _g = _f.next();
-                                        return [3 /*break*/, 17];
-                                    case 20: return [3 /*break*/, 23];
-                                    case 21:
-                                        e_2_1 = _r.sent();
-                                        e_2 = { error: e_2_1 };
-                                        return [3 /*break*/, 23];
-                                    case 22:
-                                        try {
-                                            if (_g && !_g.done && (_o = _f.return)) _o.call(_f);
-                                        }
-                                        finally { if (e_2) throw e_2.error; }
-                                        return [7 /*endfinally*/];
-                                    case 23:
-                                        product.variants = newVariants;
-                                        _r.label = 24;
-                                    case 24:
-                                        try {
-                                            for (_j = __values(Object.entries(rest)), _k = _j.next(); !_k.done; _k = _j.next()) {
-                                                _l = __read(_k.value, 2), key = _l[0], value = _l[1];
-                                                if (typeof value !== "undefined") {
+                                            for (_d = __values(Object.entries(rest)), _e = _d.next(); !_e.done; _e = _d.next()) {
+                                                _f = __read(_e.value, 2), key = _f[0], value = _f[1];
+                                                if ((0, medusa_core_utils_1.isDefined)(value)) {
                                                     product[key] = value;
                                                 }
                                             }
                                         }
-                                        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+                                        catch (e_1_1) { e_1 = { error: e_1_1 }; }
                                         finally {
                                             try {
-                                                if (_k && !_k.done && (_p = _j.return)) _p.call(_j);
+                                                if (_e && !_e.done && (_g = _d.return)) _g.call(_d);
                                             }
-                                            finally { if (e_3) throw e_3.error; }
+                                            finally { if (e_1) throw e_1.error; }
                                         }
                                         return [4 /*yield*/, productRepo.save(product)];
-                                    case 25:
-                                        result = _r.sent();
+                                    case 8:
+                                        result = _j.sent();
                                         return [4 /*yield*/, this.eventBus_
                                                 .withTransaction(manager)
                                                 .emit(ProductService.Events.UPDATED, {
                                                 id: result.id,
                                                 fields: Object.keys(update),
                                             })];
-                                    case 26:
-                                        _r.sent();
+                                    case 9:
+                                        _j.sent();
                                         return [2 /*return*/, result];
                                 }
                             });
@@ -791,8 +722,8 @@ var ProductService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var productOptionRepo, product, option, productVariantServiceTx, _a, _b, variant, e_4_1, result;
-                            var e_4, _c;
+                            var productOptionRepo, product, option, productVariantServiceTx, _a, _b, variant, e_2_1, result;
+                            var e_2, _c;
                             return __generator(this, function (_d) {
                                 switch (_d.label) {
                                     case 0:
@@ -830,14 +761,14 @@ var ProductService = /** @class */ (function (_super) {
                                         return [3 /*break*/, 4];
                                     case 7: return [3 /*break*/, 10];
                                     case 8:
-                                        e_4_1 = _d.sent();
-                                        e_4 = { error: e_4_1 };
+                                        e_2_1 = _d.sent();
+                                        e_2 = { error: e_2_1 };
                                         return [3 /*break*/, 10];
                                     case 9:
                                         try {
                                             if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
                                         }
-                                        finally { if (e_4) throw e_4.error; }
+                                        finally { if (e_2) throw e_2.error; }
                                         return [7 /*endfinally*/];
                                     case 10: return [4 /*yield*/, this.retrieve(productId)];
                                     case 11:
@@ -999,6 +930,7 @@ var ProductService = /** @class */ (function (_super) {
                                         product = _c.sent();
                                         return [4 /*yield*/, productOptionRepo.findOne({
                                                 where: { id: optionId, product_id: productId },
+                                                relations: ["values"],
                                             })];
                                     case 2:
                                         productOption = _c.sent();
@@ -1033,6 +965,41 @@ var ProductService = /** @class */ (function (_super) {
                                     case 6:
                                         _c.sent();
                                         return [2 /*return*/, product];
+                                }
+                            });
+                        }); })];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
+    /**
+     *
+     * @param productIds ID or IDs of the products to update
+     * @param profileId Shipping profile ID to update the shipping options with
+     * @returns updated shipping options
+     */
+    ProductService.prototype.updateShippingProfile = function (productIds, profileId) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
+                            var productRepo, ids, products;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        productRepo = manager.getCustomRepository(this.productRepository_);
+                                        ids = (0, utils_1.isString)(productIds) ? [productIds] : productIds;
+                                        return [4 /*yield*/, productRepo.upsertShippingProfile(ids, profileId)];
+                                    case 1:
+                                        products = _a.sent();
+                                        return [4 /*yield*/, this.eventBus_
+                                                .withTransaction(manager)
+                                                .emit(ProductService.Events.UPDATED, products)];
+                                    case 2:
+                                        _a.sent();
+                                        return [2 /*return*/, products];
                                 }
                             });
                         }); })];

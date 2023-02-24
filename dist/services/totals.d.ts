@@ -1,8 +1,8 @@
-import { ITaxCalculationStrategy, TaxCalculationContext, TransactionBaseService } from "../interfaces";
-import { Cart, Discount, DiscountRuleType, LineItem, LineItemTaxLine, Order, ShippingMethod, ShippingMethodTaxLine } from "../models";
-import { LineAllocationsMap, LineDiscount, LineDiscountAmount, SubtotalOptions } from "../types/totals";
-import TaxProviderService from "./tax-provider";
 import { EntityManager } from "typeorm";
+import { ITaxCalculationStrategy, TaxCalculationContext, TransactionBaseService } from "../interfaces";
+import { Cart, ClaimOrder, Discount, DiscountRuleType, LineItem, LineItemTaxLine, Order, ShippingMethod, ShippingMethodTaxLine, Swap } from "../models";
+import { CalculationContextData, LineAllocationsMap, LineDiscount, LineDiscountAmount, SubtotalOptions } from "../types/totals";
+import { NewTotalsService, TaxProviderService } from "./index";
 import { FlagRouter } from "../utils/flag-router";
 declare type ShippingMethodTotals = {
     price: number;
@@ -41,6 +41,7 @@ declare type GetLineItemTotalOptions = {
 };
 declare type TotalsServiceProps = {
     taxProviderService: TaxProviderService;
+    newTotalsService: NewTotalsService;
     taxCalculationStrategy: ITaxCalculationStrategy;
     manager: EntityManager;
     featureFlagRouter: FlagRouter;
@@ -67,11 +68,12 @@ declare class TotalsService extends TransactionBaseService {
     protected manager_: EntityManager;
     protected transactionManager_: EntityManager;
     protected readonly taxProviderService_: TaxProviderService;
+    protected readonly newTotalsService_: NewTotalsService;
     protected readonly taxCalculationStrategy_: ITaxCalculationStrategy;
     protected readonly featureFlagRouter_: FlagRouter;
-    constructor({ manager, taxProviderService, taxCalculationStrategy, featureFlagRouter, }: TotalsServiceProps);
+    constructor({ manager, taxProviderService, newTotalsService, taxCalculationStrategy, featureFlagRouter, }: TotalsServiceProps);
     /**
-     * Calculates subtotal of a given cart or order.
+     * Calculates total of a given cart or order.
      * @param cartOrOrder - object to calculate total for
      * @param options - options to calculate by
      * @return the calculated subtotal
@@ -129,7 +131,12 @@ declare class TotalsService extends TransactionBaseService {
      * @param options - controls what should be included in allocation map
      * @return the allocation map for the line items in the cart or order.
      */
-    getAllocationMap(orderOrCart: Cart | Order, options?: AllocationMapOptions): Promise<LineAllocationsMap>;
+    getAllocationMap(orderOrCart: {
+        discounts?: Discount[];
+        items: LineItem[];
+        swaps?: Swap[];
+        claims?: ClaimOrder[];
+    }, options?: AllocationMapOptions): Promise<LineAllocationsMap>;
     /**
      * Gets the total refund amount for an order.
      * @param order - the order to get total refund amount for.
@@ -182,7 +189,11 @@ declare class TotalsService extends TransactionBaseService {
      * @return the allocations that the discount has on the items in the cart or
      *   order
      */
-    getLineDiscounts(cartOrOrder: Cart | Order, discount: Discount): LineDiscountAmount[];
+    getLineDiscounts(cartOrOrder: {
+        items: LineItem[];
+        swaps?: Swap[];
+        claims?: ClaimOrder[];
+    }, discount?: Discount): LineDiscountAmount[];
     /**
      * Breaks down the totals related to a line item; these are the subtotal, the
      * amount of discount applied to the line item, the amount of a gift card
@@ -229,11 +240,11 @@ declare class TotalsService extends TransactionBaseService {
     getDiscountTotal(cartOrOrder: Cart | Order): Promise<number>;
     /**
      * Prepares the calculation context for a tax total calculation.
-     * @param cartOrOrder - the cart or order to get the calculation context for
+     * @param calculationContextData - the calculationContextData to get the calculation context for
      * @param options - options to gather context by
      * @return the tax calculation context
      */
-    getCalculationContext(cartOrOrder: Cart | Order, options?: CalculationContextOptions): Promise<TaxCalculationContext>;
+    getCalculationContext(calculationContextData: CalculationContextData, options?: CalculationContextOptions): Promise<TaxCalculationContext>;
     /**
      * Rounds a number using Math.round.
      * @param value - the value to round

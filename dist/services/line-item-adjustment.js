@@ -122,24 +122,27 @@ var LineItemAdjustmentService = /** @class */ (function (_super) {
     }
     /**
      * Retrieves a line item adjustment by id.
-     * @param id - the id of the line item adjustment to retrieve
+     * @param lineItemAdjustmentId - the id of the line item adjustment to retrieve
      * @param config - the config to retrieve the line item adjustment by
      * @return the line item adjustment.
      */
-    LineItemAdjustmentService.prototype.retrieve = function (id, config) {
+    LineItemAdjustmentService.prototype.retrieve = function (lineItemAdjustmentId, config) {
         if (config === void 0) { config = {}; }
         return __awaiter(this, void 0, void 0, function () {
             var lineItemAdjustmentRepo, query, lineItemAdjustment;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(lineItemAdjustmentId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"lineItemAdjustmentId\" must be defined");
+                        }
                         lineItemAdjustmentRepo = this.manager_.getCustomRepository(this.lineItemAdjustmentRepo_);
-                        query = (0, utils_1.buildQuery)({ id: id }, config);
+                        query = (0, utils_1.buildQuery)({ id: lineItemAdjustmentId }, config);
                         return [4 /*yield*/, lineItemAdjustmentRepo.findOne(query)];
                     case 1:
                         lineItemAdjustment = _a.sent();
                         if (!lineItemAdjustment) {
-                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Line item adjustment with id: ".concat(id, " was not found"));
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Line item adjustment with id: ".concat(lineItemAdjustmentId, " was not found"));
                         }
                         return [2 /*return*/, lineItemAdjustment];
                 }
@@ -283,64 +286,66 @@ var LineItemAdjustmentService = /** @class */ (function (_super) {
     };
     /**
      * Creates adjustment for a line item
-     * @param cart - the cart object holding discounts
+     * @param calculationContextData - the calculationContextData object holding discounts
      * @param generatedLineItem - the line item for which a line item adjustment might be created
      * @param context - the line item for which a line item adjustment might be created
      * @return a line item adjustment or undefined if no adjustment was created
      */
-    LineItemAdjustmentService.prototype.generateAdjustments = function (cart, generatedLineItem, context) {
+    LineItemAdjustmentService.prototype.generateAdjustments = function (calculationContextData, generatedLineItem, context) {
         return __awaiter(this, void 0, void 0, function () {
+            var lineItem;
             var _this = this;
             return __generator(this, function (_a) {
+                lineItem = __assign({}, generatedLineItem);
                 return [2 /*return*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                        var _a, discount, lineItemProduct, isValid, amount, adjustments;
-                        var _b;
-                        return __generator(this, function (_c) {
-                            switch (_c.label) {
+                        var _a, discount, discountServiceTx, lineItemProduct, isValid, amount;
+                        var _b, _c;
+                        return __generator(this, function (_d) {
+                            switch (_d.label) {
                                 case 0:
                                     // if lineItem should not be discounted
                                     // or lineItem is a return line item
                                     // or the cart does not have any discounts
                                     // then do nothing
-                                    if (!generatedLineItem.allow_discounts ||
-                                        generatedLineItem.is_return ||
-                                        !((_b = cart === null || cart === void 0 ? void 0 : cart.discounts) === null || _b === void 0 ? void 0 : _b.length)) {
+                                    if (!lineItem.allow_discounts ||
+                                        lineItem.is_return ||
+                                        !((_b = calculationContextData === null || calculationContextData === void 0 ? void 0 : calculationContextData.discounts) === null || _b === void 0 ? void 0 : _b.length)) {
                                         return [2 /*return*/, []];
                                     }
-                                    _a = __read(cart.discounts.filter(function (d) { return d.rule.type !== models_1.DiscountRuleType.FREE_SHIPPING; }), 1), discount = _a[0];
+                                    _a = __read(calculationContextData.discounts.filter(function (d) { return d.rule.type !== models_1.DiscountRuleType.FREE_SHIPPING; }), 1), discount = _a[0];
                                     // if no discount is applied to the cart then return
                                     if (!discount) {
                                         return [2 /*return*/, []];
                                     }
+                                    discountServiceTx = this.discountService.withTransaction(manager);
                                     lineItemProduct = context.variant.product_id;
-                                    return [4 /*yield*/, this.discountService
-                                            .withTransaction(manager)
-                                            .validateDiscountForProduct(discount.rule_id, lineItemProduct)
+                                    return [4 /*yield*/, discountServiceTx.validateDiscountForProduct(discount.rule_id, lineItemProduct)
                                         // if discount is not valid for line item, then do nothing
                                     ];
                                 case 1:
-                                    isValid = _c.sent();
+                                    isValid = _d.sent();
                                     // if discount is not valid for line item, then do nothing
                                     if (!isValid) {
                                         return [2 /*return*/, []];
                                     }
-                                    return [4 /*yield*/, this.discountService.calculateDiscountForLineItem(discount.id, generatedLineItem, cart)
+                                    // In case of a generated line item the id is not available, it is mocked instead to be used for totals calculations
+                                    lineItem.id = (_c = lineItem.id) !== null && _c !== void 0 ? _c : new Date().getTime();
+                                    return [4 /*yield*/, discountServiceTx.calculateDiscountForLineItem(discount.id, lineItem, calculationContextData)
                                         // if discounted amount is 0, then do nothing
                                     ];
                                 case 2:
-                                    amount = _c.sent();
+                                    amount = _d.sent();
                                     // if discounted amount is 0, then do nothing
                                     if (amount === 0) {
                                         return [2 /*return*/, []];
                                     }
-                                    adjustments = [
-                                        {
-                                            amount: amount,
-                                            discount_id: discount.id,
-                                            description: "discount",
-                                        },
-                                    ];
-                                    return [2 /*return*/, adjustments];
+                                    return [2 /*return*/, [
+                                            {
+                                                amount: amount,
+                                                discount_id: discount.id,
+                                                description: "discount",
+                                            },
+                                        ]];
                             }
                         });
                     }); })];

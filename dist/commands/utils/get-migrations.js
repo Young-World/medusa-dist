@@ -1,40 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
 var __values = (this && this.__values) || function(o) {
     var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
     if (m) return m.call(o);
@@ -50,13 +14,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getEnabledMigrations = void 0;
+exports.getModuleSharedResources = exports.getModuleMigrations = exports.getEnabledMigrations = exports.getInternalModules = void 0;
 var glob_1 = __importDefault(require("glob"));
 var path_1 = __importDefault(require("path"));
 var fs_1 = __importDefault(require("fs"));
 var lodash_1 = require("lodash");
 var fs_exists_cached_1 = require("fs-exists-cached");
 var medusa_core_utils_1 = require("medusa-core-utils");
+var config_1 = require("../../loaders/config");
+var module_definitions_1 = __importDefault(require("../../loaders/module-definitions"));
 function createFileContentHash(path, files) {
     return path + files;
 }
@@ -80,12 +46,12 @@ function resolvePlugin(pluginName) {
         if ((0, fs_exists_cached_1.sync)(resolvedPath)) {
             if ((0, fs_exists_cached_1.sync)("".concat(resolvedPath, "/package.json"))) {
                 var packageJSON = JSON.parse(fs_1.default.readFileSync("".concat(resolvedPath, "/package.json"), "utf-8"));
-                var name = packageJSON.name || pluginName;
+                var name_1 = packageJSON.name || pluginName;
                 // warnOnIncompatiblePeerDependency(name, packageJSON)
                 return {
                     resolve: resolvedPath,
-                    name: name,
-                    id: createPluginId(name),
+                    name: name_1,
+                    id: createPluginId(name_1),
                     options: {},
                     version: packageJSON.version || createFileContentHash(resolvedPath, "**"),
                 };
@@ -121,51 +87,88 @@ function resolvePlugin(pluginName) {
         throw new Error("Unable to find plugin \"".concat(pluginName, "\". Perhaps you need to install its package?"));
     }
 }
-exports.default = (function (directory, featureFlagRouter) { return __awaiter(void 0, void 0, void 0, function () {
-    var configModule, plugins, resolved, migrationDirs, coreMigrations, resolved_1, resolved_1_1, p, exists;
+function getInternalModules(configModule) {
     var e_1, _a;
-    return __generator(this, function (_b) {
-        configModule = (0, medusa_core_utils_1.getConfigFile)(directory, "medusa-config").configModule;
-        plugins = configModule.plugins;
-        resolved = plugins.map(function (plugin) {
-            if ((0, lodash_1.isString)(plugin)) {
-                return resolvePlugin(plugin);
+    var modules = [];
+    var moduleResolutions = (0, module_definitions_1.default)(configModule);
+    try {
+        for (var _b = __values(Object.values(moduleResolutions)), _c = _b.next(); !_c.done; _c = _b.next()) {
+            var moduleResolution = _c.value;
+            if (!moduleResolution.resolutionPath ||
+                moduleResolution.moduleDeclaration.scope !== "internal") {
+                continue;
             }
-            var details = resolvePlugin(plugin.resolve);
-            details.options = plugin.options;
-            return details;
-        });
-        resolved.push({
-            resolve: "".concat(directory, "/dist"),
-            name: "project-plugin",
-            id: createPluginId("project-plugin"),
-            options: {},
-            version: createFileContentHash(process.cwd(), "**"),
-        });
-        migrationDirs = [];
-        coreMigrations = path_1.default.resolve(path_1.default.join(__dirname, "..", "..", "migrations"));
-        migrationDirs.push(path_1.default.join(coreMigrations, "*.js"));
-        try {
-            for (resolved_1 = __values(resolved), resolved_1_1 = resolved_1.next(); !resolved_1_1.done; resolved_1_1 = resolved_1.next()) {
-                p = resolved_1_1.value;
-                exists = (0, fs_exists_cached_1.sync)("".concat(p.resolve, "/migrations"));
-                if (exists) {
-                    migrationDirs.push("".concat(p.resolve, "/migrations/*.js"));
-                }
-            }
-        }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
-        finally {
+            var loadedModule = null;
             try {
-                if (resolved_1_1 && !resolved_1_1.done && (_a = resolved_1.return)) _a.call(resolved_1);
+                loadedModule = require(moduleResolution.moduleDeclaration.resolve).default;
             }
-            finally { if (e_1) throw e_1.error; }
+            catch (error) {
+                console.log("Error loading Module", error);
+                continue;
+            }
+            modules.push({
+                moduleDeclaration: moduleResolution.moduleDeclaration,
+                loadedModule: loadedModule,
+            });
         }
-        return [2 /*return*/, (0, exports.getEnabledMigrations)(migrationDirs, function (flag) {
-                return featureFlagRouter.isFeatureEnabled(flag);
-            })];
+    }
+    catch (e_1_1) { e_1 = { error: e_1_1 }; }
+    finally {
+        try {
+            if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+        }
+        finally { if (e_1) throw e_1.error; }
+    }
+    return modules;
+}
+exports.getInternalModules = getInternalModules;
+exports.default = (function (directory, featureFlagRouter) {
+    var e_2, _a;
+    var _b = (0, medusa_core_utils_1.getConfigFile)(directory, "medusa-config"), configModule = _b.configModule, error = _b.error;
+    if (error) {
+        (0, config_1.handleConfigError)(error);
+    }
+    var plugins = configModule.plugins;
+    var resolved = plugins.map(function (plugin) {
+        if ((0, lodash_1.isString)(plugin)) {
+            return resolvePlugin(plugin);
+        }
+        var details = resolvePlugin(plugin.resolve);
+        details.options = plugin.options;
+        return details;
     });
-}); });
+    resolved.push({
+        resolve: "".concat(directory, "/dist"),
+        name: "project-plugin",
+        id: createPluginId("project-plugin"),
+        options: {},
+        version: createFileContentHash(process.cwd(), "**"),
+    });
+    var migrationDirs = [];
+    var corePackageMigrations = path_1.default.resolve(path_1.default.join(__dirname, "..", "..", "migrations"));
+    migrationDirs.push(path_1.default.join(corePackageMigrations, "*.js"));
+    try {
+        for (var resolved_1 = __values(resolved), resolved_1_1 = resolved_1.next(); !resolved_1_1.done; resolved_1_1 = resolved_1.next()) {
+            var p = resolved_1_1.value;
+            var exists = (0, fs_exists_cached_1.sync)("".concat(p.resolve, "/migrations"));
+            if (exists) {
+                migrationDirs.push("".concat(p.resolve, "/migrations/*.js"));
+            }
+        }
+    }
+    catch (e_2_1) { e_2 = { error: e_2_1 }; }
+    finally {
+        try {
+            if (resolved_1_1 && !resolved_1_1.done && (_a = resolved_1.return)) _a.call(resolved_1);
+        }
+        finally { if (e_2) throw e_2.error; }
+    }
+    var isFeatureFlagEnabled = function (flag) {
+        return featureFlagRouter.isFeatureEnabled(flag);
+    };
+    var coreMigrations = (0, exports.getEnabledMigrations)(migrationDirs, isFeatureFlagEnabled);
+    return { coreMigrations: coreMigrations };
+});
 var getEnabledMigrations = function (migrationDirs, isFlagEnabled) {
     var allMigrations = migrationDirs.flatMap(function (dir) {
         return glob_1.default.sync(dir);
@@ -182,4 +185,94 @@ var getEnabledMigrations = function (migrationDirs, isFlagEnabled) {
         .filter(Boolean);
 };
 exports.getEnabledMigrations = getEnabledMigrations;
+var getModuleMigrations = function (configModule, isFlagEnabled) {
+    var e_3, _a;
+    var _b, _c;
+    var loadedModules = getInternalModules(configModule);
+    var allModules = [];
+    var _loop_1 = function (loadedModule) {
+        var mod = loadedModule.loadedModule;
+        var isolatedMigrations = {};
+        var moduleMigrations = ((_b = mod.migrations) !== null && _b !== void 0 ? _b : [])
+            .map(function (migrations) {
+            var e_4, _a;
+            var all = [];
+            try {
+                for (var _b = (e_4 = void 0, __values(Object.values(migrations))), _c = _b.next(); !_c.done; _c = _b.next()) {
+                    var migration = _c.value;
+                    // TODO: revisit how Modules export their migration entrypoints up/down
+                    if (["up", "down"].includes(migration.name)) {
+                        isolatedMigrations[migration.name] = migration;
+                    }
+                    else if (typeof migration.featureFlag === "undefined" ||
+                        isFlagEnabled(migration.featureFlag)) {
+                        all.push(migration);
+                    }
+                }
+            }
+            catch (e_4_1) { e_4 = { error: e_4_1 }; }
+            finally {
+                try {
+                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                }
+                finally { if (e_4) throw e_4.error; }
+            }
+            return all;
+        })
+            .flat();
+        allModules.push({
+            moduleDeclaration: loadedModule.moduleDeclaration,
+            models: (_c = mod.models) !== null && _c !== void 0 ? _c : [],
+            migrations: moduleMigrations,
+            externalMigrations: isolatedMigrations,
+        });
+    };
+    try {
+        for (var loadedModules_1 = __values(loadedModules), loadedModules_1_1 = loadedModules_1.next(); !loadedModules_1_1.done; loadedModules_1_1 = loadedModules_1.next()) {
+            var loadedModule = loadedModules_1_1.value;
+            _loop_1(loadedModule);
+        }
+    }
+    catch (e_3_1) { e_3 = { error: e_3_1 }; }
+    finally {
+        try {
+            if (loadedModules_1_1 && !loadedModules_1_1.done && (_a = loadedModules_1.return)) _a.call(loadedModules_1);
+        }
+        finally { if (e_3) throw e_3.error; }
+    }
+    return allModules;
+};
+exports.getModuleMigrations = getModuleMigrations;
+var getModuleSharedResources = function (configModule, featureFlagsRouter) {
+    var e_5, _a;
+    var _b;
+    var isFlagEnabled = function (flag) {
+        return featureFlagsRouter && featureFlagsRouter.isFeatureEnabled(flag);
+    };
+    var loadedModules = (0, exports.getModuleMigrations)(configModule, isFlagEnabled);
+    var migrations = [];
+    var models = [];
+    try {
+        for (var loadedModules_2 = __values(loadedModules), loadedModules_2_1 = loadedModules_2.next(); !loadedModules_2_1.done; loadedModules_2_1 = loadedModules_2.next()) {
+            var mod = loadedModules_2_1.value;
+            if (mod.moduleDeclaration.resources !== "shared") {
+                continue;
+            }
+            migrations = migrations.concat(mod.migrations);
+            models = models.concat((_b = mod.models) !== null && _b !== void 0 ? _b : []);
+        }
+    }
+    catch (e_5_1) { e_5 = { error: e_5_1 }; }
+    finally {
+        try {
+            if (loadedModules_2_1 && !loadedModules_2_1.done && (_a = loadedModules_2.return)) _a.call(loadedModules_2);
+        }
+        finally { if (e_5) throw e_5.error; }
+    }
+    return {
+        models: models,
+        migrations: migrations,
+    };
+};
+exports.getModuleSharedResources = getModuleSharedResources;
 //# sourceMappingURL=get-migrations.js.map

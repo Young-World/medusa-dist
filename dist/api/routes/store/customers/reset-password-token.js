@@ -57,13 +57,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - email
- *         properties:
- *           email:
- *             description: "The email of the customer."
- *             type: string
- *             format: email
+ *         $ref: "#/components/schemas/StorePostCustomersCustomerPasswordTokenReq"
+ * x-codegen:
+ *   method: generatePasswordToken
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -111,9 +107,9 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         switch (_a.label) {
             case 0: return [4 /*yield*/, (0, validator_1.validator)(StorePostCustomersCustomerPasswordTokenReq, req.body)];
             case 1:
-                validated = _a.sent();
+                validated = (_a.sent());
                 customerService = req.scope.resolve("customerService");
-                return [4 /*yield*/, customerService.retrieveByEmail(validated.email)
+                return [4 /*yield*/, customerService.retrieveRegisteredByEmail(validated.email)
                     // Will generate a token and send it to the customer via an email provider
                 ];
             case 2:
@@ -136,6 +132,17 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema StorePostCustomersCustomerPasswordTokenReq
+ * type: object
+ * required:
+ *   - email
+ * properties:
+ *   email:
+ *     description: "The email of the customer."
+ *     type: string
+ *     format: email
+ */
 var StorePostCustomersCustomerPasswordTokenReq = /** @class */ (function () {
     function StorePostCustomersCustomerPasswordTokenReq() {
     }

@@ -100,6 +100,10 @@ var SalesChannelService = /** @class */ (function (_super) {
         _this.storeService_ = storeService;
         return _this;
     }
+    SalesChannelService.prototype.getManager = function () {
+        var _a;
+        return (_a = this.transactionManager_) !== null && _a !== void 0 ? _a : this.manager_;
+    };
     /**
      * A generic retrieve used to find a sales channel by different attributes.
      *
@@ -114,7 +118,7 @@ var SalesChannelService = /** @class */ (function (_super) {
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
-                        manager = this.manager_;
+                        manager = this.getManager();
                         salesChannelRepo = manager.getCustomRepository(this.salesChannelRepository_);
                         _a = (0, utils_1.buildQuery)(selector, config), relations = _a.relations, query = __rest(_a, ["relations"]);
                         return [4 /*yield*/, salesChannelRepo.findOneWithRelations(relations, query)];
@@ -145,7 +149,11 @@ var SalesChannelService = /** @class */ (function (_super) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.retrieve_({ id: salesChannelId }, config)];
+                    case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(salesChannelId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"salesChannelId\" must be defined");
+                        }
+                        return [4 /*yield*/, this.retrieve_({ id: salesChannelId }, config)];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
@@ -163,7 +171,11 @@ var SalesChannelService = /** @class */ (function (_super) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.retrieve_({ name: name }, config)];
+                    case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(name)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"name\" must be defined");
+                        }
+                        return [4 /*yield*/, this.retrieve_({ name: name }, config)];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
@@ -186,7 +198,7 @@ var SalesChannelService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        manager = this.manager_;
+                        manager = this.getManager();
                         salesChannelRepo = manager.getCustomRepository(this.salesChannelRepository_);
                         selector_ = __assign({}, selector);
                         if ("q" in selector_) {
@@ -305,7 +317,9 @@ var SalesChannelService = /** @class */ (function (_super) {
                                 switch (_a.label) {
                                     case 0:
                                         salesChannelRepo = transactionManager.getCustomRepository(this.salesChannelRepository_);
-                                        return [4 /*yield*/, this.retrieve(salesChannelId).catch(function () { return void 0; })];
+                                        return [4 /*yield*/, this.retrieve(salesChannelId, {
+                                                relations: ["locations"],
+                                            }).catch(function () { return void 0; })];
                                     case 1:
                                         salesChannel = _a.sent();
                                         if (!salesChannel) {
@@ -376,6 +390,30 @@ var SalesChannelService = /** @class */ (function (_super) {
                             }
                         });
                     }); })];
+            });
+        });
+    };
+    /**
+     * Retrieves the default sales channel.
+     * @return the sales channel
+     */
+    SalesChannelService.prototype.retrieveDefault = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var manager, store;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        manager = this.getManager();
+                        return [4 /*yield*/, this.storeService_.withTransaction(manager).retrieve({
+                                relations: ["default_sales_channel"],
+                            })];
+                    case 1:
+                        store = _a.sent();
+                        if (!store.default_sales_channel) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Default Sales channel was not found");
+                        }
+                        return [2 /*return*/, store.default_sales_channel];
+                }
             });
         });
     };

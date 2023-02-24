@@ -1,17 +1,20 @@
-import { EntityManager } from "typeorm";
-import { Cart, LineItem, LineItemAdjustment, ProductVariant } from "../models";
+import { EntityManager, FindOperator } from "typeorm";
+import { Cart, LineItem, LineItemAdjustment } from "../models";
 import { LineItemAdjustmentRepository } from "../repositories/line-item-adjustment";
 import { FindConfig } from "../types/common";
 import { FilterableLineItemAdjustmentProps } from "../types/line-item-adjustment";
 import DiscountService from "./discount";
 import { TransactionBaseService } from "../interfaces";
+import { CalculationContextData } from "../types/totals";
 declare type LineItemAdjustmentServiceProps = {
     manager: EntityManager;
     lineItemAdjustmentRepository: typeof LineItemAdjustmentRepository;
     discountService: DiscountService;
 };
 declare type AdjustmentContext = {
-    variant: ProductVariant;
+    variant: {
+        product_id: string;
+    };
 };
 declare type GeneratedAdjustment = {
     amount: number;
@@ -29,11 +32,11 @@ declare class LineItemAdjustmentService extends TransactionBaseService {
     constructor({ manager, lineItemAdjustmentRepository, discountService, }: LineItemAdjustmentServiceProps);
     /**
      * Retrieves a line item adjustment by id.
-     * @param id - the id of the line item adjustment to retrieve
+     * @param lineItemAdjustmentId - the id of the line item adjustment to retrieve
      * @param config - the config to retrieve the line item adjustment by
      * @return the line item adjustment.
      */
-    retrieve(id: string, config?: FindConfig<LineItemAdjustment>): Promise<LineItemAdjustment>;
+    retrieve(lineItemAdjustmentId: string, config?: FindConfig<LineItemAdjustment>): Promise<LineItemAdjustment>;
     /**
      * Creates a line item adjustment
      * @param data - the line item adjustment to create
@@ -59,15 +62,17 @@ declare class LineItemAdjustmentService extends TransactionBaseService {
      * @param selectorOrIds - the query object for find or the line item adjustment id
      * @return the result of the delete operation
      */
-    delete(selectorOrIds: string | string[] | FilterableLineItemAdjustmentProps): Promise<void>;
+    delete(selectorOrIds: string | string[] | (FilterableLineItemAdjustmentProps & {
+        discount_id?: FindOperator<string | null>;
+    })): Promise<void>;
     /**
      * Creates adjustment for a line item
-     * @param cart - the cart object holding discounts
+     * @param calculationContextData - the calculationContextData object holding discounts
      * @param generatedLineItem - the line item for which a line item adjustment might be created
      * @param context - the line item for which a line item adjustment might be created
      * @return a line item adjustment or undefined if no adjustment was created
      */
-    generateAdjustments(cart: Cart, generatedLineItem: LineItem, context: AdjustmentContext): Promise<GeneratedAdjustment[]>;
+    generateAdjustments(calculationContextData: CalculationContextData, generatedLineItem: LineItem, context: AdjustmentContext): Promise<GeneratedAdjustment[]>;
     /**
      * Creates adjustment for a line item
      * @param cart - the cart object holding discounts

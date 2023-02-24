@@ -59,6 +59,17 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 var __read = (this && this.__read) || function (o, n) {
     var m = typeof Symbol === "function" && o[Symbol.iterator];
     if (!m) return o;
@@ -75,15 +86,6 @@ var __read = (this && this.__read) || function (o, n) {
     }
     return ar;
 };
-var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
-    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
-        if (ar || !(i in from)) {
-            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
-            ar[i] = from[i];
-        }
-    }
-    return to.concat(ar || Array.prototype.slice.call(from));
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -91,16 +93,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.StoreGetProductsParams = exports.StoreGetProductsPaginationParams = void 0;
 var class_transformer_1 = require("class-transformer");
 var class_validator_1 = require("class-validator");
-var lodash_1 = require("lodash");
-var _1 = require(".");
 var sales_channels_1 = __importDefault(require("../../../../loaders/feature-flags/sales-channels"));
 var common_1 = require("../../../../types/common");
 var price_selection_1 = require("../../../../types/price-selection");
-var utils_1 = require("../../../../utils");
 var feature_flag_decorators_1 = require("../../../../utils/feature-flag-decorators");
-var validator_1 = require("../../../../utils/validator");
 var is_boolean_1 = require("../../../../utils/validators/is-boolean");
 var is_type_1 = require("../../../../utils/validators/is-type");
+var publishable_api_keys_1 = __importDefault(require("../../../../loaders/feature-flags/publishable-api-keys"));
+var clean_response_data_1 = require("../../../../utils/clean-response-data");
 /**
  * @oas [get] /products
  * operationId: GetProducts
@@ -120,10 +120,28 @@ var is_type_1 = require("../../../../utils/validators/is-type");
  *           items:
  *             type: string
  *   - in: query
+ *     name: sales_channel_id
+ *     style: form
+ *     explode: false
+ *     description: an array of sales channel IDs to filter the retrieved products by.
+ *     schema:
+ *       type: array
+ *       items:
+ *         type: string
+ *   - in: query
  *     name: collection_id
  *     style: form
  *     explode: false
  *     description: Collection IDs to search for
+ *     schema:
+ *       type: array
+ *       items:
+ *         type: string
+ *   - in: query
+ *     name: type_id
+ *     style: form
+ *     explode: false
+ *     description: Type IDs to search for
  *     schema:
  *       type: array
  *       items:
@@ -141,7 +159,6 @@ var is_type_1 = require("../../../../utils/validators/is-type");
  *   - (query) description {string} description to search for.
  *   - (query) handle {string} handle to search for.
  *   - (query) is_giftcard {boolean} Search for giftcards using is_giftcard=true.
- *   - (query) type {string} type to search for.
  *   - in: query
  *     name: created_at
  *     description: Date comparison for when resulting products were created.
@@ -186,10 +203,27 @@ var is_type_1 = require("../../../../utils/validators/is-type");
  *            type: string
  *            description: filter by dates greater than or equal to this date
  *            format: date
+ *   - in: query
+ *     name: category_id
+ *     style: form
+ *     explode: false
+ *     description: Category ids to filter by.
+ *     schema:
+ *       type: array
+ *       items:
+ *         type: string
+ *   - (query) include_category_children {boolean} Include category children when filtering by category_id.
  *   - (query) offset=0 {integer} How many products to skip in the result.
  *   - (query) limit=100 {integer} Limit the number of products returned.
- *   - (query) expand {string} (Comma separated) Which fields should be expanded in each order of the result.
- *   - (query) fields {string} (Comma separated) Which fields should be included in each order of the result.
+ *   - (query) expand {string} (Comma separated) Which fields should be expanded in each product of the result.
+ *   - (query) fields {string} (Comma separated) Which fields should be included in each product of the result.
+ *   - (query) order {string} the field used to order the products.
+ *   - (query) cart_id {string} The id of the Cart to set prices based on.
+ *   - (query) region_id {string} The id of the Region to set prices based on.
+ *   - (query) currency_code {string} The currency code to use for price selection.
+ * x-codegen:
+ *   method: list
+ *   queryParams: StoreGetProductsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -212,20 +246,7 @@ var is_type_1 = require("../../../../utils/validators/is-type");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             products:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/product"
- *             count:
- *               type: integer
- *               description: The total number of items available
- *             offset:
- *               type: integer
- *               description: The number of items skipped before these items
- *             limit:
- *               type: integer
- *               description: The number of items per page
+ *           $ref: "#/components/schemas/StoreProductsListRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":
@@ -238,77 +259,61 @@ var is_type_1 = require("../../../../utils/validators/is-type");
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var productService, pricingService, cartService, regionService, validated, filterableFields, includeFields, set, expandFields, listConfig, _a, rawProducts, count, regionId, currencyCode, cart, region, products;
-    var _b;
-    return __generator(this, function (_c) {
-        switch (_c.label) {
+    var productService, productVariantInventoryService, pricingService, cartService, regionService, validated, _a, cart_id, regionId, currencyCode, filterableFields, listConfig, featureFlagRouter, _b, rawProducts, count, cart, region, pricedProducts, products;
+    var _c, _d;
+    return __generator(this, function (_e) {
+        switch (_e.label) {
             case 0:
                 productService = req.scope.resolve("productService");
+                productVariantInventoryService = req.scope.resolve("productVariantInventoryService");
                 pricingService = req.scope.resolve("pricingService");
                 cartService = req.scope.resolve("cartService");
                 regionService = req.scope.resolve("regionService");
-                return [4 /*yield*/, (0, validator_1.validator)(StoreGetProductsParams, req.query)];
-            case 1:
-                validated = _c.sent();
-                filterableFields = (0, lodash_1.omit)(validated, [
-                    "fields",
-                    "expand",
-                    "limit",
-                    "offset",
-                    "cart_id",
-                    "region_id",
-                    "currency_code",
-                ]);
+                validated = req.validatedQuery;
+                _a = req.filterableFields, cart_id = _a.cart_id, regionId = _a.region_id, currencyCode = _a.currency_code, filterableFields = __rest(_a, ["cart_id", "region_id", "currency_code"]);
+                listConfig = req.listConfig;
                 // get only published products for store endpoint
                 filterableFields["status"] = ["published"];
-                includeFields = [];
-                if (validated.fields) {
-                    set = new Set(validated.fields.split(","));
-                    set.add("id");
-                    includeFields = __spreadArray([], __read(set), false);
+                featureFlagRouter = req.scope.resolve("featureFlagRouter");
+                if (featureFlagRouter.isFeatureEnabled(publishable_api_keys_1.default.key)) {
+                    if ((_c = req.publishableApiKeyScopes) === null || _c === void 0 ? void 0 : _c.sales_channel_id.length) {
+                        filterableFields.sales_channel_id =
+                            filterableFields.sales_channel_id ||
+                                req.publishableApiKeyScopes.sales_channel_id;
+                        listConfig.relations.push("sales_channels");
+                    }
                 }
-                expandFields = [];
-                if (validated.expand) {
-                    expandFields = validated.expand.split(",");
-                }
-                listConfig = {
-                    select: includeFields.length ? includeFields : undefined,
-                    relations: expandFields.length
-                        ? expandFields
-                        : _1.defaultStoreProductsRelations,
-                    skip: validated.offset,
-                    take: validated.limit,
-                };
-                return [4 /*yield*/, productService.listAndCount((0, lodash_1.pickBy)(filterableFields, function (val) { return (0, utils_1.isDefined)(val); }), listConfig)];
-            case 2:
-                _a = __read.apply(void 0, [_c.sent(), 2]), rawProducts = _a[0], count = _a[1];
-                regionId = validated.region_id;
-                currencyCode = validated.currency_code;
-                if (!validated.cart_id) return [3 /*break*/, 5];
+                return [4 /*yield*/, productService.listAndCount(filterableFields, listConfig)];
+            case 1:
+                _b = __read.apply(void 0, [_e.sent(), 2]), rawProducts = _b[0], count = _b[1];
+                if (!validated.cart_id) return [3 /*break*/, 4];
                 return [4 /*yield*/, cartService.retrieve(validated.cart_id, {
                         select: ["id", "region_id"],
                     })];
-            case 3:
-                cart = _c.sent();
+            case 2:
+                cart = _e.sent();
                 return [4 /*yield*/, regionService.retrieve(cart.region_id, {
                         select: ["id", "currency_code"],
                     })];
-            case 4:
-                region = _c.sent();
+            case 3:
+                region = _e.sent();
                 regionId = region.id;
                 currencyCode = region.currency_code;
-                _c.label = 5;
-            case 5: return [4 /*yield*/, pricingService.setProductPrices(rawProducts, {
-                    cart_id: validated.cart_id,
+                _e.label = 4;
+            case 4: return [4 /*yield*/, pricingService.setProductPrices(rawProducts, {
+                    cart_id: cart_id,
                     region_id: regionId,
                     currency_code: currencyCode,
-                    customer_id: (_b = req.user) === null || _b === void 0 ? void 0 : _b.customer_id,
+                    customer_id: (_d = req.user) === null || _d === void 0 ? void 0 : _d.customer_id,
                     include_discount_prices: true,
                 })];
+            case 5:
+                pricedProducts = _e.sent();
+                return [4 /*yield*/, productVariantInventoryService.setProductAvailability(pricedProducts, filterableFields.sales_channel_id)];
             case 6:
-                products = _c.sent();
+                products = _e.sent();
                 res.json({
-                    products: products,
+                    products: (0, clean_response_data_1.cleanResponseData)(products, req.allowedProperties || []),
                     count: count,
                     offset: validated.offset,
                     limit: validated.limit,
@@ -347,6 +352,11 @@ var StoreGetProductsPaginationParams = /** @class */ (function (_super) {
         (0, class_transformer_1.Type)(function () { return Number; }),
         __metadata("design:type", Number)
     ], StoreGetProductsPaginationParams.prototype, "limit", void 0);
+    __decorate([
+        (0, class_validator_1.IsString)(),
+        (0, class_validator_1.IsOptional)(),
+        __metadata("design:type", String)
+    ], StoreGetProductsPaginationParams.prototype, "order", void 0);
     return StoreGetProductsPaginationParams;
 }(price_selection_1.PriceSelectionParams));
 exports.StoreGetProductsPaginationParams = StoreGetProductsPaginationParams;
@@ -400,17 +410,28 @@ var StoreGetProductsParams = /** @class */ (function (_super) {
         __metadata("design:type", Boolean)
     ], StoreGetProductsParams.prototype, "is_giftcard", void 0);
     __decorate([
-        (0, class_validator_1.IsString)(),
+        (0, class_validator_1.IsArray)(),
         (0, class_validator_1.IsOptional)(),
-        __metadata("design:type", String)
-    ], StoreGetProductsParams.prototype, "type", void 0);
+        __metadata("design:type", Array)
+    ], StoreGetProductsParams.prototype, "type_id", void 0);
     __decorate([
-        (0, feature_flag_decorators_1.FeatureFlagDecorators)(sales_channels_1.default.key, [
-            (0, class_validator_1.IsOptional)(),
-            (0, class_validator_1.IsArray)(),
-        ]),
+        (0, feature_flag_decorators_1.FeatureFlagDecorators)(sales_channels_1.default.key, [(0, class_validator_1.IsOptional)(), (0, class_validator_1.IsArray)()]),
         __metadata("design:type", Array)
     ], StoreGetProductsParams.prototype, "sales_channel_id", void 0);
+    __decorate([
+        (0, class_validator_1.IsArray)(),
+        (0, class_validator_1.IsOptional)(),
+        __metadata("design:type", Array)
+    ], StoreGetProductsParams.prototype, "category_id", void 0);
+    __decorate([
+        (0, class_validator_1.IsBoolean)(),
+        (0, class_validator_1.IsOptional)(),
+        (0, class_transformer_1.Transform)(function (_a) {
+            var value = _a.value;
+            return is_boolean_1.optionalBooleanMapper.get(value.toLowerCase());
+        }),
+        __metadata("design:type", Boolean)
+    ], StoreGetProductsParams.prototype, "include_category_children", void 0);
     __decorate([
         (0, class_validator_1.IsOptional)(),
         (0, class_validator_1.ValidateNested)(),

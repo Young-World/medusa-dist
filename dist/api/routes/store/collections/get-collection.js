@@ -43,6 +43,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * description: "Retrieves a Product Collection."
  * parameters:
  *   - (path) id=* {string} The id of the Product Collection
+ * x-codegen:
+ *   method: retrieve
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -65,9 +67,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            collection:
- *              $ref: "#/components/schemas/product_collection"
+ *          $ref: "#/components/schemas/StoreCollectionsRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "404":

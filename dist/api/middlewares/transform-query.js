@@ -35,6 +35,31 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -49,15 +74,17 @@ function transformQuery(plainToClass, queryConfig, config) {
     var _this = this;
     if (config === void 0) { config = {}; }
     return function (req, res, next) { return __awaiter(_this, void 0, void 0, function () {
-        var validated, e_1;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
+        var validated, includesFields, e_1;
+        var _a;
+        var _b, _c;
+        return __generator(this, function (_d) {
+            switch (_d.label) {
                 case 0:
-                    _a.trys.push([0, 2, , 3]);
+                    _d.trys.push([0, 2, , 3]);
                     (0, normalized_query_1.default)()(req, res, function () { return void 0; });
                     return [4 /*yield*/, (0, validator_1.validator)(plainToClass, req.query, config)];
                 case 1:
-                    validated = _a.sent();
+                    validated = _d.sent();
                     req.validatedQuery = validated;
                     req.filterableFields = (0, lodash_1.omit)(validated, [
                         "limit",
@@ -67,6 +94,19 @@ function transformQuery(plainToClass, queryConfig, config) {
                         "order",
                     ]);
                     req.filterableFields = (0, utils_1.removeUndefinedProperties)(req.filterableFields);
+                    if (((queryConfig === null || queryConfig === void 0 ? void 0 : queryConfig.defaultFields) || validated.fields) &&
+                        ((queryConfig === null || queryConfig === void 0 ? void 0 : queryConfig.defaultRelations) || validated.expand)) {
+                        req.allowedProperties = __spreadArray(__spreadArray([], __read((validated.fields
+                            ? validated.fields.split(",")
+                            : (queryConfig === null || queryConfig === void 0 ? void 0 : queryConfig.allowedFields) || [])), false), __read((validated.expand
+                            ? validated.expand.split(",")
+                            : (queryConfig === null || queryConfig === void 0 ? void 0 : queryConfig.allowedRelations) || [])), false);
+                    }
+                    includesFields = Object.keys((_b = req["includes"]) !== null && _b !== void 0 ? _b : {});
+                    if (includesFields.length) {
+                        req.allowedProperties = (_c = req.allowedProperties) !== null && _c !== void 0 ? _c : [];
+                        (_a = req.allowedProperties).push.apply(_a, __spreadArray([], __read(includesFields), false));
+                    }
                     if (queryConfig === null || queryConfig === void 0 ? void 0 : queryConfig.isList) {
                         req.listConfig = (0, get_query_config_1.prepareListQuery)(validated, queryConfig);
                     }
@@ -76,7 +116,7 @@ function transformQuery(plainToClass, queryConfig, config) {
                     next();
                     return [3 /*break*/, 3];
                 case 2:
-                    e_1 = _a.sent();
+                    e_1 = _d.sent();
                     next(e_1);
                     return [3 /*break*/, 3];
                 case 3: return [2 /*return*/];

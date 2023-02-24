@@ -51,7 +51,7 @@ var get_query_config_1 = require("./utils/get-query-config");
 var is_type_1 = require("../../../../utils/validators/is-type");
 var lodash_1 = require("lodash");
 var validator_1 = require("../../../../utils/validator");
-var utils_1 = require("../../../../utils");
+var medusa_core_utils_1 = require("medusa-core-utils");
 /**
  * @oas [post] /tax-rates/{id}
  * operationId: "PostTaxRatesTaxRate"
@@ -82,34 +82,10 @@ var utils_1 = require("../../../../utils");
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           code:
- *             type: string
- *             description: "A code to identify the tax type by"
- *           name:
- *             type: string
- *             description: "A human friendly name for the tax"
- *           region_id:
- *             type: string
- *             description: "The ID of the Region that the rate belongs to"
- *           rate:
- *             type: number
- *             description: "The numeric rate to charge"
- *           products:
- *             type: array
- *             description: "The IDs of the products associated with this tax rate"
- *             items:
- *               type: string
- *           shipping_options:
- *             type: array
- *             description: "The IDs of the shipping options associated with this tax rate"
- *             items:
- *               type: string
- *           product_types:
- *             type: array
- *             description: "The IDs of the types of products associated with this tax rate"
- *             items:
- *               type: string
+ *         $ref: "#/components/schemas/AdminPostTaxRatesTaxRateReq"
+ * x-codegen:
+ *   method: update
+ *   queryParams: AdminPostTaxRatesTaxRateParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -143,9 +119,7 @@ var utils_1 = require("../../../../utils");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             tax_rate:
- *               $ref: "#/components/schemas/tax_rate"
+ *           $ref: "#/components/schemas/AdminTaxRatesRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -180,19 +154,19 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                     return [4 /*yield*/, txRateService.update(req.params.id, (0, lodash_1.omit)(value, ["products", "product_types", "shipping_options"]))];
                                 case 1:
                                     _a.sent();
-                                    if (!(0, utils_1.isDefined)(value.products)) return [3 /*break*/, 3];
+                                    if (!(0, medusa_core_utils_1.isDefined)(value.products)) return [3 /*break*/, 3];
                                     return [4 /*yield*/, txRateService.addToProduct(req.params.id, value.products, true)];
                                 case 2:
                                     _a.sent();
                                     _a.label = 3;
                                 case 3:
-                                    if (!(0, utils_1.isDefined)(value.product_types)) return [3 /*break*/, 5];
+                                    if (!(0, medusa_core_utils_1.isDefined)(value.product_types)) return [3 /*break*/, 5];
                                     return [4 /*yield*/, txRateService.addToProductType(req.params.id, value.product_types, true)];
                                 case 4:
                                     _a.sent();
                                     _a.label = 5;
                                 case 5:
-                                    if (!(0, utils_1.isDefined)(value.shipping_options)) return [3 /*break*/, 7];
+                                    if (!(0, medusa_core_utils_1.isDefined)(value.shipping_options)) return [3 /*break*/, 7];
                                     return [4 /*yield*/, txRateService.addToShippingOption(req.params.id, value.shipping_options, true)];
                                 case 6:
                                     _a.sent();
@@ -213,6 +187,38 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostTaxRatesTaxRateReq
+ * type: object
+ * properties:
+ *   code:
+ *     type: string
+ *     description: "A code to identify the tax type by"
+ *   name:
+ *     type: string
+ *     description: "A human friendly name for the tax"
+ *   region_id:
+ *     type: string
+ *     description: "The ID of the Region that the rate belongs to"
+ *   rate:
+ *     type: number
+ *     description: "The numeric rate to charge"
+ *   products:
+ *     type: array
+ *     description: "The IDs of the products associated with this tax rate"
+ *     items:
+ *       type: string
+ *   shipping_options:
+ *     type: array
+ *     description: "The IDs of the shipping options associated with this tax rate"
+ *     items:
+ *       type: string
+ *   product_types:
+ *     type: array
+ *     description: "The IDs of the types of products associated with this tax rate"
+ *     items:
+ *       type: string
+ */
 var AdminPostTaxRatesTaxRateReq = /** @class */ (function () {
     function AdminPostTaxRatesTaxRateReq() {
     }

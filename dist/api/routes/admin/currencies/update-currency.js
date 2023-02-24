@@ -64,10 +64,31 @@ var tax_inclusive_pricing_1 = __importDefault(require("../../../../loaders/featu
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           includes_tax:
- *             type: boolean
- *             description: "[EXPERIMENTAL] Tax included in prices of currency."
+ *         $ref: "#/components/schemas/AdminPostCurrenciesCurrencyReq"
+ * x-codegen:
+ *   method: update
+ * x-codeSamples:
+ *   - lang: JavaScript
+ *     label: JS Client
+ *     source: |
+ *       import Medusa from "@medusajs/medusa-js"
+ *       const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
+ *       // must be previously logged in or use api token
+ *       medusa.admin.currencies.update(code, {
+ *         includes_tax: true
+ *       })
+ *       .then(({ currency }) => {
+ *         console.log(currency.id);
+ *       });
+ *   - lang: Shell
+ *     label: cURL
+ *     source: |
+ *       curl --location --request POST 'https://medusa-url.com/admin/currencies/{code}' \
+ *       --header 'Authorization: Bearer {api_token}' \
+ *       --header 'Content-Type: application/json' \
+ *       --data-raw '{
+ *           "includes_tax": true
+ *       }'
  * tags:
  *   - Currency
  * responses:
@@ -76,19 +97,27 @@ var tax_inclusive_pricing_1 = __importDefault(require("../../../../loaders/featu
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             currency:
- *                 $ref: "#/components/schemas/currency"
+ *           $ref: "#/components/schemas/AdminCurrenciesRes"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var code, data, currencyService, currency;
+    var code, data, currencyService, manager, currency;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
                 code = req.params.code;
                 data = req.validatedBody;
                 currencyService = req.scope.resolve("currencyService");
-                return [4 /*yield*/, currencyService.update(code, data)];
+                manager = req.scope.resolve("manager");
+                return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0: return [4 /*yield*/, currencyService
+                                        .withTransaction(transactionManager)
+                                        .update(code, data)];
+                                case 1: return [2 /*return*/, _a.sent()];
+                            }
+                        });
+                    }); })];
             case 1:
                 currency = _a.sent();
                 res.json({ currency: currency });
@@ -96,6 +125,14 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostCurrenciesCurrencyReq
+ * type: object
+ * properties:
+ *   includes_tax:
+ *     type: boolean
+ *     description: "[EXPERIMENTAL] Tax included in prices of currency."
+ */
 var AdminPostCurrenciesCurrencyReq = /** @class */ (function () {
     function AdminPostCurrenciesCurrencyReq() {
     }

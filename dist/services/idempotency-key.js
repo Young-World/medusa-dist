@@ -183,6 +183,9 @@ var IdempotencyKeyService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(idempotencyKey)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"idempotencyKey\" must be defined");
+                        }
                         idempotencyKeyRepo = this.manager_.getCustomRepository(this.idempotencyKeyRepository_);
                         return [4 /*yield*/, idempotencyKeyRepo.findOne({
                                 where: { idempotency_key: idempotencyKey },
@@ -287,38 +290,29 @@ var IdempotencyKeyService = /** @class */ (function (_super) {
      */
     IdempotencyKeyService.prototype.workStage = function (idempotencyKey, callback) {
         return __awaiter(this, void 0, void 0, function () {
-            var err_1;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0:
-                        _a.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                                var _a, recovery_point, response_code, response_body, data, key;
-                                return __generator(this, function (_b) {
-                                    switch (_b.label) {
-                                        case 0: return [4 /*yield*/, callback(manager)];
-                                        case 1:
-                                            _a = _b.sent(), recovery_point = _a.recovery_point, response_code = _a.response_code, response_body = _a.response_body;
-                                            data = {
-                                                recovery_point: recovery_point !== null && recovery_point !== void 0 ? recovery_point : "finished",
-                                            };
-                                            if (!recovery_point) {
-                                                data.response_body = response_body;
-                                                data.response_code = response_code;
-                                            }
-                                            return [4 /*yield*/, this.update(idempotencyKey, data)];
-                                        case 2:
-                                            key = _b.sent();
-                                            return [2 /*return*/, { key: key }];
-                                    }
-                                });
-                            }); }, "SERIALIZABLE")];
+                    case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
+                            var _a, recovery_point, response_code, response_body, data;
+                            return __generator(this, function (_b) {
+                                switch (_b.label) {
+                                    case 0: return [4 /*yield*/, callback(manager)];
+                                    case 1:
+                                        _a = _b.sent(), recovery_point = _a.recovery_point, response_code = _a.response_code, response_body = _a.response_body;
+                                        data = {
+                                            recovery_point: recovery_point !== null && recovery_point !== void 0 ? recovery_point : "finished",
+                                        };
+                                        if (!recovery_point) {
+                                            data.response_body = response_body;
+                                            data.response_code = response_code;
+                                        }
+                                        return [4 /*yield*/, this.update(idempotencyKey, data)];
+                                    case 2: return [2 /*return*/, _b.sent()];
+                                }
+                            });
+                        }); })];
                     case 1: return [2 /*return*/, _a.sent()];
-                    case 2:
-                        err_1 = _a.sent();
-                        return [2 /*return*/, { error: err_1 }];
-                    case 3: return [2 /*return*/];
                 }
             });
         });

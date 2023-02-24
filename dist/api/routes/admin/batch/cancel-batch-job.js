@@ -44,6 +44,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {string} The ID of the batch job.
+ * x-codegen:
+ *   method: cancel
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -71,9 +73,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            batch_job:
- *              $ref: "#/components/schemas/batch_job"
+ *          $ref: "#/components/schemas/AdminBatchJobRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":

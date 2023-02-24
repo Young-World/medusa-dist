@@ -6,6 +6,8 @@
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {string} The ID of the Region.
+ * x-codegen:
+ *   method: retrieveFulfillmentOptions
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -33,21 +35,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             fulfillment_options:
- *               type: array
- *               items:
- *                 properties:
- *                   provider_id:
- *                     type: string
- *                     description: ID of the fulfillment provider
- *                   options:
- *                     type: array
- *                     description: fulfillment provider options
- *                     example:
- *                       - id: "manual-fulfillment"
- *                       - id: "manual-fulfillment-return"
- *                         is_return: true
+ *           $ref: "#/components/schemas/AdminGetRegionsRegionFulfillmentOptionsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

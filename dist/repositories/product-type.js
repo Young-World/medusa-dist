@@ -67,7 +67,7 @@ var ProductTypeRepository = /** @class */ (function (_super) {
     }
     ProductTypeRepository.prototype.upsertType = function (type) {
         return __awaiter(this, void 0, void 0, function () {
-            var existing, created, result;
+            var existing, created;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -86,9 +86,32 @@ var ProductTypeRepository = /** @class */ (function (_super) {
                             value: type.value,
                         });
                         return [4 /*yield*/, this.save(created)];
-                    case 2:
-                        result = _a.sent();
-                        return [2 /*return*/, result];
+                    case 2: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
+    ProductTypeRepository.prototype.findAndCountByDiscountConditionId = function (conditionId, query) {
+        return __awaiter(this, void 0, void 0, function () {
+            var qb;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        qb = this.createQueryBuilder("pt");
+                        if (query === null || query === void 0 ? void 0 : query.select) {
+                            qb.select(query.select.map(function (select) { return "pt.".concat(select); }));
+                        }
+                        if (query.skip) {
+                            qb.skip(query.skip);
+                        }
+                        if (query.take) {
+                            qb.take(query.take);
+                        }
+                        return [4 /*yield*/, qb
+                                .where(query.where)
+                                .innerJoin("discount_condition_product_type", "dc_pt", "dc_pt.product_type_id = pt.id AND dc_pt.condition_id = :dcId", { dcId: conditionId })
+                                .getManyAndCount()];
+                    case 1: return [2 /*return*/, _a.sent()];
                 }
             });
         });

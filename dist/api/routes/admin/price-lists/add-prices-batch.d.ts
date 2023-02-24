@@ -11,42 +11,9 @@ import { AdminPriceListPricesUpdateReq } from "../../../../types/price-list";
  *  content:
  *    application/json:
  *      schema:
- *        properties:
- *          prices:
- *            description: The prices to update or add.
- *            type: array
- *            items:
- *              required:
- *                - amount
- *                - variant_id
- *              properties:
- *                id:
- *                  description: The ID of the price.
- *                  type: string
- *                region_id:
- *                  description: The ID of the Region for which the price is used. Only required if currecny_code is not provided.
- *                  type: string
- *                currency_code:
- *                  description: The 3 character ISO currency code for which the price will be used. Only required if region_id is not provided.
- *                  type: string
- *                  externalDocs:
- *                    url: https://en.wikipedia.org/wiki/ISO_4217#Active_codes
- *                    description: See a list of codes.
- *                variant_id:
- *                  description: The ID of the Variant for which the price is used.
- *                  type: string
- *                amount:
- *                  description: The amount to charge for the Product Variant.
- *                  type: integer
- *                min_quantity:
- *                  description: The minimum quantity for which the price will be used.
- *                  type: integer
- *                max_quantity:
- *                  description: The maximum quantity for which the price will be used.
- *                  type: integer
- *          override:
- *            description: "If true the prices will replace all existing prices associated with the Price List."
- *            type: boolean
+ *        $ref: "#/components/schemas/AdminPostPriceListPricesPricesReq"
+ * x-codegen:
+ *   method: addPrices
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -92,9 +59,7 @@ import { AdminPriceListPricesUpdateReq } from "../../../../types/price-list";
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             price_list:
- *               $ref: "#/components/schemas/price_list"
+ *           $ref: "#/components/schemas/AdminPriceListRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -110,6 +75,47 @@ import { AdminPriceListPricesUpdateReq } from "../../../../types/price-list";
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostPriceListPricesPricesReq
+ * type: object
+ * properties:
+ *   prices:
+ *     description: The prices to update or add.
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - amount
+ *         - variant_id
+ *       properties:
+ *         id:
+ *           description: The ID of the price.
+ *           type: string
+ *         region_id:
+ *           description: The ID of the Region for which the price is used. Only required if currecny_code is not provided.
+ *           type: string
+ *         currency_code:
+ *           description: The 3 character ISO currency code for which the price will be used. Only required if region_id is not provided.
+ *           type: string
+ *           externalDocs:
+ *             url: https://en.wikipedia.org/wiki/ISO_4217#Active_codes
+ *             description: See a list of codes.
+ *         variant_id:
+ *           description: The ID of the Variant for which the price is used.
+ *           type: string
+ *         amount:
+ *           description: The amount to charge for the Product Variant.
+ *           type: integer
+ *         min_quantity:
+ *           description: The minimum quantity for which the price will be used.
+ *           type: integer
+ *         max_quantity:
+ *           description: The maximum quantity for which the price will be used.
+ *           type: integer
+ *   override:
+ *     description: "If true the prices will replace all existing prices associated with the Price List."
+ *     type: boolean
+ */
 export declare class AdminPostPriceListPricesPricesReq {
     prices: AdminPriceListPricesUpdateReq[];
     override?: boolean;

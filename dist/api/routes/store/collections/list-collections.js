@@ -44,17 +44,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __read = (this && this.__read) || function (o, n) {
     var m = typeof Symbol === "function" && o[Symbol.iterator];
     if (!m) return o;
@@ -76,7 +65,6 @@ exports.StoreGetCollectionsParams = void 0;
 var class_validator_1 = require("class-validator");
 var common_1 = require("../../../../types/common");
 var class_transformer_1 = require("class-transformer");
-var validator_1 = require("../../../../utils/validator");
 /**
  * @oas [get] /collections
  * operationId: "GetCollections"
@@ -129,6 +117,9 @@ var validator_1 = require("../../../../utils/validator");
  *            type: string
  *            description: filter by dates greater than or equal to this date
  *            format: date
+ * x-codegen:
+ *   method: list
+ *   queryParams: StoreGetCollectionsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -151,20 +142,7 @@ var validator_1 = require("../../../../utils/validator");
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            collections:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/product_collection"
- *            count:
- *               type: integer
- *               description: The total number of items available
- *            offset:
- *               type: integer
- *               description: The number of items skipped before these items
- *            limit:
- *               type: integer
- *               description: The number of items per page
+ *          $ref: "#/components/schemas/StoreCollectionsListRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "404":
@@ -177,22 +155,17 @@ var validator_1 = require("../../../../utils/validator");
  *    $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var validated, limit, offset, filterableFields, productCollectionService, listConfig, _a, collections, count;
-    return __generator(this, function (_b) {
-        switch (_b.label) {
-            case 0: return [4 /*yield*/, (0, validator_1.validator)(StoreGetCollectionsParams, req.query)];
-            case 1:
-                validated = _b.sent();
-                limit = validated.limit, offset = validated.offset, filterableFields = __rest(validated, ["limit", "offset"]);
+    var productCollectionService, listConfig, filterableFields, _a, skip, take, _b, collections, count;
+    return __generator(this, function (_c) {
+        switch (_c.label) {
+            case 0:
                 productCollectionService = req.scope.resolve("productCollectionService");
-                listConfig = {
-                    skip: offset,
-                    take: limit,
-                };
+                listConfig = req.listConfig, filterableFields = req.filterableFields;
+                _a = req.listConfig, skip = _a.skip, take = _a.take;
                 return [4 /*yield*/, productCollectionService.listAndCount(filterableFields, listConfig)];
-            case 2:
-                _a = __read.apply(void 0, [_b.sent(), 2]), collections = _a[0], count = _a[1];
-                res.status(200).json({ collections: collections, count: count, limit: limit, offset: offset });
+            case 1:
+                _b = __read.apply(void 0, [_c.sent(), 2]), collections = _b[0], count = _b[1];
+                res.status(200).json({ collections: collections, count: count, limit: take, offset: skip });
                 return [2 /*return*/];
         }
     });
@@ -202,6 +175,11 @@ var StoreGetCollectionsParams = /** @class */ (function () {
         this.limit = 10;
         this.offset = 0;
     }
+    __decorate([
+        (0, class_validator_1.IsOptional)(),
+        (0, class_validator_1.IsArray)(),
+        __metadata("design:type", Array)
+    ], StoreGetCollectionsParams.prototype, "handle", void 0);
     __decorate([
         (0, class_validator_1.IsOptional)(),
         (0, class_validator_1.IsInt)(),

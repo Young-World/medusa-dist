@@ -1,9 +1,9 @@
 import { EntityManager } from "typeorm";
 import { AbstractBatchJobStrategy, IFileService } from "../../../interfaces";
+import { BatchJobService, ProductCollectionService, ProductService, ProductVariantService, RegionService, SalesChannelService, ShippingProfileService } from "../../../services";
 import CsvParser from "../../../services/csv-parser";
-import { BatchJobService, ProductService, ProductVariantService, RegionService, SalesChannelService, ShippingProfileService } from "../../../services";
-import { InjectedProps, OperationType, ProductImportCsvSchema, TParsedProductImportRowData } from "./types";
 import { FlagRouter } from "../../../utils/flag-router";
+import { OperationType, ProductImportCsvSchema, ProductImportInjectedProps, TParsedProductImportRowData } from "./types";
 /**
  * Default strategy class used for a batch import of products/variants.
  */
@@ -18,11 +18,12 @@ declare class ProductImportStrategy extends AbstractBatchJobStrategy {
     protected readonly regionService_: RegionService;
     protected readonly productService_: ProductService;
     protected readonly batchJobService_: BatchJobService;
+    protected readonly productCollectionService_: ProductCollectionService;
     protected readonly salesChannelService_: SalesChannelService;
     protected readonly productVariantService_: ProductVariantService;
     protected readonly shippingProfileService_: ShippingProfileService;
     protected readonly csvParser_: CsvParser<ProductImportCsvSchema, Record<string, string>, Record<string, string>>;
-    constructor({ batchJobService, productService, salesChannelService, productVariantService, shippingProfileService, regionService, fileService, manager, featureFlagRouter, }: InjectedProps);
+    constructor({ batchJobService, productService, salesChannelService, productVariantService, shippingProfileService, regionService, fileService, productCollectionService, manager, featureFlagRouter, }: ProductImportInjectedProps);
     buildTemplate(): Promise<string>;
     /**
      * Create a description of a row on which the error occurred and throw a Medusa error.

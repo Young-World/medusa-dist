@@ -66,6 +66,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var bull_1 = __importDefault(require("bull"));
 var ioredis_1 = __importDefault(require("ioredis"));
+var medusa_core_utils_1 = require("medusa-core-utils");
+var ulid_1 = require("ulid");
 var sleep_1 = require("../utils/sleep");
 /**
  * Can keep track of multiple subscribers to different events and run the
@@ -73,7 +75,7 @@ var sleep_1 = require("../utils/sleep");
  */
 var EventBusService = /** @class */ (function () {
     function EventBusService(_a, config, singleton) {
-        var manager = _a.manager, logger = _a.logger, stagedJobRepository = _a.stagedJobRepository, redisClient = _a.redisClient, redisSubscriber = _a.redisSubscriber;
+        var manager = _a.manager, logger = _a.logger, stagedJobRepository = _a.stagedJobRepository, redisClient = _a.redisClient, redisSubscriber = _a.redisSubscriber, jobSchedulerService = _a.jobSchedulerService;
         if (singleton === void 0) { singleton = true; }
         var _this = this;
         /**
@@ -82,87 +84,102 @@ var EventBusService = /** @class */ (function () {
          * @return resolves to the results of the subscriber calls.
          */
         this.worker_ = function (job) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, eventName, data, eventObservers, wildcardObservers, observers;
+            var _a, eventName, data, eventSubscribers, wildcardSubscribers, allSubscribers, completedSubscribers, subscribersInCurrentAttempt, isRetry, currentAttempt, isFinalAttempt, completedSubscribersInCurrentAttempt, subscribersResult, didSubscribersFail, isRetriesConfigured, shouldRetry, updatedCompletedSubscribers, errorMessage;
             var _this = this;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var _b, _c;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
                     case 0:
                         _a = job.data, eventName = _a.eventName, data = _a.data;
-                        eventObservers = this.observers_.get(eventName) || [];
-                        wildcardObservers = this.observers_.get("*") || [];
-                        observers = eventObservers.concat(wildcardObservers);
-                        this.logger_.info("Processing ".concat(eventName, " which has ").concat(eventObservers.length, " subscribers"));
-                        return [4 /*yield*/, Promise.all(observers.map(function (subscriber) { return __awaiter(_this, void 0, void 0, function () {
-                                var _this = this;
-                                return __generator(this, function (_a) {
-                                    return [2 /*return*/, subscriber(data, eventName).catch(function (err) {
-                                            _this.logger_.warn("An error occurred while processing ".concat(eventName, ": ").concat(err));
-                                            console.error(err);
-                                            return err;
-                                        })];
-                                });
-                            }); }))];
-                    case 1: return [2 /*return*/, _b.sent()];
-                }
-            });
-        }); };
-        /**
-         * Handles incoming jobs.
-         * @param job The job object
-         * @return resolves to the results of the subscriber calls.
-         */
-        this.cronWorker_ = function (job) { return __awaiter(_this, void 0, void 0, function () {
-            var _a, eventName, data, observers;
-            var _this = this;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _a = job.data, eventName = _a.eventName, data = _a.data;
-                        observers = this.cronHandlers_.get(eventName) || [];
-                        this.logger_.info("Processing cron job: ".concat(eventName));
-                        return [4 /*yield*/, Promise.all(observers.map(function (subscriber) { return __awaiter(_this, void 0, void 0, function () {
-                                var _this = this;
-                                return __generator(this, function (_a) {
-                                    return [2 /*return*/, subscriber(data, eventName).catch(function (err) {
-                                            _this.logger_.warn("An error occured while processing ".concat(eventName, ": ").concat(err));
-                                            return err;
-                                        })];
-                                });
-                            }); }))];
-                    case 1: return [2 /*return*/, _b.sent()];
-                }
-            });
-        }); };
-        var opts = {
-            createClient: function (type) {
-                switch (type) {
-                    case "client":
-                        return redisClient;
-                    case "subscriber":
-                        return redisSubscriber;
-                    default:
-                        if (config.projectConfig.redis_url) {
-                            return new ioredis_1.default(config.projectConfig.redis_url);
+                        eventSubscribers = this.eventToSubscribersMap_.get(eventName) || [];
+                        wildcardSubscribers = this.eventToSubscribersMap_.get("*") || [];
+                        allSubscribers = eventSubscribers.concat(wildcardSubscribers);
+                        completedSubscribers = job.data.completedSubscriberIds || [];
+                        subscribersInCurrentAttempt = allSubscribers.filter(function (subscriber) {
+                            return subscriber.id && !completedSubscribers.includes(subscriber.id);
+                        });
+                        isRetry = job.attemptsMade > 0;
+                        currentAttempt = job.attemptsMade + 1;
+                        isFinalAttempt = ((_b = job === null || job === void 0 ? void 0 : job.opts) === null || _b === void 0 ? void 0 : _b.attempts) === currentAttempt;
+                        if (isRetry) {
+                            if (isFinalAttempt) {
+                                this.logger_.info("Final retry attempt for ".concat(eventName));
+                            }
+                            this.logger_.info("Retrying ".concat(eventName, " which has ").concat(eventSubscribers.length, " subscribers (").concat(subscribersInCurrentAttempt.length, " of them failed)"));
                         }
-                        return redisClient;
+                        else {
+                            this.logger_.info("Processing ".concat(eventName, " which has ").concat(eventSubscribers.length, " subscribers"));
+                        }
+                        completedSubscribersInCurrentAttempt = [];
+                        return [4 /*yield*/, Promise.all(subscribersInCurrentAttempt.map(function (_a) {
+                                var id = _a.id, subscriber = _a.subscriber;
+                                return __awaiter(_this, void 0, void 0, function () {
+                                    var _this = this;
+                                    return __generator(this, function (_b) {
+                                        return [2 /*return*/, subscriber(data, eventName)
+                                                .then(function (data) {
+                                                // For every subscriber that completes successfully, add their id to the list of completed subscribers
+                                                completedSubscribersInCurrentAttempt.push(id);
+                                                return data;
+                                            })
+                                                .catch(function (err) {
+                                                _this.logger_.warn("An error occurred while processing ".concat(eventName, ": ").concat(err));
+                                                return err;
+                                            })];
+                                    });
+                                });
+                            }))
+                            // If the number of completed subscribers is different from the number of subcribers to process in current attempt, some of them failed
+                        ];
+                    case 1:
+                        subscribersResult = _d.sent();
+                        didSubscribersFail = completedSubscribersInCurrentAttempt.length !==
+                            subscribersInCurrentAttempt.length;
+                        isRetriesConfigured = ((_c = job === null || job === void 0 ? void 0 : job.opts) === null || _c === void 0 ? void 0 : _c.attempts) > 1;
+                        shouldRetry = didSubscribersFail && isRetriesConfigured && !isFinalAttempt;
+                        if (shouldRetry) {
+                            updatedCompletedSubscribers = __spreadArray(__spreadArray([], __read(completedSubscribers), false), __read(completedSubscribersInCurrentAttempt), false);
+                            job.data.completedSubscriberIds = updatedCompletedSubscribers;
+                            job.update(job.data);
+                            errorMessage = "One or more subscribers of ".concat(eventName, " failed. Retrying...");
+                            this.logger_.warn(errorMessage);
+                            return [2 /*return*/, Promise.reject(Error(errorMessage))];
+                        }
+                        if (didSubscribersFail && !isFinalAttempt) {
+                            // If retrying is not configured, we log a warning to allow server admins to recover manually
+                            this.logger_.warn("One or more subscribers of ".concat(eventName, " failed. Retrying is not configured. Use 'attempts' option when emitting events."));
+                        }
+                        return [2 /*return*/, Promise.resolve(subscribersResult)];
                 }
-            },
-        };
+            });
+        }); };
         this.config_ = config;
         this.manager_ = manager;
         this.logger_ = logger;
+        this.jobSchedulerService_ = jobSchedulerService;
         this.stagedJobRepository_ = stagedJobRepository;
         if (singleton) {
-            this.observers_ = new Map();
+            var opts = {
+                createClient: function (type) {
+                    switch (type) {
+                        case "client":
+                            return redisClient;
+                        case "subscriber":
+                            return redisSubscriber;
+                        default:
+                            if (config.projectConfig.redis_url) {
+                                return new ioredis_1.default(config.projectConfig.redis_url);
+                            }
+                            return redisClient;
+                    }
+                },
+            };
+            this.eventToSubscribersMap_ = new Map();
             this.queue_ = new bull_1.default("".concat(this.constructor.name, ":queue"), opts);
-            this.cronHandlers_ = new Map();
             this.redisClient_ = redisClient;
             this.redisSubscriber_ = redisSubscriber;
-            this.cronQueue_ = new bull_1.default("cron-jobs:queue", opts);
             // Register our worker to handle emit calls
             this.queue_.process(this.worker_);
-            // Register cron worker
-            this.cronQueue_.process(this.cronWorker_);
             if (process.env.NODE_ENV !== "test") {
                 this.startEnqueuer();
             }
@@ -175,6 +192,7 @@ var EventBusService = /** @class */ (function () {
         var cloned = new EventBusService({
             manager: transactionManager,
             stagedJobRepository: this.stagedJobRepository_,
+            jobSchedulerService: this.jobSchedulerService_,
             logger: this.logger_,
             redisClient: this.redisClient_,
             redisSubscriber: this.redisSubscriber_,
@@ -187,16 +205,29 @@ var EventBusService = /** @class */ (function () {
      * Adds a function to a list of event subscribers.
      * @param event - the event that the subscriber will listen for.
      * @param subscriber - the function to be called when a certain event
+     * @param context - context to use when attaching subscriber
      * happens. Subscribers must return a Promise.
      * @return this
      */
-    EventBusService.prototype.subscribe = function (event, subscriber) {
-        var _a;
+    EventBusService.prototype.subscribe = function (event, subscriber, context) {
+        var _a, _b;
         if (typeof subscriber !== "function") {
             throw new Error("Subscriber must be a function");
         }
-        var observers = (_a = this.observers_.get(event)) !== null && _a !== void 0 ? _a : [];
-        this.observers_.set(event, __spreadArray(__spreadArray([], __read(observers), false), [subscriber], false));
+        /**
+         * If context is provided, we use the subscriberId from it
+         * otherwise we generate a random using a ulid
+         */
+        var subscriberId = (_a = context === null || context === void 0 ? void 0 : context.subscriberId) !== null && _a !== void 0 ? _a : "".concat(event.toString(), "-").concat((0, ulid_1.ulid)());
+        var newSubscriberDescriptor = { subscriber: subscriber, id: subscriberId };
+        var existingSubscribers = (_b = this.eventToSubscribersMap_.get(event)) !== null && _b !== void 0 ? _b : [];
+        var subscriberAlreadyExists = existingSubscribers.find(function (sub) { return sub.id === subscriberId; });
+        if (subscriberAlreadyExists) {
+            throw Error("Subscriber with id ".concat(subscriberId, " already exists"));
+        }
+        this.eventToSubscribersMap_.set(event, __spreadArray(__spreadArray([], __read(existingSubscribers), false), [
+            newSubscriberDescriptor,
+        ], false));
         return this;
     };
     /**
@@ -207,32 +238,17 @@ var EventBusService = /** @class */ (function () {
      * @return this
      */
     EventBusService.prototype.unsubscribe = function (event, subscriber) {
-        var _a, _b, _c;
+        var _a;
         if (typeof subscriber !== "function") {
             throw new Error("Subscriber must be a function");
         }
-        if ((_a = this.observers_.get(event)) === null || _a === void 0 ? void 0 : _a.length) {
-            var index = (_b = this.observers_.get(event)) === null || _b === void 0 ? void 0 : _b.indexOf(subscriber);
-            if (index !== -1) {
-                (_c = this.observers_.get(event)) === null || _c === void 0 ? void 0 : _c.splice(index, 1);
+        var existingSubscribers = this.eventToSubscribersMap_.get(event);
+        if (existingSubscribers === null || existingSubscribers === void 0 ? void 0 : existingSubscribers.length) {
+            var subIndex = existingSubscribers === null || existingSubscribers === void 0 ? void 0 : existingSubscribers.findIndex(function (sub) { return sub.subscriber === subscriber; });
+            if (subIndex !== -1) {
+                (_a = this.eventToSubscribersMap_.get(event)) === null || _a === void 0 ? void 0 : _a.splice(subIndex, 1);
             }
         }
-        return this;
-    };
-    /**
-     * Adds a function to a list of event subscribers.
-     * @param event - the event that the subscriber will listen for.
-     * @param subscriber - the function to be called when a certain event
-     * happens. Subscribers must return a Promise.
-     * @return this
-     */
-    EventBusService.prototype.registerCronHandler_ = function (event, subscriber) {
-        var _a;
-        if (typeof subscriber !== "function") {
-            throw new Error("Handler must be a function");
-        }
-        var cronHandlers = (_a = this.cronHandlers_.get(event)) !== null && _a !== void 0 ? _a : [];
-        this.cronHandlers_.set(event, __spreadArray(__spreadArray([], __read(cronHandlers), false), [subscriber], false));
         return this;
     };
     /**
@@ -243,30 +259,38 @@ var EventBusService = /** @class */ (function () {
      * @return the job from our queue
      */
     EventBusService.prototype.emit = function (eventName, data, options) {
-        if (options === void 0) { options = {}; }
+        if (options === void 0) { options = { attempts: 1 }; }
         return __awaiter(this, void 0, void 0, function () {
-            var stagedJobRepository, stagedJobInstance, opts;
+            var opts, stagedJobRepository, jobToCreate, stagedJobInstance;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        if (!this.transactionManager_) return [3 /*break*/, 2];
-                        stagedJobRepository = this.transactionManager_.getCustomRepository(this.stagedJobRepository_);
-                        stagedJobInstance = stagedJobRepository.create({
-                            event_name: eventName,
-                            data: data,
-                        });
-                        return [4 /*yield*/, stagedJobRepository.save(stagedJobInstance)];
-                    case 1: return [2 /*return*/, _a.sent()];
-                    case 2:
                         opts = {
                             removeOnComplete: true,
+                            attempts: 1,
                         };
+                        if (typeof options.attempts === "number") {
+                            opts.attempts = options.attempts;
+                            if ((0, medusa_core_utils_1.isDefined)(options.backoff)) {
+                                opts.backoff = options.backoff;
+                            }
+                        }
                         if (typeof options.delay === "number") {
                             opts.delay = options.delay;
                         }
+                        if (!this.transactionManager_) return [3 /*break*/, 2];
+                        stagedJobRepository = this.transactionManager_.getCustomRepository(this.stagedJobRepository_);
+                        jobToCreate = {
+                            event_name: eventName,
+                            data: data,
+                            options: opts,
+                        };
+                        stagedJobInstance = stagedJobRepository.create(jobToCreate);
+                        return [4 /*yield*/, stagedJobRepository.save(stagedJobInstance)];
+                    case 1: return [2 /*return*/, _a.sent()];
+                    case 2:
                         this.queue_.add({ eventName: eventName, data: data }, opts);
-                        _a.label = 3;
-                    case 3: return [2 /*return*/];
+                        return [2 /*return*/];
                 }
             });
         });
@@ -311,8 +335,9 @@ var EventBusService = /** @class */ (function () {
                                     case 1:
                                         jobs = _b.sent();
                                         return [4 /*yield*/, Promise.all(jobs.map(function (job) {
+                                                var _a;
                                                 _this.queue_
-                                                    .add({ eventName: job.event_name, data: job.data }, { removeOnComplete: true })
+                                                    .add({ eventName: job.event_name, data: job.data }, (_a = job.options) !== null && _a !== void 0 ? _a : { removeOnComplete: true })
                                                     .then(function () { return __awaiter(_this, void 0, void 0, function () {
                                                     return __generator(this, function (_a) {
                                                         switch (_a.label) {
@@ -348,19 +373,24 @@ var EventBusService = /** @class */ (function () {
     };
     /**
      * Registers a cron job.
+     * @deprecated All cron job logic has been refactored to the `JobSchedulerService`. This method will be removed in a future release.
      * @param eventName - the name of the event
      * @param data - the data to be sent with the event
      * @param cron - the cron pattern
      * @param handler - the handler to call on each cron job
      * @return void
      */
-    EventBusService.prototype.createCronJob = function (eventName, data, cron, handler) {
-        this.logger_.info("Registering ".concat(eventName));
-        this.registerCronHandler_(eventName, handler);
-        return this.cronQueue_.add({
-            eventName: eventName,
-            data: data,
-        }, { repeat: { cron: cron } });
+    EventBusService.prototype.createCronJob = function (eventName, data, cron, handler, options) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.jobSchedulerService_.create(eventName, data, cron, handler, options !== null && options !== void 0 ? options : {})];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
     };
     return EventBusService;
 }());

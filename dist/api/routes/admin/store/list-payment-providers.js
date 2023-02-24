@@ -42,6 +42,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * summary: "List Payment Providers"
  * description: "Retrieves the configured Payment Providers"
  * x-authenticated: true
+ * x-codegen:
+ *   method: listPaymentProviders
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -69,11 +71,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             payment_providers:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/payment_provider"
+ *           $ref: "#/components/schemas/AdminPaymentProvidersList"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

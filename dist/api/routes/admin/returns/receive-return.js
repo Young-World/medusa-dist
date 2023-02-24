@@ -48,8 +48,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminPostReturnsReturnReceiveReq = void 0;
 var class_validator_1 = require("class-validator");
 var class_transformer_1 = require("class-transformer");
+var medusa_core_utils_1 = require("medusa-core-utils");
 var validator_1 = require("../../../../utils/validator");
-var utils_1 = require("../../../../utils");
 /**
  * @oas [post] /returns/{id}/receive
  * operationId: "PostReturnsReturnReceive"
@@ -61,26 +61,9 @@ var utils_1 = require("../../../../utils");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - items
- *         properties:
- *           items:
- *             description: The Line Items that have been received.
- *             type: array
- *             items:
- *               required:
- *                 - item_id
- *                 - quantity
- *               properties:
- *                 item_id:
- *                   description: The ID of the Line Item.
- *                   type: string
- *                 quantity:
- *                   description: The quantity of the Line Item.
- *                   type: integer
- *           refund:
- *             description: The amount to refund.
- *             type: number
+ *         $ref: "#/components/schemas/AdminPostReturnsReturnReceiveReq"
+ * x-codegen:
+ *   method: receive
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -96,8 +79,8 @@ var utils_1 = require("../../../../utils");
  *           }
  *         ]
  *       })
- *       .then(({ return }) => {
- *         console.log(return.id);
+ *       .then((data) => {
+ *         console.log(data.return.id);
  *       });
  *   - lang: Shell
  *     label: cURL
@@ -124,9 +107,7 @@ var utils_1 = require("../../../../utils");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             return:
- *               $ref: "#/components/schemas/return"
+ *           $ref: "#/components/schemas/AdminReturnsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -159,12 +140,14 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                             switch (_a.label) {
                                 case 0:
                                     refundAmount = validated.refund;
-                                    if ((0, utils_1.isDefined)(validated.refund) && validated.refund < 0) {
+                                    if ((0, medusa_core_utils_1.isDefined)(validated.refund) && validated.refund < 0) {
                                         refundAmount = 0;
                                     }
                                     return [4 /*yield*/, returnService
                                             .withTransaction(manager)
-                                            .receive(id, validated.items, refundAmount, true)];
+                                            .receive(id, validated.items, refundAmount, true, {
+                                            locationId: validated.location_id,
+                                        })];
                                 case 1:
                                     receivedReturn = _a.sent();
                                     if (!receivedReturn.order_id) return [3 /*break*/, 3];
@@ -209,6 +192,31 @@ var Item = /** @class */ (function () {
     ], Item.prototype, "quantity", void 0);
     return Item;
 }());
+/**
+ * @schema AdminPostReturnsReturnReceiveReq
+ * type: object
+ * required:
+ *   - items
+ * properties:
+ *   items:
+ *     description: The Line Items that have been received.
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - item_id
+ *         - quantity
+ *       properties:
+ *         item_id:
+ *           description: The ID of the Line Item.
+ *           type: string
+ *         quantity:
+ *           description: The quantity of the Line Item.
+ *           type: integer
+ *   refund:
+ *     description: The amount to refund.
+ *     type: number
+ */
 var AdminPostReturnsReturnReceiveReq = /** @class */ (function () {
     function AdminPostReturnsReturnReceiveReq() {
     }
@@ -223,6 +231,11 @@ var AdminPostReturnsReturnReceiveReq = /** @class */ (function () {
         (0, class_validator_1.IsNumber)(),
         __metadata("design:type", Number)
     ], AdminPostReturnsReturnReceiveReq.prototype, "refund", void 0);
+    __decorate([
+        (0, class_validator_1.IsOptional)(),
+        (0, class_validator_1.IsString)(),
+        __metadata("design:type", String)
+    ], AdminPostReturnsReturnReceiveReq.prototype, "location_id", void 0);
     return AdminPostReturnsReturnReceiveReq;
 }());
 exports.AdminPostReturnsReturnReceiveReq = AdminPostReturnsReturnReceiveReq;

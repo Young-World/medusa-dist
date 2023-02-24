@@ -54,9 +54,13 @@ var validator_1 = require("../../../../utils/validator");
  * summary: "Create a Customer Group"
  * description: "Creates a CustomerGroup."
  * x-authenticated: true
- * parameters:
- *   - (body) name=* {string} Name of the customer group
- *   - (body) metadata {object} Metadata for the customer.
+ * requestBody:
+ *   content:
+ *     application/json:
+ *       schema:
+ *         $ref: "#/components/schemas/AdminPostCustomerGroupsReq"
+ * x-codegen:
+ *   method: create
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -90,9 +94,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             customer_group:
- *               $ref: "#/components/schemas/customer_group"
+ *           $ref: "#/components/schemas/AdminCustomerGroupsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -132,6 +134,19 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostCustomerGroupsReq
+ * type: object
+ * required:
+ *   - name
+ * properties:
+ *   name:
+ *     type: string
+ *     description: Name of the customer group
+ *   metadata:
+ *     type: object
+ *     description: Metadata for the customer.
+ */
 var AdminPostCustomerGroupsReq = /** @class */ (function () {
     function AdminPostCustomerGroupsReq() {
     }

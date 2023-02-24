@@ -53,7 +53,14 @@ var order_edit_1 = require("../../../../types/order-edit");
  * operationId: "PostOrderEdits"
  * summary: "Create an OrderEdit"
  * description: "Creates an OrderEdit."
+ * requestBody:
+ *   content:
+ *     application/json:
+ *       schema:
+ *         $ref: "#/components/schemas/AdminPostOrderEditsReq"
  * x-authenticated: true
+ * x-codegen:
+ *   method: create
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -61,7 +68,7 @@ var order_edit_1 = require("../../../../types/order-edit");
  *       import Medusa from "@medusajs/medusa-js"
  *       const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
  *       // must be previously logged in or use api token
- *       medusa.admin.orderEdit.create({ order_id, internal_note })
+ *       medusa.admin.orderEdits.create({ order_id })
  *         .then(({ order_edit }) => {
  *           console.log(order_edit.id)
  *         })
@@ -69,8 +76,9 @@ var order_edit_1 = require("../../../../types/order-edit");
  *     label: cURL
  *     source: |
  *       curl --location --request POST 'https://medusa-url.com/admin/order-edits' \
- *       --header 'Authorization: Bearer {api_token}'
- *       -d '{ "order_id": "my_order_id", "internal_note": "my_optional_note" }'
+ *       --header 'Authorization: Bearer {api_token}' \
+ *       --header 'Content-Type: application/json' \
+ *       --data-raw '{ "order_id": "my_order_id", "internal_note": "my_optional_note" }'
  * security:
  *   - api_token: []
  *   - cookie_auth: []
@@ -82,9 +90,7 @@ var order_edit_1 = require("../../../../types/order-edit");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order_edit:
- *               $ref: "#/components/schemas/order_edit"
+ *           $ref: "#/components/schemas/AdminOrderEditsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -99,7 +105,7 @@ var order_edit_1 = require("../../../../types/order-edit");
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var orderEditService, manager, data, loggedInUserId, createdOrderEdit, orderEdit;
+    var orderEditService, manager, data, createdBy, createdOrderEdit, orderEdit;
     var _a, _b, _c;
     return __generator(this, function (_d) {
         switch (_d.label) {
@@ -107,13 +113,13 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                 orderEditService = req.scope.resolve("orderEditService");
                 manager = req.scope.resolve("manager");
                 data = req.validatedBody;
-                loggedInUserId = ((_b = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id) !== null && _b !== void 0 ? _b : (_c = req.user) === null || _c === void 0 ? void 0 : _c.userId);
+                createdBy = ((_b = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id) !== null && _b !== void 0 ? _b : (_c = req.user) === null || _c === void 0 ? void 0 : _c.userId);
                 return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
                         return __generator(this, function (_a) {
                             switch (_a.label) {
                                 case 0: return [4 /*yield*/, orderEditService
                                         .withTransaction(transactionManager)
-                                        .create(data, { loggedInUserId: loggedInUserId })];
+                                        .create(data, { createdBy: createdBy })];
                                 case 1: return [2 /*return*/, _a.sent()];
                             }
                         });
@@ -133,6 +139,19 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostOrderEditsReq
+ * type: object
+ * required:
+ *   - order_id
+ * properties:
+ *   order_id:
+ *     description: The ID of the order to create the edit for.
+ *     type: string
+ *   internal_note:
+ *     description: An optional note to create for the order edit.
+ *     type: string
+ */
 var AdminPostOrderEditsReq = /** @class */ (function () {
     function AdminPostOrderEditsReq() {
     }
@@ -145,6 +164,11 @@ var AdminPostOrderEditsReq = /** @class */ (function () {
         (0, class_validator_1.IsString)(),
         __metadata("design:type", String)
     ], AdminPostOrderEditsReq.prototype, "internal_note", void 0);
+    __decorate([
+        (0, class_validator_1.IsOptional)(),
+        (0, class_validator_1.IsString)(),
+        __metadata("design:type", String)
+    ], AdminPostOrderEditsReq.prototype, "created_by", void 0);
     return AdminPostOrderEditsReq;
 }());
 exports.AdminPostOrderEditsReq = AdminPostOrderEditsReq;

@@ -48,7 +48,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminPostDiscountsDiscountDynamicCodesReq = void 0;
 var class_validator_1 = require("class-validator");
 var _1 = require(".");
-var validator_1 = require("../../../../utils/validator");
 /**
  * @oas [post] /discounts/{id}/dynamic-codes
  * operationId: "PostDiscountsDiscountDynamicCodes"
@@ -57,9 +56,13 @@ var validator_1 = require("../../../../utils/validator");
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {string} The ID of the Discount to create the dynamic code from."
- *   - (body) code=* {string} The unique code that will be used to redeem the Discount.
- *   - (body) usage_limit=1 {number} amount of times the discount can be applied.
- *   - (body) metadata {object} An optional set of key-value paris to hold additional information.
+ * requestBody:
+ *  content:
+ *    application/json:
+ *      schema:
+ *        $ref: "#/components/schemas/AdminPostDiscountsDiscountDynamicCodesReq"
+ * x-codegen:
+ *   method: createDynamicCode
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -94,9 +97,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             discount:
- *               $ref: "#/components/schemas/discount"
+ *           $ref: "#/components/schemas/AdminDiscountsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -111,14 +112,11 @@ var validator_1 = require("../../../../utils/validator");
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var discount_id, validated, discountService, manager, created, discount;
+    var discount_id, discountService, manager, created, discount;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
                 discount_id = req.params.discount_id;
-                return [4 /*yield*/, (0, validator_1.validator)(AdminPostDiscountsDiscountDynamicCodesReq, req.body)];
-            case 1:
-                validated = _a.sent();
                 discountService = req.scope.resolve("discountService");
                 manager = req.scope.resolve("manager");
                 return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
@@ -126,24 +124,41 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                             switch (_a.label) {
                                 case 0: return [4 /*yield*/, discountService
                                         .withTransaction(transactionManager)
-                                        .createDynamicCode(discount_id, validated)];
+                                        .createDynamicCode(discount_id, req.validatedBody)];
                                 case 1: return [2 /*return*/, _a.sent()];
                             }
                         });
                     }); })];
-            case 2:
+            case 1:
                 created = _a.sent();
                 return [4 /*yield*/, discountService.retrieve(created.id, {
                         select: _1.defaultAdminDiscountsFields,
                         relations: _1.defaultAdminDiscountsRelations,
                     })];
-            case 3:
+            case 2:
                 discount = _a.sent();
                 res.status(200).json({ discount: discount });
                 return [2 /*return*/];
         }
     });
 }); });
+/**
+ * @schema AdminPostDiscountsDiscountDynamicCodesReq
+ * type: object
+ * required:
+ *   - code
+ * properties:
+ *   code:
+ *     type: string
+ *     description: A unique code that will be used to redeem the Discount
+ *   usage_limit:
+ *     type: number
+ *     description: Maximum times the discount can be used
+ *     default: 1
+ *   metadata:
+ *     type: object
+ *     description: An optional set of key-value pairs to hold additional information.
+ */
 var AdminPostDiscountsDiscountDynamicCodesReq = /** @class */ (function () {
     function AdminPostDiscountsDiscountDynamicCodesReq() {
         this.usage_limit = 1;

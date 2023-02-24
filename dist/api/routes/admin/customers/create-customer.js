@@ -58,34 +58,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - email
- *           - first_name
- *           - last_name
- *           - password
- *         properties:
- *           email:
- *             type: string
- *             description: The customer's email.
- *             format: email
- *           first_name:
- *             type: string
- *             description: The customer's first name.
- *           last_name:
- *             type: string
- *             description: The customer's last name.
- *           password:
- *             type: string
- *             description: The customer's password.
- *             format: password
- *           phone:
- *             type: string
- *             description: The customer's phone number.
- *           metadata:
- *             description: An optional set of key-value pairs to hold additional information.
- *             type: object
- * tags:
- *   - Customer
+ *         $ref: "#/components/schemas/AdminPostCustomersReq"
+ * x-codegen:
+ *   method: create
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -117,15 +92,15 @@ var validator_1 = require("../../../../utils/validator");
  * security:
  *   - api_token: []
  *   - cookie_auth: []
+ * tags:
+ *   - Customer
  * responses:
  *   201:
  *     description: OK
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             customer:
- *               $ref: "#/components/schemas/customer"
+ *           $ref: "#/components/schemas/AdminCustomersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -165,6 +140,36 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostCustomersReq
+ * type: object
+ * required:
+ *   - email
+ *   - first_name
+ *   - last_name
+ *   - password
+ * properties:
+ *   email:
+ *     type: string
+ *     description: The customer's email.
+ *     format: email
+ *   first_name:
+ *     type: string
+ *     description: The customer's first name.
+ *   last_name:
+ *     type: string
+ *     description: The customer's last name.
+ *   password:
+ *     type: string
+ *     description: The customer's password.
+ *     format: password
+ *   phone:
+ *     type: string
+ *     description: The customer's phone number.
+ *   metadata:
+ *     description: An optional set of key-value pairs to hold additional information.
+ *     type: object
+ */
 var AdminPostCustomersReq = /** @class */ (function () {
     function AdminPostCustomersReq() {
     }

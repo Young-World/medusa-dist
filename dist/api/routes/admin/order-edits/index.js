@@ -25,25 +25,27 @@ var __importStar = (this && this.__importStar) || function (mod) {
 var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 var express_1 = require("express");
-var middlewares_1 = __importStar(require("../../../middlewares"));
-var common_1 = require("../../../../types/common");
-var feature_flag_enabled_1 = require("../../../middlewares/feature-flag-enabled");
-var order_editing_1 = __importDefault(require("../../../../loaders/feature-flags/order-editing"));
 var order_edit_1 = require("../../../../types/order-edit");
-var update_order_edit_1 = require("./update-order-edit");
-var create_order_edit_1 = require("./create-order-edit");
+var middlewares_1 = __importStar(require("../../../middlewares"));
 var add_line_item_1 = require("./add-line-item");
+var create_order_edit_1 = require("./create-order-edit");
+var get_order_edit_1 = require("./get-order-edit");
+var list_order_edit_1 = require("./list-order-edit");
+var request_confirmation_1 = require("./request-confirmation");
+var update_order_edit_1 = require("./update-order-edit");
 var update_order_edit_line_item_1 = require("./update-order-edit-line-item");
 var route = (0, express_1.Router)();
 exports.default = (function (app) {
-    app.use("/order-edits", (0, feature_flag_enabled_1.isFeatureFlagEnabled)(order_editing_1.default.key), route);
+    app.use("/order-edits", route);
     route.post("/", (0, middlewares_1.transformBody)(create_order_edit_1.AdminPostOrderEditsReq), middlewares_1.default.wrap(require("./create-order-edit").default));
-    route.get("/:id", (0, middlewares_1.transformQuery)(common_1.FindParams, {
+    route.get("/", (0, middlewares_1.transformQuery)(list_order_edit_1.GetOrderEditsParams, {
+        defaultFields: order_edit_1.defaultOrderEditFields,
+        defaultRelations: order_edit_1.defaultOrderEditRelations,
+        isList: true,
+    }), middlewares_1.default.wrap(require("./list-order-edit").default));
+    route.get("/:id", (0, middlewares_1.transformQuery)(get_order_edit_1.GetOrderEditsOrderEditParams, {
         defaultRelations: order_edit_1.defaultOrderEditRelations,
         defaultFields: order_edit_1.defaultOrderEditFields,
         isList: false,
@@ -54,13 +56,16 @@ exports.default = (function (app) {
     route.post("/:id/confirm", middlewares_1.default.wrap(require("./confirm-order-edit").default));
     route.delete("/:id", middlewares_1.default.wrap(require("./delete-order-edit").default));
     route.delete("/:id/changes/:change_id", middlewares_1.default.wrap(require("./delete-order-edit-item-change").default));
-    route.post("/:id/request", middlewares_1.default.wrap(require("./request-confirmation").default));
+    route.post("/:id/request", (0, middlewares_1.transformBody)(request_confirmation_1.AdminPostOrderEditsRequestConfirmationReq), middlewares_1.default.wrap(require("./request-confirmation").default));
     route.post("/:id/items/:item_id", (0, middlewares_1.transformBody)(update_order_edit_line_item_1.AdminPostOrderEditsEditLineItemsLineItemReq), middlewares_1.default.wrap(require("./update-order-edit-line-item").default));
     route.delete("/:id/items/:item_id", middlewares_1.default.wrap(require("./delete-line-item").default));
     return app;
 });
+__exportStar(require("./add-line-item"), exports);
+__exportStar(require("./create-order-edit"), exports);
+__exportStar(require("./get-order-edit"), exports);
+__exportStar(require("./list-order-edit"), exports);
+__exportStar(require("./request-confirmation"), exports);
 __exportStar(require("./update-order-edit"), exports);
 __exportStar(require("./update-order-edit-line-item"), exports);
-__exportStar(require("./create-order-edit"), exports);
-__exportStar(require("./add-line-item"), exports);
 //# sourceMappingURL=index.js.map

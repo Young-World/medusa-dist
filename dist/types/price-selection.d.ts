@@ -3,3 +3,6 @@ export declare class PriceSelectionParams {
     region_id?: string;
     currency_code?: string;
 }
+export declare class AdminPriceSelectionParams extends PriceSelectionParams {
+    customer_id?: string;
+}

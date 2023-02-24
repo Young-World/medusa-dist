@@ -69,24 +69,28 @@ var Store = /** @class */ (function (_super) {
         __metadata("design:type", Array)
     ], Store.prototype, "currencies", void 0);
     __decorate([
-        (0, typeorm_1.Column)({ nullable: true }),
-        __metadata("design:type", String)
+        (0, typeorm_1.Column)({ nullable: true, type: "text" }),
+        __metadata("design:type", Object)
     ], Store.prototype, "swap_link_template", void 0);
     __decorate([
-        (0, typeorm_1.Column)({ nullable: true }),
-        __metadata("design:type", String)
+        (0, typeorm_1.Column)({ nullable: true, type: "text" }),
+        __metadata("design:type", Object)
     ], Store.prototype, "payment_link_template", void 0);
+    __decorate([
+        (0, typeorm_1.Column)({ nullable: true, type: "text" }),
+        __metadata("design:type", Object)
+    ], Store.prototype, "invite_link_template", void 0);
     __decorate([
         (0, typeorm_1.Column)({ nullable: true }),
         __metadata("design:type", String)
-    ], Store.prototype, "invite_link_template", void 0);
+    ], Store.prototype, "default_location_id", void 0);
     __decorate([
         (0, db_aware_column_1.DbAwareColumn)({ type: "jsonb", nullable: true }),
         __metadata("design:type", Object)
     ], Store.prototype, "metadata", void 0);
     __decorate([
-        (0, feature_flag_decorators_1.FeatureFlagColumn)("sales_channels", { nullable: true }),
-        __metadata("design:type", String)
+        (0, feature_flag_decorators_1.FeatureFlagColumn)("sales_channels", { nullable: true, type: "text" }),
+        __metadata("design:type", Object)
     ], Store.prototype, "default_sales_channel_id", void 0);
     __decorate([
         (0, feature_flag_decorators_1.FeatureFlagDecorators)("sales_channels", [
@@ -108,21 +112,32 @@ var Store = /** @class */ (function (_super) {
 }(base_entity_1.BaseEntity));
 exports.Store = Store;
 /**
- * @schema store
+ * @schema Store
  * title: "Store"
  * description: "Holds settings for the Store, such as name, currencies, etc."
- * x-resourceId: store
+ * type: object
+ * required:
+ *   - created_at
+ *   - default_currency_code
+ *   - default_location_id
+ *   - id
+ *   - invite_link_template
+ *   - metadata
+ *   - name
+ *   - payment_link_template
+ *   - swap_link_template
+ *   - updated_at
  * properties:
  *   id:
- *     type: string
  *     description: The store's ID
+ *     type: string
  *     example: store_01G1G5V21KADXNGH29BJMAJ4B4
  *   name:
- *     description: "The name of the Store - this may be displayed to the Customer."
+ *     description: The name of the Store - this may be displayed to the Customer.
  *     type: string
  *     example: Medusa Store
  *   default_currency_code:
- *     description: "The 3 character currency code that is the default of the store."
+ *     description: The 3 character currency code that is the default of the store.
  *     type: string
  *     example: usd
  *     externalDocs:
@@ -130,34 +145,54 @@ exports.Store = Store;
  *       description: See a list of codes.
  *   default_currency:
  *     description: Available if the relation `default_currency` is expanded.
- *     $ref: "#/components/schemas/currency"
+ *     nullable: true
+ *     $ref: "#/components/schemas/Currency"
  *   currencies:
  *     description: The currencies that are enabled for the Store. Available if the relation `currencies` is expanded.
  *     type: array
  *     items:
- *       $ref: "#/components/schemas/currency"
+ *       $ref: "#/components/schemas/Currency"
  *   swap_link_template:
- *     description: "A template to generate Swap links from. Use {{cart_id}} to include the Swap's `cart_id` in the link."
+ *     description: A template to generate Swap links from. Use {{cart_id}} to include the Swap's `cart_id` in the link.
+ *     nullable: true
  *     type: string
  *     example: null
  *   payment_link_template:
- *     description: "A template to generate Payment links from. Use {{cart_id}} to include the payment's `cart_id` in the link."
+ *     description: A template to generate Payment links from. Use {{cart_id}} to include the payment's `cart_id` in the link.
+ *     nullable: true
  *     type: string
  *     example: null
  *   invite_link_template:
- *     description: "A template to generate Invite links from"
+ *     description: A template to generate Invite links from
+ *     nullable: true
+ *     type: string
+ *     example: null
+ *   default_location_id:
+ *     description: The location ID the store is associated with.
+ *     nullable: true
  *     type: string
  *     example: null
  *   default_sales_channel_id:
- *     type: string
  *     description: The sales channel ID the cart is associated with.
+ *     nullable: true
+ *     type: string
  *     example: null
  *   default_sales_channel:
  *     description: A sales channel object. Available if the relation `default_sales_channel` is expanded.
- *     type: object
+ *     nullable: true
+ *     $ref: "#/components/schemas/SalesChannel"
+ *   created_at:
+ *     description: The date with timezone at which the resource was created.
+ *     type: string
+ *     format: date-time
+ *   updated_at:
+ *     description: The date with timezone at which the resource was updated.
+ *     type: string
+ *     format: date-time
  *   metadata:
- *     type: object
  *     description: An optional key-value map with additional details
+ *     nullable: true
+ *     type: object
  *     example: {car: "white"}
  */
 //# sourceMappingURL=store.js.map

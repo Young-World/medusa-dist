@@ -1,3 +1,5 @@
+import { Request, Response } from "express";
+import { FindParams } from "../../../../types/common";
 /**
  * @oas [get] /discounts/{id}
  * operationId: "GetDiscountsDiscount"
@@ -8,6 +10,9 @@
  *   - (path) id=* {string} The ID of the Discount
  *   - (query) expand {string} Comma separated list of relations to include in the results.
  *   - (query) fields {string} Comma separated list of fields to include in the results.
+ * x-codegen:
+ *   method: retrieve
+ *   queryParams: AdminGetDiscountParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -35,9 +40,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             discount:
- *               $ref: "#/components/schemas/discount"
+ *           $ref: "#/components/schemas/AdminDiscountsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -51,9 +54,7 @@
  *   "500":
  *     $ref: "#/components/responses/500_error"
  */
-declare const _default: (req: any, res: any) => Promise<void>;
+declare const _default: (req: Request, res: Response) => Promise<void>;
 export default _default;
-export declare class AdminGetDiscountParams {
-    expand?: string;
-    fields?: string;
+export declare class AdminGetDiscountParams extends FindParams {
 }

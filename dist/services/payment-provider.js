@@ -50,9 +50,26 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 var medusa_core_utils_1 = require("medusa-core-utils");
 var interfaces_1 = require("../interfaces");
+var models_1 = require("../models");
 var utils_1 = require("../utils");
 /**
  * Helps retrieve payment providers
@@ -67,6 +84,9 @@ var PaymentProviderService = /** @class */ (function (_super) {
         _this.paymentProviderRepository_ = container.paymentProviderRepository;
         _this.paymentRepository_ = container.paymentRepository;
         _this.refundRepository_ = container.refundRepository;
+        _this.customerService_ = container.customerService;
+        _this.featureFlagRouter_ = container.featureFlagRouter;
+        _this.logger_ = container.logger;
         return _this;
     }
     PaymentProviderService.prototype.registerInstalledProviders = function (providerIds) {
@@ -195,40 +215,61 @@ var PaymentProviderService = /** @class */ (function (_super) {
     };
     /**
      * Creates a payment session with the given provider.
-     * @param providerId - the id of the provider to create payment with
+     * @param providerIdOrSessionInput - the id of the provider to create payment with or the input data
      * @param cart - a cart object used to calculate the amount, etc. from
      * @return the payment session
      */
-    PaymentProviderService.prototype.createSession = function (providerId, cart) {
+    PaymentProviderService.prototype.createSession = function (providerIdOrSessionInput) {
+        var _a = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            _a[_i - 1] = arguments[_i];
+        }
+        var _b = __read(_a, 1), cart = _b[0];
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            return __generator(this, function (_c) {
+                switch (_c.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                            var provider, sessionData, sessionRepo, toCreate, created;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
+                            var providerId, data, provider, context, paymentResponse, sessionData;
+                            var _a, _b;
+                            return __generator(this, function (_c) {
+                                switch (_c.label) {
                                     case 0:
+                                        providerId = (0, utils_1.isString)(providerIdOrSessionInput)
+                                            ? providerIdOrSessionInput
+                                            : providerIdOrSessionInput.provider_id;
+                                        data = ((0, utils_1.isString)(providerIdOrSessionInput) ? cart : providerIdOrSessionInput);
                                         provider = this.retrieveProvider(providerId);
+                                        context = this.buildPaymentProcessorContext(data);
+                                        if (!(0, medusa_core_utils_1.isDefined)(context.currency_code) || !(0, medusa_core_utils_1.isDefined)(context.amount)) {
+                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_ARGUMENT, "`currency_code` and `amount` are required to create payment session.");
+                                        }
                                         return [4 /*yield*/, provider
                                                 .withTransaction(transactionManager)
-                                                .createPayment(cart)];
+                                                .createPayment(context)];
                                     case 1:
-                                        sessionData = _a.sent();
-                                        sessionRepo = transactionManager.getCustomRepository(this.paymentSessionRepository_);
-                                        toCreate = {
-                                            cart_id: cart.id,
-                                            provider_id: providerId,
-                                            data: sessionData,
-                                            status: "pending",
-                                        };
-                                        created = sessionRepo.create(toCreate);
-                                        return [4 /*yield*/, sessionRepo.save(created)];
-                                    case 2: return [2 /*return*/, _a.sent()];
+                                        paymentResponse = _c.sent();
+                                        sessionData = (_a = paymentResponse.session_data) !== null && _a !== void 0 ? _a : paymentResponse;
+                                        return [4 /*yield*/, this.processUpdateRequestsData({
+                                                customer: { id: (_b = context.customer) === null || _b === void 0 ? void 0 : _b.id },
+                                            }, paymentResponse)];
+                                    case 2:
+                                        _c.sent();
+                                        return [4 /*yield*/, this.saveSession(providerId, {
+                                                payment_session_id: !(0, utils_1.isString)(providerIdOrSessionInput)
+                                                    ? providerIdOrSessionInput.payment_session_id
+                                                    : undefined,
+                                                cartId: context.id,
+                                                sessionData: sessionData,
+                                                status: models_1.PaymentSessionStatus.PENDING,
+                                                isInitiated: true,
+                                                amount: context.amount,
+                                            })];
+                                    case 3: return [2 /*return*/, _c.sent()];
                                 }
                             });
                         }); })];
-                    case 1: return [2 /*return*/, _a.sent()];
+                    case 1: return [2 /*return*/, _c.sent()];
                 }
             });
         });
@@ -238,15 +279,15 @@ var PaymentProviderService = /** @class */ (function (_super) {
      * This means, that we delete the current one and create a new.
      * @param paymentSession - the payment session object to
      *    update
-     * @param cart - a cart object used to calculate the amount, etc. from
+     * @param sessionInput
      * @return the payment session
      */
-    PaymentProviderService.prototype.refreshSession = function (paymentSession, cart) {
+    PaymentProviderService.prototype.refreshSession = function (paymentSession, sessionInput) {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
                 return [2 /*return*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                        var session, provider, sessionRepo, sessionData, toCreate, created;
+                        var session, provider, sessionRepo;
                         return __generator(this, function (_a) {
                             switch (_a.label) {
                                 case 0: return [4 /*yield*/, this.retrieveSession(paymentSession.id)];
@@ -260,21 +301,8 @@ var PaymentProviderService = /** @class */ (function (_super) {
                                     return [4 /*yield*/, sessionRepo.remove(session)];
                                 case 3:
                                     _a.sent();
-                                    return [4 /*yield*/, provider
-                                            .withTransaction(transactionManager)
-                                            .createPayment(cart)];
-                                case 4:
-                                    sessionData = _a.sent();
-                                    toCreate = {
-                                        cart_id: cart.id,
-                                        provider_id: session.provider_id,
-                                        data: sessionData,
-                                        is_selected: true,
-                                        status: "pending",
-                                    };
-                                    created = sessionRepo.create(toCreate);
-                                    return [4 /*yield*/, sessionRepo.save(created)];
-                                case 5: return [2 /*return*/, _a.sent()];
+                                    return [4 /*yield*/, this.createSession(sessionInput)];
+                                case 4: return [2 /*return*/, _a.sent()];
                             }
                         });
                     }); })];
@@ -282,33 +310,42 @@ var PaymentProviderService = /** @class */ (function (_super) {
         });
     };
     /**
-     * Updates an existing payment session.
-     * @param paymentSession - the payment session object to
-     *    update
-     * @param cart - the cart object to update for
-     * @return the updated payment session
+     * Update a payment session with the given provider.
+     * @param paymentSession - The paymentSession to update
+     * @param sessionInput
+     * @return the payment session
      */
-    PaymentProviderService.prototype.updateSession = function (paymentSession, cart) {
+    PaymentProviderService.prototype.updateSession = function (paymentSession, sessionInput) {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                            var session, provider, _a, sessionRepo;
-                            return __generator(this, function (_b) {
-                                switch (_b.label) {
-                                    case 0: return [4 /*yield*/, this.retrieveSession(paymentSession.id)];
-                                    case 1:
-                                        session = _b.sent();
+                            var provider, context, paymentResponse, sessionData;
+                            var _a, _b;
+                            return __generator(this, function (_c) {
+                                switch (_c.label) {
+                                    case 0:
                                         provider = this.retrieveProvider(paymentSession.provider_id);
-                                        _a = session;
+                                        context = this.buildPaymentProcessorContext(sessionInput);
                                         return [4 /*yield*/, provider
                                                 .withTransaction(transactionManager)
-                                                .updatePayment(paymentSession.data, cart)];
+                                                .updatePayment(paymentSession.data, context)];
+                                    case 1:
+                                        paymentResponse = _c.sent();
+                                        sessionData = (_a = paymentResponse.session_data) !== null && _a !== void 0 ? _a : paymentResponse;
+                                        return [4 /*yield*/, this.processUpdateRequestsData({
+                                                customer: { id: (_b = context.customer) === null || _b === void 0 ? void 0 : _b.id },
+                                            }, paymentResponse)];
                                     case 2:
-                                        _a.data = _b.sent();
-                                        sessionRepo = transactionManager.getCustomRepository(this.paymentSessionRepository_);
-                                        return [2 /*return*/, sessionRepo.save(session)];
+                                        _c.sent();
+                                        return [4 /*yield*/, this.saveSession(paymentSession.provider_id, {
+                                                payment_session_id: paymentSession.id,
+                                                sessionData: sessionData,
+                                                isInitiated: true,
+                                                amount: context.amount,
+                                            })];
+                                    case 3: return [2 /*return*/, _c.sent()];
                                 }
                             });
                         }); })];
@@ -339,7 +376,8 @@ var PaymentProviderService = /** @class */ (function (_super) {
                                     case 2:
                                         _a.sent();
                                         sessionRepo = transactionManager.getCustomRepository(this.paymentSessionRepository_);
-                                        return [2 /*return*/, sessionRepo.remove(session)];
+                                        return [4 /*yield*/, sessionRepo.remove(session)];
+                                    case 3: return [2 /*return*/, _a.sent()];
                                 }
                             });
                         }); })];
@@ -368,32 +406,34 @@ var PaymentProviderService = /** @class */ (function (_super) {
             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Could not find a payment provider with id: ".concat(providerId));
         }
     };
-    PaymentProviderService.prototype.createPayment = function (cart) {
+    PaymentProviderService.prototype.createPayment = function (data) {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                            var paymentSession, region, total, provider, paymentData, paymentRepo, created;
+                            var payment_session, currency_code, amount, provider_id, providerId, provider, paymentData, paymentRepo, created;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
-                                        paymentSession = cart.payment_session, region = cart.region, total = cart.total;
-                                        provider = this.retrieveProvider(paymentSession.provider_id);
+                                        payment_session = data.payment_session, currency_code = data.currency_code, amount = data.amount, provider_id = data.provider_id;
+                                        providerId = provider_id !== null && provider_id !== void 0 ? provider_id : payment_session.provider_id;
+                                        provider = this.retrieveProvider(providerId);
                                         return [4 /*yield*/, provider
                                                 .withTransaction(transactionManager)
-                                                .getPaymentData(paymentSession)];
+                                                .getPaymentData(payment_session)];
                                     case 1:
                                         paymentData = _a.sent();
                                         paymentRepo = transactionManager.getCustomRepository(this.paymentRepository_);
                                         created = paymentRepo.create({
-                                            provider_id: paymentSession.provider_id,
-                                            amount: total,
-                                            currency_code: region.currency_code,
+                                            provider_id: providerId,
+                                            amount: amount,
+                                            currency_code: currency_code,
                                             data: paymentData,
-                                            cart_id: cart.id,
+                                            cart_id: data.cart_id,
                                         });
-                                        return [2 /*return*/, paymentRepo.save(created)];
+                                        return [4 /*yield*/, paymentRepo.save(created)];
+                                    case 2: return [2 /*return*/, _a.sent()];
                                 }
                             });
                         }); })];
@@ -408,20 +448,15 @@ var PaymentProviderService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                            var payment, payRepo;
+                            var paymentService;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.retrievePayment(paymentId)];
-                                    case 1:
-                                        payment = _a.sent();
-                                        if (data === null || data === void 0 ? void 0 : data.order_id) {
-                                            payment.order_id = data.order_id;
-                                        }
-                                        if (data === null || data === void 0 ? void 0 : data.swap_id) {
-                                            payment.swap_id = data.swap_id;
-                                        }
-                                        payRepo = transactionManager.getCustomRepository(this.paymentRepository_);
-                                        return [2 /*return*/, payRepo.save(payment)];
+                                    case 0:
+                                        paymentService = this.container_.paymentService;
+                                        return [4 /*yield*/, paymentService
+                                                .withTransaction(transactionManager)
+                                                .update(paymentId, data)];
+                                    case 1: return [2 /*return*/, _a.sent()];
                                 }
                             });
                         }); })];
@@ -453,8 +488,12 @@ var PaymentProviderService = /** @class */ (function (_super) {
                                         _a = _b.sent(), status = _a.status, data = _a.data;
                                         session.data = data;
                                         session.status = status;
+                                        if (status === models_1.PaymentSessionStatus.AUTHORIZED) {
+                                            session.payment_authorized_at = new Date();
+                                        }
                                         sessionRepo = transactionManager.getCustomRepository(this.paymentSessionRepository_);
-                                        return [2 /*return*/, sessionRepo.save(session)];
+                                        return [4 /*yield*/, sessionRepo.save(session)];
+                                    case 3: return [2 /*return*/, _b.sent()];
                                 }
                             });
                         }); })];
@@ -484,7 +523,8 @@ var PaymentProviderService = /** @class */ (function (_super) {
                                         _a.data = _b.sent();
                                         session.status = paymentSession.status;
                                         sessionRepo = transactionManager.getCustomRepository(this.paymentSessionRepository_);
-                                        return [2 /*return*/, sessionRepo.save(session)];
+                                        return [4 /*yield*/, sessionRepo.save(session)];
+                                    case 3: return [2 /*return*/, _b.sent()];
                                 }
                             });
                         }); })];
@@ -560,7 +600,8 @@ var PaymentProviderService = /** @class */ (function (_super) {
                                         now = new Date();
                                         payment.captured_at = now.toISOString();
                                         paymentRepo = transactionManager.getCustomRepository(this.paymentRepository_);
-                                        return [2 /*return*/, paymentRepo.save(payment)];
+                                        return [4 /*yield*/, paymentRepo.save(payment)];
+                                    case 3: return [2 /*return*/, _b.sent()];
                                 }
                             });
                         }); })];
@@ -591,7 +632,7 @@ var PaymentProviderService = /** @class */ (function (_super) {
                                             return acc;
                                         }, 0);
                                         if (refundable < amount) {
-                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Refund amount is higher that the refundable amount");
+                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Refund amount is greater that the refundable amount");
                                         }
                                         balance = amount;
                                         used = [];
@@ -634,7 +675,52 @@ var PaymentProviderService = /** @class */ (function (_super) {
                                             note: note,
                                         };
                                         created = refundRepo.create(toCreate);
-                                        return [2 /*return*/, refundRepo.save(created)];
+                                        return [4 /*yield*/, refundRepo.save(created)];
+                                    case 6: return [2 /*return*/, _b.sent()];
+                                }
+                            });
+                        }); })];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
+    PaymentProviderService.prototype.refundFromPayment = function (payment, amount, reason, note) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
+                            var refundable, provider, _a, paymentRepo, refundRepo, toCreate, created;
+                            return __generator(this, function (_b) {
+                                switch (_b.label) {
+                                    case 0:
+                                        refundable = payment.amount - payment.amount_refunded;
+                                        if (refundable < amount) {
+                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Refund amount is greater that the refundable amount");
+                                        }
+                                        provider = this.retrieveProvider(payment.provider_id);
+                                        _a = payment;
+                                        return [4 /*yield*/, provider
+                                                .withTransaction(manager)
+                                                .refundPayment(payment, amount)];
+                                    case 1:
+                                        _a.data = _b.sent();
+                                        payment.amount_refunded += amount;
+                                        paymentRepo = manager.getCustomRepository(this.paymentRepository_);
+                                        return [4 /*yield*/, paymentRepo.save(payment)];
+                                    case 2:
+                                        _b.sent();
+                                        refundRepo = manager.getCustomRepository(this.refundRepository_);
+                                        toCreate = {
+                                            payment_id: payment.id,
+                                            amount: amount,
+                                            reason: reason,
+                                            note: note,
+                                        };
+                                        created = refundRepo.create(toCreate);
+                                        return [4 /*yield*/, refundRepo.save(created)];
+                                    case 3: return [2 /*return*/, _b.sent()];
                                 }
                             });
                         }); })];
@@ -659,6 +745,116 @@ var PaymentProviderService = /** @class */ (function (_super) {
                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "A refund with ".concat(id, " was not found"));
                         }
                         return [2 /*return*/, refund];
+                }
+            });
+        });
+    };
+    /**
+     * Build the create session context for both legacy and new API
+     * @param cartOrData
+     * @protected
+     */
+    PaymentProviderService.prototype.buildPaymentProcessorContext = function (cartOrData) {
+        var _a;
+        var cart = "object" in cartOrData && cartOrData.object === "cart"
+            ? cartOrData
+            : cartOrData.cart;
+        var context = {};
+        // TODO: only to support legacy API. Once we are ready to break the API, the cartOrData will only support PaymentSessionInput
+        if ("object" in cartOrData && cartOrData.object === "cart") {
+            context.cart = {
+                context: cart.context,
+                shipping_address: cart.shipping_address,
+                id: cart.id,
+                email: cart.email,
+                shipping_methods: cart.shipping_methods,
+            };
+            context.amount = cart.total;
+            context.currency_code = (_a = cart.region) === null || _a === void 0 ? void 0 : _a.currency_code;
+            Object.assign(context, cart);
+        }
+        else {
+            var data = cartOrData;
+            context.cart = data.cart;
+            context.amount = data.amount;
+            context.currency_code = data.currency_code;
+            context.resource_id = data.resource_id;
+            Object.assign(context, cart);
+        }
+        return context;
+    };
+    /**
+     * Create or update a Payment session data.
+     * @param providerId
+     * @param data
+     * @protected
+     */
+    PaymentProviderService.prototype.saveSession = function (providerId, data) {
+        var _a, _b, _c, _d, _e, _f;
+        return __awaiter(this, void 0, void 0, function () {
+            var manager, sessionRepo, session, toCreate, created;
+            return __generator(this, function (_g) {
+                switch (_g.label) {
+                    case 0:
+                        manager = (_a = this.transactionManager_) !== null && _a !== void 0 ? _a : this.manager_;
+                        sessionRepo = manager.getCustomRepository(this.paymentSessionRepository_);
+                        if (!data.payment_session_id) return [3 /*break*/, 3];
+                        return [4 /*yield*/, this.retrieveSession(data.payment_session_id)];
+                    case 1:
+                        session = _g.sent();
+                        session.data = (_b = data.sessionData) !== null && _b !== void 0 ? _b : session.data;
+                        session.status = (_c = data.status) !== null && _c !== void 0 ? _c : session.status;
+                        session.amount = (_d = data.amount) !== null && _d !== void 0 ? _d : session.amount;
+                        session.is_initiated = (_e = data.isInitiated) !== null && _e !== void 0 ? _e : session.is_initiated;
+                        session.is_selected = (_f = data.isSelected) !== null && _f !== void 0 ? _f : session.is_selected;
+                        return [4 /*yield*/, sessionRepo.save(session)];
+                    case 2: return [2 /*return*/, _g.sent()];
+                    case 3:
+                        toCreate = {
+                            cart_id: data.cartId || null,
+                            provider_id: providerId,
+                            data: data.sessionData,
+                            is_selected: data.isSelected,
+                            is_initiated: data.isInitiated,
+                            status: data.status,
+                            amount: data.amount,
+                        };
+                        created = sessionRepo.create(toCreate);
+                        return [4 /*yield*/, sessionRepo.save(created)];
+                    case 4: return [2 /*return*/, _g.sent()];
+                }
+            });
+        });
+    };
+    /**
+     * Process the collected data. Can be used every time we need to process some collected data returned by the provider
+     * @param data
+     * @param paymentResponse
+     * @protected
+     */
+    PaymentProviderService.prototype.processUpdateRequestsData = function (data, paymentResponse) {
+        var _a, _b;
+        if (data === void 0) { data = {}; }
+        return __awaiter(this, void 0, void 0, function () {
+            var update_requests, manager;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0:
+                        update_requests = paymentResponse.update_requests;
+                        if (!update_requests) {
+                            return [2 /*return*/];
+                        }
+                        manager = (_a = this.transactionManager_) !== null && _a !== void 0 ? _a : this.manager_;
+                        if (!(update_requests.customer_metadata && ((_b = data.customer) === null || _b === void 0 ? void 0 : _b.id))) return [3 /*break*/, 2];
+                        return [4 /*yield*/, this.customerService_
+                                .withTransaction(manager)
+                                .update(data.customer.id, {
+                                metadata: update_requests.customer_metadata,
+                            })];
+                    case 1:
+                        _c.sent();
+                        _c.label = 2;
+                    case 2: return [2 /*return*/];
                 }
             });
         });

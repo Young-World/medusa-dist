@@ -7,9 +7,13 @@ import { PriceSelectionParams } from "../../../../types/price-selection";
  * description: "Retrieves a list of Product Variants"
  * parameters:
  *   - (query) ids {string} A comma separated list of Product Variant ids to filter by.
+ *   - (query) sales_channel_id {string} A sales channel id for result configuration.
  *   - (query) expand {string} A comma separated list of Product Variant relations to load.
  *   - (query) offset=0 {number} How many product variants to skip in the result.
  *   - (query) limit=100 {number} Maximum number of Product Variants to return.
+ *   - (query) cart_id {string} The id of the Cart to set prices based on.
+ *   - (query) region_id {string} The id of the Region to set prices based on.
+ *   - (query) currency_code {string} The currency code to use for price selection.
  *   - in: query
  *     name: title
  *     style: form
@@ -45,6 +49,9 @@ import { PriceSelectionParams } from "../../../../types/price-selection";
  *             gte:
  *               type: number
  *               description: filter by inventory quantity greater than or equal to this number
+ * x-codegen:
+ *   method: list
+ *   queryParams: StoreGetVariantsParams
  * x-codeSamples:
  *   - lang: Shell
  *     label: cURL
@@ -58,11 +65,7 @@ import { PriceSelectionParams } from "../../../../types/price-selection";
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             variants:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/product_variant"
+ *           $ref: "#/components/schemas/StoreVariantsListRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":
@@ -81,6 +84,7 @@ export declare class StoreGetVariantsParams extends PriceSelectionParams {
     offset?: number;
     expand?: string;
     ids?: string;
+    sales_channel_id?: string;
     id?: string | string[];
     title?: string | string[];
     inventory_quantity?: number | NumericalComparisonOperator;

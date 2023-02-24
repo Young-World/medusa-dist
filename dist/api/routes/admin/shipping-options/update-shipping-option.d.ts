@@ -10,44 +10,9 @@
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - requirements
- *         properties:
- *           name:
- *             description: "The name of the Shipping Option"
- *             type: string
- *           amount:
- *             description: "The amount to charge for the Shipping Option."
- *             type: integer
- *           admin_only:
- *             description: "If true, the option can be used for draft orders"
- *             type: boolean
- *           metadata:
- *             description: "An optional set of key-value pairs with additional information."
- *             type: object
- *           requirements:
- *             description: "The requirements that must be satisfied for the Shipping Option to be available."
- *             type: array
- *             items:
- *               required:
- *                 - type
- *                 - amount
- *               properties:
- *                 id:
- *                   description: The ID of the requirement
- *                   type: string
- *                 type:
- *                   description: The type of the requirement
- *                   type: string
- *                   enum:
- *                     - max_subtotal
- *                     - min_subtotal
- *                 amount:
- *                   description: The amount to compare with.
- *                   type: integer
- *           includes_tax:
- *             description: "[EXPERIMENTAL] Tax included in prices of shipping option"
- *             type: boolean
+ *         $ref: "#/components/schemas/AdminPostShippingOptionsOptionReq"
+ * x-codegen:
+ *   method: update
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -93,9 +58,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             shipping_option:
- *               $ref: "#/components/schemas/shipping_option"
+ *           $ref: "#/components/schemas/AdminShippingOptionsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -116,6 +79,49 @@ declare class OptionRequirement {
     type: string;
     amount: number;
 }
+/**
+ * @schema AdminPostShippingOptionsOptionReq
+ * type: object
+ * required:
+ *   - requirements
+ * properties:
+ *   name:
+ *     description: "The name of the Shipping Option"
+ *     type: string
+ *   amount:
+ *     description: "The amount to charge for the Shipping Option."
+ *     type: integer
+ *   admin_only:
+ *     description: "If true, the option can be used for draft orders"
+ *     type: boolean
+ *   metadata:
+ *     description: "An optional set of key-value pairs with additional information."
+ *     type: object
+ *   requirements:
+ *     description: "The requirements that must be satisfied for the Shipping Option to be available."
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - type
+ *         - amount
+ *       properties:
+ *         id:
+ *           description: The ID of the requirement
+ *           type: string
+ *         type:
+ *           description: The type of the requirement
+ *           type: string
+ *           enum:
+ *             - max_subtotal
+ *             - min_subtotal
+ *         amount:
+ *           description: The amount to compare with.
+ *           type: integer
+ *   includes_tax:
+ *     description: "[EXPERIMENTAL] Tax included in prices of shipping option"
+ *     type: boolean
+ */
 export declare class AdminPostShippingOptionsOptionReq {
     name: string;
     amount?: number;

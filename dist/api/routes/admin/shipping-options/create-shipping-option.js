@@ -65,68 +65,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - name
- *           - region_id
- *           - provider_id
- *           - data
- *           - price_type
- *         properties:
- *           name:
- *             description: "The name of the Shipping Option"
- *             type: string
- *           region_id:
- *             description: "The ID of the Region in which the Shipping Option will be available."
- *             type: string
- *           provider_id:
- *             description: "The ID of the Fulfillment Provider that handles the Shipping Option."
- *             type: string
- *           profile_id:
- *             description: "The ID of the Shipping Profile to add the Shipping Option to."
- *             type: number
- *           data:
- *             description: "The data needed for the Fulfillment Provider to handle shipping with this Shipping Option."
- *             type: object
- *           price_type:
- *             description: "The type of the Shipping Option price."
- *             type: string
- *             enum:
- *               - flat_rate
- *               - calculated
- *           amount:
- *             description: "The amount to charge for the Shipping Option."
- *             type: integer
- *           requirements:
- *             description: "The requirements that must be satisfied for the Shipping Option to be available."
- *             type: array
- *             items:
- *               required:
- *                 - type
- *                 - amount
- *               properties:
- *                 type:
- *                   description: The type of the requirement
- *                   type: string
- *                   enum:
- *                     - max_subtotal
- *                     - min_subtotal
- *                 amount:
- *                   description: The amount to compare with.
- *                   type: integer
- *           is_return:
- *             description: Whether the Shipping Option defines a return shipment.
- *             type: boolean
- *             default: false
- *           admin_only:
- *             description: If true, the option can be used for draft orders
- *             type: boolean
- *             default: false
- *           metadata:
- *             description: An optional set of key-value pairs with additional information.
- *             type: object
- *           includes_tax:
- *             description: "[EXPERIMENTAL] Tax included in prices of shipping option"
- *             type: boolean
+ *         $ref: "#/components/schemas/AdminPostShippingOptionsReq"
+ * x-codegen:
+ *   method: create
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -169,9 +110,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             shipping_option:
- *               $ref: "#/components/schemas/shipping_option"
+ *           $ref: "#/components/schemas/AdminShippingOptionsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -238,6 +177,73 @@ var OptionRequirement = /** @class */ (function () {
     ], OptionRequirement.prototype, "amount", void 0);
     return OptionRequirement;
 }());
+/**
+ * @schema AdminPostShippingOptionsReq
+ * type: object
+ * required:
+ *   - name
+ *   - region_id
+ *   - provider_id
+ *   - data
+ *   - price_type
+ * properties:
+ *   name:
+ *     description: "The name of the Shipping Option"
+ *     type: string
+ *   region_id:
+ *     description: "The ID of the Region in which the Shipping Option will be available."
+ *     type: string
+ *   provider_id:
+ *     description: "The ID of the Fulfillment Provider that handles the Shipping Option."
+ *     type: string
+ *   profile_id:
+ *     description: "The ID of the Shipping Profile to add the Shipping Option to."
+ *     type: number
+ *   data:
+ *     description: "The data needed for the Fulfillment Provider to handle shipping with this Shipping Option."
+ *     type: object
+ *   price_type:
+ *     description: "The type of the Shipping Option price."
+ *     type: string
+ *     enum:
+ *       - flat_rate
+ *       - calculated
+ *   amount:
+ *     description: "The amount to charge for the Shipping Option."
+ *     type: integer
+ *   requirements:
+ *     description: "The requirements that must be satisfied for the Shipping Option to be available."
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - type
+ *         - amount
+ *       properties:
+ *         type:
+ *           description: The type of the requirement
+ *           type: string
+ *           enum:
+ *             - max_subtotal
+ *             - min_subtotal
+ *         amount:
+ *           description: The amount to compare with.
+ *           type: integer
+ *   is_return:
+ *     description: Whether the Shipping Option defines a return shipment.
+ *     type: boolean
+ *     default: false
+ *   admin_only:
+ *     description: If true, the option can be used for draft orders
+ *     type: boolean
+ *     default: false
+ *   metadata:
+ *     description: An optional set of key-value pairs with additional information.
+ *     type: object
+ *   includes_tax:
+ *     description: "[EXPERIMENTAL] Tax included in prices of shipping option"
+ *     type: boolean
+ */
 var AdminPostShippingOptionsReq = /** @class */ (function () {
     function AdminPostShippingOptionsReq() {
         this.admin_only = false;

@@ -61,6 +61,22 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
 var __values = (this && this.__values) || function(o) {
     var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
     if (m) return m.call(o);
@@ -73,15 +89,15 @@ var __values = (this && this.__values) || function(o) {
     throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var typeorm_1 = require("typeorm");
 var medusa_core_utils_1 = require("medusa-core-utils");
-var utils_1 = require("../utils");
-var models_1 = require("../models");
+var typeorm_1 = require("typeorm");
 var interfaces_1 = require("../interfaces");
+var models_1 = require("../models");
+var utils_1 = require("../utils");
 var OrderEditService = /** @class */ (function (_super) {
     __extends(OrderEditService, _super);
     function OrderEditService(_a) {
-        var manager = _a.manager, orderEditRepository = _a.orderEditRepository, orderService = _a.orderService, lineItemService = _a.lineItemService, eventBusService = _a.eventBusService, totalsService = _a.totalsService, orderEditItemChangeService = _a.orderEditItemChangeService, lineItemAdjustmentService = _a.lineItemAdjustmentService, taxProviderService = _a.taxProviderService;
+        var manager = _a.manager, orderEditRepository = _a.orderEditRepository, orderService = _a.orderService, lineItemService = _a.lineItemService, eventBusService = _a.eventBusService, totalsService = _a.totalsService, newTotalsService = _a.newTotalsService, orderEditItemChangeService = _a.orderEditItemChangeService, lineItemAdjustmentService = _a.lineItemAdjustmentService, taxProviderService = _a.taxProviderService;
         var _this = 
         // eslint-disable-next-line prefer-rest-params
         _super.call(this, arguments[0]) || this;
@@ -91,6 +107,7 @@ var OrderEditService = /** @class */ (function (_super) {
         _this.lineItemService_ = lineItemService;
         _this.eventBusService_ = eventBusService;
         _this.totalsService_ = totalsService;
+        _this.newTotalsService_ = newTotalsService;
         _this.orderEditItemChangeService_ = orderEditItemChangeService;
         _this.lineItemAdjustmentService_ = lineItemAdjustmentService;
         _this.taxProviderService_ = taxProviderService;
@@ -104,6 +121,9 @@ var OrderEditService = /** @class */ (function (_super) {
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(orderEditId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"orderEditId\" must be defined");
+                        }
                         manager = (_a = this.transactionManager_) !== null && _a !== void 0 ? _a : this.manager_;
                         orderEditRepository = manager.getCustomRepository(this.orderEditRepository_);
                         query = (0, utils_1.buildQuery)({ id: orderEditId }, config);
@@ -118,76 +138,38 @@ var OrderEditService = /** @class */ (function (_super) {
             });
         });
     };
-    /**
-     * Compute and return the different totals from the order edit id
-     * @param orderEditId
-     */
-    OrderEditService.prototype.getTotals = function (orderEditId) {
+    OrderEditService.prototype.listAndCount = function (selector, config) {
         var _a;
         return __awaiter(this, void 0, void 0, function () {
-            var manager, _b, order_id, items, order, computedOrder, totalsServiceTx, shipping_total, _c, gift_card_total, gift_card_tax_total, discount_total, tax_total, subtotal, total, orderTotal, difference_due;
-            return __generator(this, function (_d) {
-                switch (_d.label) {
+            var manager, orderEditRepository, q, query;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         manager = (_a = this.transactionManager_) !== null && _a !== void 0 ? _a : this.manager_;
-                        return [4 /*yield*/, this.retrieve(orderEditId, {
-                                select: ["id", "order_id", "items"],
-                                relations: ["items", "items.tax_lines", "items.adjustments"],
-                            })];
+                        orderEditRepository = manager.getCustomRepository(this.orderEditRepository_);
+                        if ((0, utils_1.isString)(selector.q)) {
+                            q = selector.q;
+                            delete selector.q;
+                        }
+                        query = (0, utils_1.buildQuery)(selector, config);
+                        if (q) {
+                            query.where.internal_note = (0, typeorm_1.ILike)("%".concat(q, "%"));
+                        }
+                        return [4 /*yield*/, orderEditRepository.findAndCount(query)];
+                    case 1: return [2 /*return*/, _b.sent()];
+                }
+            });
+        });
+    };
+    OrderEditService.prototype.list = function (selector, config) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _a, orderEdits;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0: return [4 /*yield*/, this.listAndCount(selector, config)];
                     case 1:
-                        _b = _d.sent(), order_id = _b.order_id, items = _b.items;
-                        return [4 /*yield*/, this.orderService_
-                                .withTransaction(manager)
-                                .retrieve(order_id, {
-                                relations: [
-                                    "discounts",
-                                    "discounts.rule",
-                                    "gift_cards",
-                                    "region",
-                                    "items",
-                                    "items.tax_lines",
-                                    "items.adjustments",
-                                    "region.tax_rates",
-                                    "shipping_methods",
-                                    "shipping_methods.tax_lines",
-                                ],
-                            })];
-                    case 2:
-                        order = _d.sent();
-                        computedOrder = __assign(__assign({}, order), { items: items });
-                        totalsServiceTx = this.totalsService_.withTransaction(manager);
-                        return [4 /*yield*/, totalsServiceTx.getShippingTotal(computedOrder)];
-                    case 3:
-                        shipping_total = _d.sent();
-                        return [4 /*yield*/, totalsServiceTx.getGiftCardTotal(computedOrder)];
-                    case 4:
-                        _c = _d.sent(), gift_card_total = _c.total, gift_card_tax_total = _c.tax_total;
-                        return [4 /*yield*/, totalsServiceTx.getDiscountTotal(computedOrder)];
-                    case 5:
-                        discount_total = _d.sent();
-                        return [4 /*yield*/, totalsServiceTx.getTaxTotal(computedOrder)];
-                    case 6:
-                        tax_total = _d.sent();
-                        return [4 /*yield*/, totalsServiceTx.getSubtotal(computedOrder)];
-                    case 7:
-                        subtotal = _d.sent();
-                        return [4 /*yield*/, totalsServiceTx.getTotal(computedOrder)];
-                    case 8:
-                        total = _d.sent();
-                        return [4 /*yield*/, totalsServiceTx.getTotal(order)];
-                    case 9:
-                        orderTotal = _d.sent();
-                        difference_due = total - orderTotal;
-                        return [2 /*return*/, {
-                                shipping_total: shipping_total,
-                                gift_card_total: gift_card_total,
-                                gift_card_tax_total: gift_card_tax_total,
-                                discount_total: discount_total,
-                                tax_total: tax_total,
-                                subtotal: subtotal,
-                                total: total,
-                                difference_due: difference_due,
-                            }];
+                        _a = __read.apply(void 0, [_b.sent(), 1]), orderEdits = _a[0];
+                        return [2 /*return*/, orderEdits];
                 }
             });
         });
@@ -211,7 +193,7 @@ var OrderEditService = /** @class */ (function (_super) {
                                         orderEditToCreate = orderEditRepository.create({
                                             order_id: data.order_id,
                                             internal_note: data.internal_note,
-                                            created_by: context.loggedInUserId,
+                                            created_by: context.createdBy,
                                         });
                                         return [4 /*yield*/, orderEditRepository.save(orderEditToCreate)];
                                     case 2:
@@ -265,7 +247,7 @@ var OrderEditService = /** @class */ (function (_super) {
                                         try {
                                             for (_a = __values(Object.keys(data)), _b = _a.next(); !_b.done; _b = _a.next()) {
                                                 key = _b.value;
-                                                if ((0, utils_1.isDefined)(data[key])) {
+                                                if ((0, medusa_core_utils_1.isDefined)(data[key])) {
                                                     orderEdit[key] = data[key];
                                                 }
                                             }
@@ -337,12 +319,12 @@ var OrderEditService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var orderEditRepo, loggedInUserId, declinedReason, orderEdit, result;
+                            var orderEditRepo, declinedBy, declinedReason, orderEdit, result;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
                                         orderEditRepo = manager.getCustomRepository(this.orderEditRepository_);
-                                        loggedInUserId = context.loggedInUserId, declinedReason = context.declinedReason;
+                                        declinedBy = context.declinedBy, declinedReason = context.declinedReason;
                                         return [4 /*yield*/, this.retrieve(orderEditId)];
                                     case 1:
                                         orderEdit = _a.sent();
@@ -353,7 +335,7 @@ var OrderEditService = /** @class */ (function (_super) {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Cannot decline an order edit with status ".concat(orderEdit.status, "."));
                                         }
                                         orderEdit.declined_at = new Date();
-                                        orderEdit.declined_by = loggedInUserId;
+                                        orderEdit.declined_by = declinedBy;
                                         orderEdit.declined_reason = declinedReason;
                                         return [4 /*yield*/, orderEditRepo.save(orderEdit)];
                                     case 2:
@@ -388,7 +370,7 @@ var OrderEditService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var orderEdit, isOrderEditActive, lineItem, orderEditItemChangeServiceTx, change;
+                            var orderEdit, isOrderEditActive, lineItemServiceTx, lineItem, orderEditItemChangeServiceTx, change;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0: return [4 /*yield*/, this.retrieve(orderEditId, {
@@ -408,9 +390,8 @@ var OrderEditService = /** @class */ (function (_super) {
                                         if (!isOrderEditActive) {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Can not update an item on the order edit ".concat(orderEditId, " with the status ").concat(orderEdit.status));
                                         }
-                                        return [4 /*yield*/, this.lineItemService_
-                                                .withTransaction(manager)
-                                                .retrieve(itemId, {
+                                        lineItemServiceTx = this.lineItemService_.withTransaction(manager);
+                                        return [4 /*yield*/, lineItemServiceTx.retrieve(itemId, {
                                                 select: ["id", "order_edit_id", "original_item_id"],
                                             })];
                                     case 2:
@@ -434,14 +415,14 @@ var OrderEditService = /** @class */ (function (_super) {
                                     case 4:
                                         change = _a.sent();
                                         _a.label = 5;
-                                    case 5: return [4 /*yield*/, this.lineItemService_
-                                            .withTransaction(manager)
-                                            .update(change.line_item_id, {
+                                    case 5: return [4 /*yield*/, lineItemServiceTx.update(change.line_item_id, {
                                             quantity: data.quantity,
                                         })];
                                     case 6:
                                         _a.sent();
-                                        return [4 /*yield*/, this.refreshAdjustments(orderEditId)];
+                                        return [4 /*yield*/, this.refreshAdjustments(orderEditId, {
+                                                preserveCustomAdjustments: true,
+                                            })];
                                     case 7:
                                         _a.sent();
                                         return [2 /*return*/];
@@ -517,8 +498,9 @@ var OrderEditService = /** @class */ (function (_super) {
             });
         });
     };
-    OrderEditService.prototype.refreshAdjustments = function (orderEditId) {
+    OrderEditService.prototype.refreshAdjustments = function (orderEditId, config) {
         var _a;
+        if (config === void 0) { config = { preserveCustomAdjustments: false }; }
         return __awaiter(this, void 0, void 0, function () {
             var manager, lineItemAdjustmentServiceTx, orderEdit, clonedItemAdjustmentIds, localCart;
             return __generator(this, function (_b) {
@@ -548,7 +530,12 @@ var OrderEditService = /** @class */ (function (_super) {
                             var _a;
                             if ((_a = item.adjustments) === null || _a === void 0 ? void 0 : _a.length) {
                                 item.adjustments.forEach(function (adjustment) {
-                                    clonedItemAdjustmentIds.push(adjustment.id);
+                                    var preserveAdjustment = config.preserveCustomAdjustments
+                                        ? !!adjustment.discount_id
+                                        : true;
+                                    if (preserveAdjustment) {
+                                        clonedItemAdjustmentIds.push(adjustment.id);
+                                    }
                                 });
                             }
                         });
@@ -565,21 +552,58 @@ var OrderEditService = /** @class */ (function (_super) {
         });
     };
     OrderEditService.prototype.decorateTotals = function (orderEdit) {
+        var _a;
         return __awaiter(this, void 0, void 0, function () {
-            var totals;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getTotals(orderEdit.id)];
+            var manager, _b, order_id, items, orderServiceTx, order, computedOrder, _c, _d, _e;
+            return __generator(this, function (_f) {
+                switch (_f.label) {
+                    case 0:
+                        manager = (_a = this.transactionManager_) !== null && _a !== void 0 ? _a : this.manager_;
+                        return [4 /*yield*/, this.retrieve(orderEdit.id, {
+                                select: ["id", "order_id", "items"],
+                                relations: ["items", "items.tax_lines", "items.adjustments"],
+                            })];
                     case 1:
-                        totals = _a.sent();
-                        orderEdit.discount_total = totals.discount_total;
-                        orderEdit.gift_card_total = totals.gift_card_total;
-                        orderEdit.gift_card_tax_total = totals.gift_card_tax_total;
-                        orderEdit.shipping_total = totals.shipping_total;
-                        orderEdit.subtotal = totals.subtotal;
-                        orderEdit.tax_total = totals.tax_total;
-                        orderEdit.total = totals.total;
-                        orderEdit.difference_due = totals.difference_due;
+                        _b = _f.sent(), order_id = _b.order_id, items = _b.items;
+                        orderServiceTx = this.orderService_.withTransaction(manager);
+                        return [4 /*yield*/, orderServiceTx.retrieve(order_id, {
+                                relations: [
+                                    "discounts",
+                                    "discounts.rule",
+                                    "gift_cards",
+                                    "region",
+                                    "items",
+                                    "items.tax_lines",
+                                    "items.adjustments",
+                                    "region.tax_rates",
+                                    "shipping_methods",
+                                    "shipping_methods.tax_lines",
+                                ],
+                            })];
+                    case 2:
+                        order = _f.sent();
+                        computedOrder = __assign(__assign({}, order), { items: items });
+                        _d = (_c = Promise).all;
+                        return [4 /*yield*/, orderServiceTx.decorateTotals(computedOrder)];
+                    case 3:
+                        _e = [
+                            _f.sent()
+                        ];
+                        return [4 /*yield*/, orderServiceTx.decorateTotals(order)];
+                    case 4: return [4 /*yield*/, _d.apply(_c, [_e.concat([
+                                _f.sent()
+                            ])])];
+                    case 5:
+                        _f.sent();
+                        orderEdit.items = computedOrder.items;
+                        orderEdit.discount_total = computedOrder.discount_total;
+                        orderEdit.gift_card_total = computedOrder.gift_card_total;
+                        orderEdit.gift_card_tax_total = computedOrder.gift_card_tax_total;
+                        orderEdit.shipping_total = computedOrder.shipping_total;
+                        orderEdit.subtotal = computedOrder.subtotal;
+                        orderEdit.tax_total = computedOrder.tax_total;
+                        orderEdit.total = computedOrder.total;
+                        orderEdit.difference_due = computedOrder.total - order.total;
                         return [2 /*return*/, orderEdit];
                 }
             });
@@ -712,7 +736,7 @@ var OrderEditService = /** @class */ (function (_super) {
                                         orderEditRepo = manager.getCustomRepository(this.orderEditRepository_);
                                         return [4 /*yield*/, this.retrieve(orderEditId, {
                                                 relations: ["changes"],
-                                                select: ["id", "requested_at"],
+                                                select: ["id", "order_id", "requested_at"],
                                             })];
                                     case 1:
                                         orderEdit = _b.sent();
@@ -723,7 +747,7 @@ var OrderEditService = /** @class */ (function (_super) {
                                             return [2 /*return*/, orderEdit];
                                         }
                                         orderEdit.requested_at = new Date();
-                                        orderEdit.requested_by = context.loggedInUserId;
+                                        orderEdit.requested_by = context.requestedBy;
                                         return [4 /*yield*/, orderEditRepo.save(orderEdit)];
                                     case 2:
                                         orderEdit = _b.sent();
@@ -763,7 +787,7 @@ var OrderEditService = /** @class */ (function (_super) {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Cannot cancel order edit with status ".concat(orderEdit.status));
                                         }
                                         orderEdit.canceled_at = new Date();
-                                        orderEdit.canceled_by = context.loggedInUserId;
+                                        orderEdit.canceled_by = context.canceledBy;
                                         return [4 /*yield*/, orderEditRepository.save(orderEdit)];
                                     case 2:
                                         saved = _a.sent();
@@ -810,7 +834,7 @@ var OrderEditService = /** @class */ (function (_super) {
                                     case 2:
                                         _a.sent();
                                         orderEdit.confirmed_at = new Date();
-                                        orderEdit.confirmed_by = context.loggedInUserId;
+                                        orderEdit.confirmed_by = context.confirmedBy;
                                         return [4 /*yield*/, orderEditRepository.save(orderEdit)];
                                     case 3:
                                         orderEdit = _a.sent();
@@ -853,7 +877,7 @@ var OrderEditService = /** @class */ (function (_super) {
     OrderEditService.prototype.deleteClonedItems = function (orderEditId) {
         var _a;
         return __awaiter(this, void 0, void 0, function () {
-            var manager, lineItemServiceTx, lineItemAdjustmentServiceTx, taxProviderServiceTs, clonedLineItems, clonedItemIds;
+            var manager, lineItemServiceTx, lineItemAdjustmentServiceTx, taxProviderServiceTs, clonedLineItems, clonedItemIds, orderEdit;
             var _this = this;
             return __generator(this, function (_b) {
                 switch (_b.label) {
@@ -871,6 +895,15 @@ var OrderEditService = /** @class */ (function (_super) {
                     case 1:
                         clonedLineItems = _b.sent();
                         clonedItemIds = clonedLineItems.map(function (item) { return item.id; });
+                        return [4 /*yield*/, this.retrieve(orderEditId, {
+                                select: ["id", "changes"],
+                                relations: ["changes"],
+                            })];
+                    case 2:
+                        orderEdit = _b.sent();
+                        return [4 /*yield*/, this.orderEditItemChangeService_.delete(orderEdit.changes.map(function (change) { return change.id; }))];
+                    case 3:
+                        _b.sent();
                         return [4 /*yield*/, Promise.all([
                                 taxProviderServiceTs.clearLineItemsTaxLines(clonedItemIds),
                                 clonedItemIds.map(function (id) { return __awaiter(_this, void 0, void 0, function () {
@@ -884,7 +917,7 @@ var OrderEditService = /** @class */ (function (_super) {
                                     });
                                 }); }),
                             ].flat())];
-                    case 2:
+                    case 4:
                         _b.sent();
                         return [4 /*yield*/, Promise.all(clonedItemIds.map(function (id) { return __awaiter(_this, void 0, void 0, function () {
                                 return __generator(this, function (_a) {
@@ -894,7 +927,7 @@ var OrderEditService = /** @class */ (function (_super) {
                                     }
                                 });
                             }); }))];
-                    case 3:
+                    case 5:
                         _b.sent();
                         return [2 /*return*/];
                 }

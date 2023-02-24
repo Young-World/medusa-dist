@@ -62,19 +62,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - customer_ids
- *         properties:
- *           customer_ids:
- *             description: "The ids of the customers to remove"
- *             type: array
- *             items:
- *               required:
- *                 - id
- *               properties:
- *                 id:
- *                   description: ID of the customer
- *                   type: string
+ *         $ref: "#/components/schemas/AdminDeleteCustomerGroupsGroupCustomerBatchReq"
+ * x-codegen:
+ *   method: removeCustomers
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -116,9 +106,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             customer_group:
- *               $ref: "#/components/schemas/customer_group"
+ *           $ref: "#/components/schemas/AdminCustomerGroupsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -163,6 +151,24 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminDeleteCustomerGroupsGroupCustomerBatchReq
+ * type: object
+ * required:
+ *   - customer_ids
+ * properties:
+ *   customer_ids:
+ *     description: "The ids of the customers to remove"
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - id
+ *       properties:
+ *         id:
+ *           description: ID of the customer
+ *           type: string
+ */
 var AdminDeleteCustomerGroupsGroupCustomerBatchReq = /** @class */ (function () {
     function AdminDeleteCustomerGroupsGroupCustomerBatchReq() {
     }

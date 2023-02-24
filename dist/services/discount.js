@@ -121,7 +121,6 @@ var tax_inclusive_pricing_1 = __importDefault(require("../loaders/feature-flags/
 var discount_rule_1 = require("../models/discount-rule");
 var utils_1 = require("../utils");
 var date_helpers_1 = require("../utils/date-helpers");
-var exception_formatter_1 = require("../utils/exception-formatter");
 /**
  * Provides layer to manipulate discounts.
  * @implements {BaseService}
@@ -129,7 +128,7 @@ var exception_formatter_1 = require("../utils/exception-formatter");
 var DiscountService = /** @class */ (function (_super) {
     __extends(DiscountService, _super);
     function DiscountService(_a) {
-        var manager = _a.manager, discountRepository = _a.discountRepository, discountRuleRepository = _a.discountRuleRepository, giftCardRepository = _a.giftCardRepository, discountConditionRepository = _a.discountConditionRepository, discountConditionService = _a.discountConditionService, totalsService = _a.totalsService, productService = _a.productService, regionService = _a.regionService, customerService = _a.customerService, eventBusService = _a.eventBusService, featureFlagRouter = _a.featureFlagRouter;
+        var manager = _a.manager, discountRepository = _a.discountRepository, discountRuleRepository = _a.discountRuleRepository, giftCardRepository = _a.giftCardRepository, discountConditionRepository = _a.discountConditionRepository, discountConditionService = _a.discountConditionService, totalsService = _a.totalsService, newTotalsService = _a.newTotalsService, productService = _a.productService, regionService = _a.regionService, customerService = _a.customerService, eventBusService = _a.eventBusService, featureFlagRouter = _a.featureFlagRouter;
         var _this = 
         // eslint-disable-next-line prefer-rest-params
         _super.call(this, arguments[0]) || this;
@@ -140,6 +139,7 @@ var DiscountService = /** @class */ (function (_super) {
         _this.discountConditionRepository_ = discountConditionRepository;
         _this.discountConditionService_ = discountConditionService;
         _this.totalsService_ = totalsService;
+        _this.newTotalsService_ = newTotalsService;
         _this.productService_ = productService;
         _this.regionService_ = regionService;
         _this.customerService_ = customerService;
@@ -234,11 +234,11 @@ var DiscountService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var discountRepo, ruleRepo, conditions, ruleToCreate, validatedRule, _a, discountRule, createdDiscountRule, created, result_1, error_1;
+                            var discountRepo, ruleRepo, conditions, ruleToCreate, validatedRule, _a, discountRule, createdDiscountRule, created, result;
                             var _this = this;
-                            var _b, _c;
-                            return __generator(this, function (_d) {
-                                switch (_d.label) {
+                            var _b, _c, _d;
+                            return __generator(this, function (_e) {
+                                switch (_e.label) {
                                     case 0:
                                         discountRepo = manager.getCustomRepository(this.discountRepository_);
                                         ruleRepo = manager.getCustomRepository(this.discountRuleRepository_);
@@ -250,48 +250,44 @@ var DiscountService = /** @class */ (function (_super) {
                                             ((_c = discount === null || discount === void 0 ? void 0 : discount.rule) === null || _c === void 0 ? void 0 : _c.type) === "fixed") {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Fixed discounts can have one region");
                                         }
-                                        _d.label = 1;
-                                    case 1:
-                                        _d.trys.push([1, 8, , 9]);
-                                        if (!discount.regions) return [3 /*break*/, 3];
+                                        if (!discount.regions) return [3 /*break*/, 2];
                                         _a = discount;
                                         return [4 /*yield*/, Promise.all(discount.regions.map(function (regionId) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
                                                 return [2 /*return*/, this.regionService_.withTransaction(manager).retrieve(regionId)];
                                             }); }); }))];
+                                    case 1:
+                                        _a.regions = (_e.sent());
+                                        _e.label = 2;
                                     case 2:
-                                        _a.regions = (_d.sent());
-                                        _d.label = 3;
-                                    case 3:
+                                        if (!((_d = discount.regions) === null || _d === void 0 ? void 0 : _d.length)) {
+                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Discount must have atleast 1 region");
+                                        }
                                         discountRule = ruleRepo.create(validatedRule);
                                         return [4 /*yield*/, ruleRepo.save(discountRule)];
-                                    case 4:
-                                        createdDiscountRule = _d.sent();
+                                    case 3:
+                                        createdDiscountRule = _e.sent();
                                         created = discountRepo.create(discount);
                                         created.rule = createdDiscountRule;
                                         return [4 /*yield*/, discountRepo.save(created)];
-                                    case 5:
-                                        result_1 = _d.sent();
-                                        if (!(conditions === null || conditions === void 0 ? void 0 : conditions.length)) return [3 /*break*/, 7];
+                                    case 4:
+                                        result = _e.sent();
+                                        if (!(conditions === null || conditions === void 0 ? void 0 : conditions.length)) return [3 /*break*/, 6];
                                         return [4 /*yield*/, Promise.all(conditions.map(function (cond) { return __awaiter(_this, void 0, void 0, function () {
                                                 return __generator(this, function (_a) {
                                                     switch (_a.label) {
                                                         case 0: return [4 /*yield*/, this.discountConditionService_
                                                                 .withTransaction(manager)
-                                                                .upsertCondition(__assign({ rule_id: result_1.rule_id }, cond))];
+                                                                .upsertCondition(__assign({ rule_id: result.rule_id }, cond))];
                                                         case 1:
                                                             _a.sent();
                                                             return [2 /*return*/];
                                                     }
                                                 });
                                             }); }))];
-                                    case 6:
-                                        _d.sent();
-                                        _d.label = 7;
-                                    case 7: return [2 /*return*/, result_1];
-                                    case 8:
-                                        error_1 = _d.sent();
-                                        throw (0, exception_formatter_1.formatException)(error_1);
-                                    case 9: return [2 /*return*/];
+                                    case 5:
+                                        _e.sent();
+                                        _e.label = 6;
+                                    case 6: return [2 /*return*/, result];
                                 }
                             });
                         }); })];
@@ -313,6 +309,9 @@ var DiscountService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(discountId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"discountId\" must be defined");
+                        }
                         manager = this.manager_;
                         discountRepo = manager.getCustomRepository(this.discountRepository_);
                         query = (0, utils_1.buildQuery)({ id: discountId }, config);
@@ -320,7 +319,7 @@ var DiscountService = /** @class */ (function (_super) {
                     case 1:
                         discount = _a.sent();
                         if (!discount) {
-                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Discount with ".concat(discountId, " was not found"));
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Discount with id ".concat(discountId, " was not found"));
                         }
                         return [2 /*return*/, discount];
                 }
@@ -328,10 +327,10 @@ var DiscountService = /** @class */ (function (_super) {
         });
     };
     /**
-     * Gets a discount by discount code.
-     * @param {string} discountCode - discount code of discount to retrieve
-     * @param {Object} config - the config object containing query settings
-     * @return {Promise<Discount>} the discount document
+     * Gets the discount by discount code.
+     * @param discountCode - discount code of discount to retrieve
+     * @param config - the config object containing query settings
+     * @return the discount
      */
     DiscountService.prototype.retrieveByCode = function (discountCode, config) {
         if (config === void 0) { config = {}; }
@@ -343,20 +342,44 @@ var DiscountService = /** @class */ (function (_super) {
                         manager = this.manager_;
                         discountRepo = manager.getCustomRepository(this.discountRepository_);
                         normalizedCode = discountCode.toUpperCase().trim();
-                        query = (0, utils_1.buildQuery)({ code: normalizedCode, is_dynamic: false }, config);
+                        query = (0, utils_1.buildQuery)({ code: normalizedCode }, config);
                         return [4 /*yield*/, discountRepo.findOne(query)];
                     case 1:
                         discount = _a.sent();
-                        if (!!discount) return [3 /*break*/, 3];
-                        query = (0, utils_1.buildQuery)({ code: normalizedCode, is_dynamic: true }, config);
-                        return [4 /*yield*/, discountRepo.findOne(query)];
-                    case 2:
-                        discount = _a.sent();
                         if (!discount) {
-                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Discount with code ".concat(discountCode, " was not found"));
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Discounts with code ".concat(discountCode, " was not found"));
                         }
-                        _a.label = 3;
-                    case 3: return [2 /*return*/, discount];
+                        return [2 /*return*/, discount];
+                }
+            });
+        });
+    };
+    /**
+     * List all the discounts corresponding to the given codes
+     * @param discountCodes - discount codes of discounts to retrieve
+     * @param config - the config object containing query settings
+     * @return the discounts
+     */
+    DiscountService.prototype.listByCodes = function (discountCodes, config) {
+        if (config === void 0) { config = {}; }
+        return __awaiter(this, void 0, void 0, function () {
+            var manager, discountRepo, normalizedCodes, query, discounts;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        manager = this.manager_;
+                        discountRepo = manager.getCustomRepository(this.discountRepository_);
+                        normalizedCodes = discountCodes.map(function (code) {
+                            return code.toUpperCase().trim();
+                        });
+                        query = (0, utils_1.buildQuery)({ code: (0, typeorm_1.In)(normalizedCodes) }, config);
+                        return [4 /*yield*/, discountRepo.find(query)];
+                    case 1:
+                        discounts = _a.sent();
+                        if ((discounts === null || discounts === void 0 ? void 0 : discounts.length) !== discountCodes.length) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Discounts with code [".concat(normalizedCodes.join(", "), "] was not found"));
+                        }
+                        return [2 /*return*/, discounts];
                 }
             });
         });
@@ -694,13 +717,13 @@ var DiscountService = /** @class */ (function (_super) {
             });
         });
     };
-    DiscountService.prototype.calculateDiscountForLineItem = function (discountId, lineItem, cart) {
+    DiscountService.prototype.calculateDiscountForLineItem = function (discountId, lineItem, calculationContextData) {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.atomicPhase_(function () { return __awaiter(_this, void 0, void 0, function () {
-                            var adjustment, discount, _a, type, value, allocation, fullItemPrice, lineItemTotals, subtotal, nominator, totalItemPercentage;
+                    case 0: return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
+                            var adjustment, discount, _a, type, value, allocation, calculationContext, fullItemPrice, lineItemTotals, discountedItems, totals, subtotal, nominator, totalItemPercentage;
                             return __generator(this, function (_b) {
                                 switch (_b.label) {
                                     case 0:
@@ -712,37 +735,51 @@ var DiscountService = /** @class */ (function (_super) {
                                     case 1:
                                         discount = _b.sent();
                                         _a = discount.rule, type = _a.type, value = _a.value, allocation = _a.allocation;
-                                        fullItemPrice = lineItem.unit_price * lineItem.quantity;
-                                        if (!(this.featureFlagRouter_.isFeatureEnabled(tax_inclusive_pricing_1.default.key) &&
-                                            lineItem.includes_tax)) return [3 /*break*/, 3];
-                                        return [4 /*yield*/, this.totalsService_.getLineItemTotals(lineItem, cart, {
-                                                include_tax: true,
-                                                exclude_gift_cards: true,
+                                        return [4 /*yield*/, this.totalsService_
+                                                .withTransaction(transactionManager)
+                                                .getCalculationContext(calculationContextData, {
+                                                exclude_shipping: true,
                                             })];
                                     case 2:
-                                        lineItemTotals = _b.sent();
-                                        fullItemPrice = lineItemTotals.subtotal;
-                                        _b.label = 3;
-                                    case 3:
-                                        if (!(type === discount_rule_1.DiscountRuleType.PERCENTAGE)) return [3 /*break*/, 4];
-                                        adjustment = Math.round((fullItemPrice / 100) * value);
-                                        return [3 /*break*/, 7];
-                                    case 4:
-                                        if (!(type === discount_rule_1.DiscountRuleType.FIXED &&
-                                            allocation === discount_rule_1.AllocationType.TOTAL)) return [3 /*break*/, 6];
-                                        return [4 /*yield*/, this.totalsService_.getSubtotal(cart, {
-                                                excludeNonDiscounts: true,
+                                        calculationContext = _b.sent();
+                                        fullItemPrice = lineItem.unit_price * lineItem.quantity;
+                                        if (!(this.featureFlagRouter_.isFeatureEnabled(tax_inclusive_pricing_1.default.key) &&
+                                            lineItem.includes_tax)) return [3 /*break*/, 4];
+                                        return [4 /*yield*/, this.newTotalsService_
+                                                .withTransaction(transactionManager)
+                                                .getLineItemTotals([lineItem], {
+                                                includeTax: true,
+                                                calculationContext: calculationContext,
                                             })];
+                                    case 3:
+                                        lineItemTotals = _b.sent();
+                                        fullItemPrice = lineItemTotals[lineItem.id].subtotal;
+                                        _b.label = 4;
+                                    case 4:
+                                        if (!(type === discount_rule_1.DiscountRuleType.PERCENTAGE)) return [3 /*break*/, 5];
+                                        adjustment = Math.round((fullItemPrice / 100) * value);
+                                        return [3 /*break*/, 8];
                                     case 5:
-                                        subtotal = _b.sent();
+                                        if (!(type === discount_rule_1.DiscountRuleType.FIXED &&
+                                            allocation === discount_rule_1.AllocationType.TOTAL)) return [3 /*break*/, 7];
+                                        discountedItems = calculationContextData.items.filter(function (item) { return item.allow_discounts; });
+                                        return [4 /*yield*/, this.newTotalsService_.getLineItemTotals(discountedItems, {
+                                                calculationContext: calculationContext,
+                                            })];
+                                    case 6:
+                                        totals = _b.sent();
+                                        subtotal = Object.values(totals).reduce(function (subtotal, total) {
+                                            subtotal += total.subtotal;
+                                            return subtotal;
+                                        }, 0);
                                         nominator = Math.min(value, subtotal);
                                         totalItemPercentage = fullItemPrice / subtotal;
                                         adjustment = Math.round(nominator * totalItemPercentage);
-                                        return [3 /*break*/, 7];
-                                    case 6:
+                                        return [3 /*break*/, 8];
+                                    case 7:
                                         adjustment = value * lineItem.quantity;
-                                        _b.label = 7;
-                                    case 7: 
+                                        _b.label = 8;
+                                    case 8: 
                                     // if the amount of the discount exceeds the total price of the item,
                                     // we return the total item price, else the fixed amount
                                     return [2 /*return*/, adjustment >= fullItemPrice ? fullItemPrice : adjustment];
@@ -756,44 +793,57 @@ var DiscountService = /** @class */ (function (_super) {
     };
     DiscountService.prototype.validateDiscountForCartOrThrow = function (cart, discount) {
         return __awaiter(this, void 0, void 0, function () {
+            var discounts;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.atomicPhase_(function () { return __awaiter(_this, void 0, void 0, function () {
-                            var isValidForRegion, canApplyForCustomer;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0:
-                                        if (this.hasReachedLimit(discount)) {
-                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Discount has been used maximum allowed times");
-                                        }
-                                        if (this.hasNotStarted(discount)) {
-                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Discount is not valid yet");
-                                        }
-                                        if (this.hasExpired(discount)) {
-                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Discount is expired");
-                                        }
-                                        if (this.isDisabled(discount)) {
-                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "The discount code is disabled");
-                                        }
-                                        return [4 /*yield*/, this.isValidForRegion(discount, cart.region_id)];
-                                    case 1:
-                                        isValidForRegion = _a.sent();
-                                        if (!isValidForRegion) {
-                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "The discount is not available in current region");
-                                        }
-                                        if (!cart.customer_id) return [3 /*break*/, 3];
-                                        return [4 /*yield*/, this.canApplyForCustomer(discount.rule.id, cart.customer_id)];
-                                    case 2:
-                                        canApplyForCustomer = _a.sent();
-                                        if (!canApplyForCustomer) {
-                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Discount is not valid for customer");
-                                        }
-                                        _a.label = 3;
-                                    case 3: return [2 /*return*/];
-                                }
-                            });
-                        }); })];
+                    case 0:
+                        discounts = Array.isArray(discount) ? discount : [discount];
+                        return [4 /*yield*/, this.atomicPhase_(function () { return __awaiter(_this, void 0, void 0, function () {
+                                var _this = this;
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
+                                        case 0: return [4 /*yield*/, Promise.all(discounts.map(function (disc) { return __awaiter(_this, void 0, void 0, function () {
+                                                var isValidForRegion, canApplyForCustomer;
+                                                return __generator(this, function (_a) {
+                                                    switch (_a.label) {
+                                                        case 0:
+                                                            if (this.hasReachedLimit(disc)) {
+                                                                throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Discount ".concat(disc.code, " has been used maximum allowed times"));
+                                                            }
+                                                            if (this.hasNotStarted(disc)) {
+                                                                throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Discount ".concat(disc.code, " is not valid yet"));
+                                                            }
+                                                            if (this.hasExpired(disc)) {
+                                                                throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Discount ".concat(disc.code, " is expired"));
+                                                            }
+                                                            if (this.isDisabled(disc)) {
+                                                                throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "The discount code ".concat(disc.code, " is disabled"));
+                                                            }
+                                                            return [4 /*yield*/, this.isValidForRegion(disc, cart.region_id)];
+                                                        case 1:
+                                                            isValidForRegion = _a.sent();
+                                                            if (!isValidForRegion) {
+                                                                throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "The discount is not available in current region");
+                                                            }
+                                                            if (!cart.customer_id) return [3 /*break*/, 3];
+                                                            return [4 /*yield*/, this.canApplyForCustomer(disc.rule.id, cart.customer_id)];
+                                                        case 2:
+                                                            canApplyForCustomer = _a.sent();
+                                                            if (!canApplyForCustomer) {
+                                                                throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Discount ".concat(disc.code, " is not valid for customer"));
+                                                            }
+                                                            _a.label = 3;
+                                                        case 3: return [2 /*return*/];
+                                                    }
+                                                });
+                                            }); }))];
+                                        case 1:
+                                            _a.sent();
+                                            return [2 /*return*/];
+                                    }
+                                });
+                            }); })];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
@@ -822,7 +872,7 @@ var DiscountService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function () { return __awaiter(_this, void 0, void 0, function () {
-                            var regions, parent;
+                            var regions, parent_1;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
@@ -832,8 +882,8 @@ var DiscountService = /** @class */ (function (_super) {
                                                 relations: ["rule", "regions"],
                                             })];
                                     case 1:
-                                        parent = _a.sent();
-                                        regions = parent.regions;
+                                        parent_1 = _a.sent();
+                                        regions = parent_1.regions;
                                         _a.label = 2;
                                     case 2: return [2 /*return*/, regions.find(function (_a) {
                                             var id = _a.id;

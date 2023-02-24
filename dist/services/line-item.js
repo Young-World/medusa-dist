@@ -72,6 +72,17 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
 var __read = (this && this.__read) || function (o, n) {
     var m = typeof Symbol === "function" && o[Symbol.iterator];
     if (!m) return o;
@@ -94,15 +105,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var medusa_core_utils_1 = require("medusa-core-utils");
 var typeorm_1 = require("typeorm");
-var order_editing_1 = __importDefault(require("../loaders/feature-flags/order-editing"));
+var interfaces_1 = require("../interfaces");
 var tax_inclusive_pricing_1 = __importDefault(require("../loaders/feature-flags/tax-inclusive-pricing"));
 var utils_1 = require("../utils");
-var interfaces_1 = require("../interfaces");
 var LineItemService = /** @class */ (function (_super) {
     __extends(LineItemService, _super);
     function LineItemService(_a) {
         var manager = _a.manager, lineItemRepository = _a.lineItemRepository, lineItemTaxLineRepository = _a.lineItemTaxLineRepository, productVariantService = _a.productVariantService, productService = _a.productService, pricingService = _a.pricingService, regionService = _a.regionService, cartRepository = _a.cartRepository, lineItemAdjustmentService = _a.lineItemAdjustmentService, taxProviderService = _a.taxProviderService, featureFlagRouter = _a.featureFlagRouter;
-        var _this = _super.call(this, arguments[0]) || this;
+        var _this = 
+        // eslint-disable-next-line prefer-rest-params
+        _super.call(this, arguments[0]) || this;
         _this.manager_ = manager;
         _this.lineItemRepository_ = lineItemRepository;
         _this.itemTaxLineRepo_ = lineItemTaxLineRepository;
@@ -195,6 +207,7 @@ var LineItemService = /** @class */ (function (_super) {
                                                         unit_price: -1 * lineItem.unit_price,
                                                         quantity: lineItem.return_item.quantity,
                                                         allow_discounts: lineItem.allow_discounts,
+                                                        includes_tax: !!lineItem.includes_tax,
                                                         tax_lines: lineItem.tax_lines.map(function (taxLine) {
                                                             return itemTaxLineRepo.create({
                                                                 name: taxLine.name,
@@ -227,82 +240,160 @@ var LineItemService = /** @class */ (function (_super) {
             });
         });
     };
-    LineItemService.prototype.generate = function (variantId, regionId, quantity, context) {
+    /**
+     * Generate a single or multiple line item without persisting the data into the db
+     * @param variantIdOrData
+     * @param regionIdOrContext
+     * @param quantity
+     * @param context
+     */
+    LineItemService.prototype.generate = function (variantIdOrData, regionIdOrContext, quantity, context) {
         if (context === void 0) { context = {}; }
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                            var _a, variant, region, unit_price, unitPriceIncludesTax, shouldMerge, variantPricing, rawLineItem, lineItemRepo, lineItem, adjustments;
-                            var _b;
+                            var data, resolvedContext, regionId, resolvedData, variants, variantsMap, variantIdsToCalculatePricingFor, variants_1, variants_1_1, variant, variantsPricing, generatedItems, resolvedData_1, resolvedData_1_1, variantData, variant, variantPricing, lineItem, adjustments, e_1_1;
+                            var e_2, _a, e_1, _b;
                             return __generator(this, function (_c) {
                                 switch (_c.label) {
-                                    case 0: return [4 /*yield*/, Promise.all([
-                                            this.productVariantService_
-                                                .withTransaction(transactionManager)
-                                                .retrieve(variantId, {
+                                    case 0:
+                                        this.validateGenerateArguments(variantIdOrData, regionIdOrContext, quantity);
+                                        data = (0, utils_1.isString)(variantIdOrData)
+                                            ? {
+                                                variantId: variantIdOrData,
+                                                quantity: quantity,
+                                            }
+                                            : variantIdOrData;
+                                        resolvedContext = (0, utils_1.isString)(variantIdOrData)
+                                            ? context
+                                            : regionIdOrContext;
+                                        regionId = ((0, utils_1.isString)(variantIdOrData)
+                                            ? regionIdOrContext
+                                            : resolvedContext.region_id);
+                                        resolvedData = (Array.isArray(data) ? data : [data]);
+                                        return [4 /*yield*/, this.productVariantService_.list({
+                                                id: resolvedData.map(function (d) { return d.variantId; }),
+                                            }, {
                                                 relations: ["product"],
-                                            }),
-                                            this.regionService_
-                                                .withTransaction(transactionManager)
-                                                .retrieve(regionId),
-                                        ])];
+                                            })];
                                     case 1:
-                                        _a = __read.apply(void 0, [_c.sent(), 2]), variant = _a[0], region = _a[1];
-                                        unit_price = Number(context.unit_price) < 0 ? 0 : context.unit_price;
-                                        unitPriceIncludesTax = false;
-                                        shouldMerge = false;
-                                        if (!(context.unit_price === undefined || context.unit_price === null)) return [3 /*break*/, 3];
-                                        shouldMerge = true;
+                                        variants = _c.sent();
+                                        variantsMap = new Map();
+                                        variantIdsToCalculatePricingFor = [];
+                                        try {
+                                            for (variants_1 = __values(variants), variants_1_1 = variants_1.next(); !variants_1_1.done; variants_1_1 = variants_1.next()) {
+                                                variant = variants_1_1.value;
+                                                variantsMap.set(variant.id, variant);
+                                                if (resolvedContext.unit_price == null) {
+                                                    variantIdsToCalculatePricingFor.push(variant.id);
+                                                }
+                                            }
+                                        }
+                                        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                                        finally {
+                                            try {
+                                                if (variants_1_1 && !variants_1_1.done && (_a = variants_1.return)) _a.call(variants_1);
+                                            }
+                                            finally { if (e_2) throw e_2.error; }
+                                        }
                                         return [4 /*yield*/, this.pricingService_
                                                 .withTransaction(transactionManager)
-                                                .getProductVariantPricingById(variant.id, {
-                                                region_id: region.id,
+                                                .getProductVariantsPricing(variantIdsToCalculatePricingFor, {
+                                                region_id: regionId,
                                                 quantity: quantity,
                                                 customer_id: context === null || context === void 0 ? void 0 : context.customer_id,
                                                 include_discount_prices: true,
                                             })];
                                     case 2:
-                                        variantPricing = _c.sent();
-                                        unitPriceIncludesTax = !!variantPricing.calculated_price_includes_tax;
-                                        unit_price = (_b = variantPricing.calculated_price) !== null && _b !== void 0 ? _b : undefined;
+                                        variantsPricing = _c.sent();
+                                        generatedItems = [];
                                         _c.label = 3;
                                     case 3:
-                                        rawLineItem = {
-                                            unit_price: unit_price,
-                                            title: variant.product.title,
-                                            description: variant.title,
-                                            thumbnail: variant.product.thumbnail,
-                                            variant_id: variant.id,
-                                            quantity: quantity || 1,
-                                            allow_discounts: variant.product.discountable,
-                                            is_giftcard: variant.product.is_giftcard,
-                                            metadata: (context === null || context === void 0 ? void 0 : context.metadata) || {},
-                                            should_merge: shouldMerge,
-                                        };
-                                        if (this.featureFlagRouter_.isFeatureEnabled(tax_inclusive_pricing_1.default.key)) {
-                                            rawLineItem.includes_tax = unitPriceIncludesTax;
-                                        }
-                                        if (this.featureFlagRouter_.isFeatureEnabled(order_editing_1.default.key)) {
-                                            rawLineItem.order_edit_id = context.order_edit_id || null;
-                                        }
-                                        lineItemRepo = transactionManager.getCustomRepository(this.lineItemRepository_);
-                                        lineItem = lineItemRepo.create(rawLineItem);
-                                        if (!context.cart) return [3 /*break*/, 5];
+                                        _c.trys.push([3, 10, 11, 12]);
+                                        resolvedData_1 = __values(resolvedData), resolvedData_1_1 = resolvedData_1.next();
+                                        _c.label = 4;
+                                    case 4:
+                                        if (!!resolvedData_1_1.done) return [3 /*break*/, 9];
+                                        variantData = resolvedData_1_1.value;
+                                        variant = variantsMap.get(variantData.variantId);
+                                        variantPricing = variantsPricing[variantData.variantId];
+                                        return [4 /*yield*/, this.generateLineItem(variant, variantData.quantity, __assign(__assign({}, resolvedContext), { variantPricing: variantPricing }))];
+                                    case 5:
+                                        lineItem = _c.sent();
+                                        if (!resolvedContext.cart) return [3 /*break*/, 7];
                                         return [4 /*yield*/, this.lineItemAdjustmentService_
                                                 .withTransaction(transactionManager)
-                                                .generateAdjustments(context.cart, lineItem, { variant: variant })];
-                                    case 4:
+                                                .generateAdjustments(resolvedContext.cart, lineItem, { variant: variant })];
+                                    case 6:
                                         adjustments = _c.sent();
-                                        lineItem.adjustments = adjustments;
-                                        _c.label = 5;
-                                    case 5: return [2 /*return*/, lineItem];
+                                        lineItem.adjustments =
+                                            adjustments;
+                                        _c.label = 7;
+                                    case 7:
+                                        generatedItems.push(lineItem);
+                                        _c.label = 8;
+                                    case 8:
+                                        resolvedData_1_1 = resolvedData_1.next();
+                                        return [3 /*break*/, 4];
+                                    case 9: return [3 /*break*/, 12];
+                                    case 10:
+                                        e_1_1 = _c.sent();
+                                        e_1 = { error: e_1_1 };
+                                        return [3 /*break*/, 12];
+                                    case 11:
+                                        try {
+                                            if (resolvedData_1_1 && !resolvedData_1_1.done && (_b = resolvedData_1.return)) _b.call(resolvedData_1);
+                                        }
+                                        finally { if (e_1) throw e_1.error; }
+                                        return [7 /*endfinally*/];
+                                    case 12: return [2 /*return*/, (Array.isArray(data)
+                                            ? generatedItems
+                                            : generatedItems[0])];
                                 }
                             });
                         }); })];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
+            });
+        });
+    };
+    LineItemService.prototype.generateLineItem = function (variant, quantity, context) {
+        var _a, _b, _c, _d;
+        return __awaiter(this, void 0, void 0, function () {
+            var transactionManager, unit_price, unitPriceIncludesTax, shouldMerge, rawLineItem, lineItemRepo, lineItem;
+            return __generator(this, function (_e) {
+                transactionManager = (_a = this.transactionManager_) !== null && _a !== void 0 ? _a : this.manager_;
+                unit_price = Number(context.unit_price) < 0 ? 0 : context.unit_price;
+                unitPriceIncludesTax = false;
+                shouldMerge = false;
+                if (context.unit_price == null) {
+                    shouldMerge = true;
+                    unitPriceIncludesTax =
+                        !!((_b = context.variantPricing) === null || _b === void 0 ? void 0 : _b.calculated_price_includes_tax);
+                    unit_price = (_d = (_c = context.variantPricing) === null || _c === void 0 ? void 0 : _c.calculated_price) !== null && _d !== void 0 ? _d : undefined;
+                }
+                rawLineItem = {
+                    unit_price: unit_price,
+                    title: variant.product.title,
+                    description: variant.title,
+                    thumbnail: variant.product.thumbnail,
+                    variant_id: variant.id,
+                    quantity: quantity || 1,
+                    allow_discounts: variant.product.discountable,
+                    is_giftcard: variant.product.is_giftcard,
+                    metadata: (context === null || context === void 0 ? void 0 : context.metadata) || {},
+                    should_merge: shouldMerge,
+                };
+                if (this.featureFlagRouter_.isFeatureEnabled(tax_inclusive_pricing_1.default.key)) {
+                    rawLineItem.includes_tax = unitPriceIncludesTax;
+                }
+                rawLineItem.order_edit_id = context.order_edit_id || null;
+                lineItemRepo = transactionManager.getCustomRepository(this.lineItemRepository_);
+                lineItem = lineItemRepo.create(rawLineItem);
+                lineItem.variant = variant;
+                return [2 /*return*/, lineItem];
             });
         });
     };
@@ -317,14 +408,19 @@ var LineItemService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                            var lineItemRepository, lineItem;
+                            var lineItemRepository, data_, items, lineItems;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
                                         lineItemRepository = transactionManager.getCustomRepository(this.lineItemRepository_);
-                                        lineItem = lineItemRepository.create(data);
-                                        return [4 /*yield*/, lineItemRepository.save(lineItem)];
-                                    case 1: return [2 /*return*/, _a.sent()];
+                                        data_ = Array.isArray(data) ? data : [data];
+                                        items = lineItemRepository.create(data_);
+                                        return [4 /*yield*/, lineItemRepository.save(items)];
+                                    case 1:
+                                        lineItems = _a.sent();
+                                        return [2 /*return*/, (Array.isArray(data)
+                                                ? lineItems
+                                                : lineItems[0])];
                                 }
                             });
                         }); })];
@@ -367,10 +463,8 @@ var LineItemService = /** @class */ (function (_super) {
                                                 throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Line item with ".concat(selectorConstraints, " was not found"));
                                             }
                                             lineItems = lineItems.map(function (item) {
-                                                var lineItemMetadata = metadata
-                                                    ? (0, utils_1.setMetadata)(item, metadata)
-                                                    : item.metadata;
-                                                return Object.assign(item, __assign(__assign({}, rest), { metadata: lineItemMetadata }));
+                                                item.metadata = metadata ? (0, utils_1.setMetadata)(item, metadata) : item.metadata;
+                                                return Object.assign(item, rest);
                                             });
                                             return [4 /*yield*/, lineItemRepository.save(lineItems)];
                                         case 2: return [2 /*return*/, _a.sent()];
@@ -495,6 +589,19 @@ var LineItemService = /** @class */ (function (_super) {
                 }
             });
         });
+    };
+    LineItemService.prototype.validateGenerateArguments = function (variantIdOrData, regionIdOrContext, quantity) {
+        if ((0, utils_1.isString)(variantIdOrData)) {
+            if (!quantity || !regionIdOrContext || !(0, utils_1.isString)(regionIdOrContext)) {
+                throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.UNEXPECTED_STATE, "The generate method has been called with a variant id but one of the argument quantity or regionId is missing. Please, provide the variantId, quantity and regionId.");
+            }
+        }
+        else {
+            var resolvedContext = regionIdOrContext;
+            if (!resolvedContext.region_id) {
+                throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.UNEXPECTED_STATE, "The generate method has been called with the data but the context is missing either region_id or region. Please provide at least one of region or region_id.");
+            }
+        }
     };
     return LineItemService;
 }(interfaces_1.TransactionBaseService));

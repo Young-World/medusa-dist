@@ -7,29 +7,9 @@
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - first_name
- *           - last_name
- *           - email
- *           - password
- *         properties:
- *           first_name:
- *             description: "The Customer's first name."
- *             type: string
- *           last_name:
- *             description: "The Customer's last name."
- *             type: string
- *           email:
- *             description: "The email of the customer."
- *             type: string
- *             format: email
- *           password:
- *             description: "The Customer's password."
- *             type: string
- *             format: password
- *           phone:
- *             description: "The Customer's phone number."
- *             type: string
+ *         $ref: "#/components/schemas/StorePostCustomersReq"
+ * x-codegen:
+ *   method: create
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -64,14 +44,13 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             customer:
- *               $ref: "#/components/schemas/customer"
+ *           $ref: "#/components/schemas/StoreCustomersRes"
  *   422:
  *     description: A customer with the same email exists
  *     content:
  *       application/json:
  *         schema:
+ *           type: object
  *           properties:
  *             code:
  *               type: string
@@ -97,6 +76,33 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema StorePostCustomersReq
+ * type: object
+ * required:
+ *   - first_name
+ *   - last_name
+ *   - email
+ *   - password
+ * properties:
+ *   first_name:
+ *     description: "The Customer's first name."
+ *     type: string
+ *   last_name:
+ *     description: "The Customer's last name."
+ *     type: string
+ *   email:
+ *     description: "The email of the customer."
+ *     type: string
+ *     format: email
+ *   password:
+ *     description: "The Customer's password."
+ *     type: string
+ *     format: password
+ *   phone:
+ *     description: "The Customer's phone number."
+ *     type: string
+ */
 export declare class StorePostCustomersReq {
     first_name: string;
     last_name: string;

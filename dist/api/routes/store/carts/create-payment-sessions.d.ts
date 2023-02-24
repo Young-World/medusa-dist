@@ -5,6 +5,8 @@
  * description: "Creates Payment Sessions for each of the available Payment Providers in the Cart's Region."
  * parameters:
  *   - (path) id=* {string} The id of the Cart.
+ * x-codegen:
+ *   method: createPaymentSessions
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -27,9 +29,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             cart:
- *               $ref: "#/components/schemas/cart"
+ *           $ref: "#/components/schemas/StoreCartsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":

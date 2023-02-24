@@ -61,6 +61,22 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 var medusa_core_utils_1 = require("medusa-core-utils");
 var typeorm_1 = require("typeorm");
@@ -70,26 +86,31 @@ var CustomerGroupService = /** @class */ (function (_super) {
     __extends(CustomerGroupService, _super);
     function CustomerGroupService(_a) {
         var manager = _a.manager, customerGroupRepository = _a.customerGroupRepository, customerService = _a.customerService;
-        var _this = _super.call(this, arguments[0]) || this;
+        var _this = 
+        // eslint-disable-next-line prefer-rest-params
+        _super.call(this, arguments[0]) || this;
         _this.manager_ = manager;
         _this.customerGroupRepository_ = customerGroupRepository;
         _this.customerService_ = customerService;
         return _this;
     }
-    CustomerGroupService.prototype.retrieve = function (id, config) {
+    CustomerGroupService.prototype.retrieve = function (customerGroupId, config) {
         if (config === void 0) { config = {}; }
         return __awaiter(this, void 0, void 0, function () {
             var cgRepo, query, customerGroup;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(customerGroupId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"customerGroupId\" must be defined");
+                        }
                         cgRepo = this.manager_.getCustomRepository(this.customerGroupRepository_);
-                        query = (0, utils_1.buildQuery)({ id: id }, config);
+                        query = (0, utils_1.buildQuery)({ id: customerGroupId }, config);
                         return [4 /*yield*/, cgRepo.findOne(query)];
                     case 1:
                         customerGroup = _a.sent();
                         if (!customerGroup) {
-                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "CustomerGroup with id ".concat(id, " was not found"));
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "CustomerGroup with id ".concat(customerGroupId, " was not found"));
                         }
                         return [2 /*return*/, customerGroup];
                 }
@@ -160,23 +181,13 @@ var CustomerGroupService = /** @class */ (function (_super) {
                                         case 1: return [2 /*return*/, _a.sent()];
                                     }
                                 });
-                            }); }, function (error) { return __awaiter(_this, void 0, void 0, function () {
-                                var existingCustomers_1, nonExistingCustomers;
+                            }); }, function (e) { return __awaiter(_this, void 0, void 0, function () {
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
-                                        case 0:
-                                            if (!(error.code === utils_1.PostgresError.FOREIGN_KEY_ERROR)) return [3 /*break*/, 3];
-                                            return [4 /*yield*/, this.retrieve(id)];
+                                        case 0: return [4 /*yield*/, this.handleCreationFail(id, ids, e)];
                                         case 1:
                                             _a.sent();
-                                            return [4 /*yield*/, this.customerService_.list({
-                                                    id: ids,
-                                                })];
-                                        case 2:
-                                            existingCustomers_1 = _a.sent();
-                                            nonExistingCustomers = ids.filter(function (cId) { return existingCustomers_1.findIndex(function (el) { return el.id === cId; }) === -1; });
-                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "The following customer ids do not exist: ".concat(JSON.stringify(nonExistingCustomers.join(", "))));
-                                        case 3: throw (0, utils_1.formatException)(error);
+                                            return [2 /*return*/];
                                     }
                                 });
                             }); })];
@@ -208,11 +219,11 @@ var CustomerGroupService = /** @class */ (function (_super) {
                                     case 1:
                                         customerGroup = _a.sent();
                                         for (key in properties) {
-                                            if ((0, utils_1.isDefined)(properties[key])) {
+                                            if ((0, medusa_core_utils_1.isDefined)(properties[key])) {
                                                 customerGroup[key] = properties[key];
                                             }
                                         }
-                                        if ((0, utils_1.isDefined)(metadata)) {
+                                        if ((0, medusa_core_utils_1.isDefined)(metadata)) {
                                             customerGroup.metadata = (0, utils_1.setMetadata)(customerGroup, metadata);
                                         }
                                         return [4 /*yield*/, cgRepo.save(customerGroup)];
@@ -269,14 +280,13 @@ var CustomerGroupService = /** @class */ (function (_super) {
     CustomerGroupService.prototype.list = function (selector, config) {
         if (selector === void 0) { selector = {}; }
         return __awaiter(this, void 0, void 0, function () {
-            var cgRepo, query;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        cgRepo = this.manager_.getCustomRepository(this.customerGroupRepository_);
-                        query = (0, utils_1.buildQuery)(selector, config);
-                        return [4 /*yield*/, cgRepo.find(query)];
-                    case 1: return [2 /*return*/, _a.sent()];
+            var _a, customerGroups;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0: return [4 /*yield*/, this.listAndCount(selector, config)];
+                    case 1:
+                        _a = __read.apply(void 0, [_b.sent(), 1]), customerGroups = _a[0];
+                        return [2 /*return*/, customerGroups];
                 }
             });
         });
@@ -291,25 +301,25 @@ var CustomerGroupService = /** @class */ (function (_super) {
     CustomerGroupService.prototype.listAndCount = function (selector, config) {
         if (selector === void 0) { selector = {}; }
         return __awaiter(this, void 0, void 0, function () {
-            var cgRepo, q, query, where_1;
+            var cgRepo, q, query, relations, query_;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         cgRepo = this.manager_.getCustomRepository(this.customerGroupRepository_);
-                        if ("q" in selector) {
+                        if ((0, utils_1.isString)(selector.q)) {
                             q = selector.q;
                             delete selector.q;
                         }
                         query = (0, utils_1.buildQuery)(selector, config);
                         if (q) {
-                            where_1 = query.where;
-                            delete where_1.name;
-                            query.where = (function (qb) {
-                                qb.where(where_1).andWhere([{ name: (0, typeorm_1.ILike)("%".concat(q, "%")) }]);
-                            });
+                            query.where.name = (0, typeorm_1.ILike)("%".concat(q, "%"));
                         }
-                        return [4 /*yield*/, cgRepo.findAndCount(query)];
+                        if (!query.where.discount_condition_id) return [3 /*break*/, 2];
+                        relations = query.relations, query_ = __rest(query, ["relations"]);
+                        return [4 /*yield*/, cgRepo.findWithRelationsAndCount(relations, query_)];
                     case 1: return [2 /*return*/, _a.sent()];
+                    case 2: return [4 /*yield*/, cgRepo.findAndCount(query)];
+                    case 3: return [2 /*return*/, _a.sent()];
                 }
             });
         });
@@ -341,6 +351,28 @@ var CustomerGroupService = /** @class */ (function (_super) {
                     case 2:
                         _a.sent();
                         return [2 /*return*/, customerGroup];
+                }
+            });
+        });
+    };
+    CustomerGroupService.prototype.handleCreationFail = function (id, ids, error) {
+        return __awaiter(this, void 0, void 0, function () {
+            var existingCustomers_1, nonExistingCustomers;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!(error.code === utils_1.PostgresError.FOREIGN_KEY_ERROR)) return [3 /*break*/, 3];
+                        return [4 /*yield*/, this.retrieve(id)];
+                    case 1:
+                        _a.sent();
+                        return [4 /*yield*/, this.customerService_.list({
+                                id: ids,
+                            })];
+                    case 2:
+                        existingCustomers_1 = _a.sent();
+                        nonExistingCustomers = ids.filter(function (cId) { return existingCustomers_1.findIndex(function (el) { return el.id === cId; }) === -1; });
+                        throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "The following customer ids do not exist: ".concat(JSON.stringify(nonExistingCustomers.join(", "))));
+                    case 3: throw error;
                 }
             });
         });

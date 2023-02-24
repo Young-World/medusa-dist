@@ -16,10 +16,10 @@ function pickObjectPropsByRegex(data, regex) {
     var ret = {};
     for (var k in data) {
         if (variantKeyPredicate(k)) {
-            var formattedData = typeof data[k] === "string"
-                ? (0, utils_1.csvRevertCellContentFormatter)(data[k])
-                : data[k];
-            ret[k] = formattedData;
+            ret[k] =
+                typeof data[k] === "string"
+                    ? (0, utils_1.csvRevertCellContentFormatter)(data[k])
+                    : data[k];
         }
     }
     return ret;

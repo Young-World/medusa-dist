@@ -10,16 +10,9 @@
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - key
- *           - value
- *         properties:
- *           key:
- *             description: The metadata key
- *             type: string
- *           value:
- *             description: The metadata value
- *             type: string
+ *         $ref: "#/components/schemas/AdminPostProductsProductMetadataReq"
+ * x-codegen:
+ *   method: setMetadata
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -55,9 +48,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             product:
- *               $ref: "#/components/schemas/product"
+ *           $ref: "#/components/schemas/AdminProductsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -73,6 +64,20 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostProductsProductMetadataReq
+ * type: object
+ * required:
+ *   - key
+ *   - value
+ * properties:
+ *   key:
+ *     description: The metadata key
+ *     type: string
+ *   value:
+ *     description: The metadata value
+ *     type: string
+ */
 export declare class AdminPostProductsProductMetadataReq {
     key: string;
     value: string;

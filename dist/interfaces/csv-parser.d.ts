@@ -27,8 +27,11 @@ export declare abstract class AbstractCsvValidator<TCsvLine, TBuiltLine> impleme
     constructor(container: AwilixContainer);
     abstract validate(builtLine: TBuiltLine, context: CsvParserContext<TCsvLine>): Promise<boolean | never>;
 }
-export declare type CsvSchemaColumn<TCsvLine, TBuiltLine> = {
+export declare type CsvSchemaColumn<TCsvLine, TBuiltLine, NameAsOptional = false> = (NameAsOptional extends false ? {
     name: string;
+} : {
+    name?: string;
+}) & {
     required?: boolean;
     validator?: AbstractCsvValidator<TCsvLine, TBuiltLine>;
 } & ({

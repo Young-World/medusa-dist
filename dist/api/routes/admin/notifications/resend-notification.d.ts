@@ -10,10 +10,9 @@
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           to:
- *             description: "A new address or user identifier that the Notification should be sent to"
- *             type: string
+ *         $ref: "#/components/schemas/AdminPostNotificationsNotificationResendReq"
+ * x-codegen:
+ *   method: resend
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -41,9 +40,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             notification:
- *               $ref: "#/components/schemas/notification"
+ *           $ref: "#/components/schemas/AdminNotificationsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -59,6 +56,14 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostNotificationsNotificationResendReq
+ * type: object
+ * properties:
+ *   to:
+ *     description: "A new address or user identifier that the Notification should be sent to"
+ *     type: string
+ */
 export declare class AdminPostNotificationsNotificationResendReq {
     to?: string;
 }

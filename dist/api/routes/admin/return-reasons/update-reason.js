@@ -61,19 +61,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           label:
- *             description: "The label to display to the Customer."
- *             type: string
- *           value:
- *             description: "The value that the Return Reason will be identified by. Must be unique."
- *             type: string
- *           description:
- *             description: "An optional description to for the Reason."
- *             type: string
- *           metadata:
- *             description: An optional set of key-value pairs with additional information.
- *             type: object
+ *         $ref: "#/components/schemas/AdminPostReturnReasonsReasonReq"
+ * x-codegen:
+ *   method: update
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -107,9 +97,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             return_reason:
- *               $ref: "#/components/schemas/return_reason"
+ *           $ref: "#/components/schemas/AdminReturnReasonsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -157,6 +145,23 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostReturnReasonsReasonReq
+ * type: object
+ * properties:
+ *   label:
+ *     description: "The label to display to the Customer."
+ *     type: string
+ *   value:
+ *     description: "The value that the Return Reason will be identified by. Must be unique."
+ *     type: string
+ *   description:
+ *     description: "An optional description to for the Reason."
+ *     type: string
+ *   metadata:
+ *     description: An optional set of key-value pairs with additional information.
+ *     type: object
+ */
 var AdminPostReturnReasonsReasonReq = /** @class */ (function () {
     function AdminPostReturnReasonsReasonReq() {
     }

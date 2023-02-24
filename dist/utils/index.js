@@ -19,8 +19,9 @@ __exportStar(require("./set-metadata"), exports);
 __exportStar(require("./validate-id"), exports);
 __exportStar(require("./generate-entity-id"), exports);
 __exportStar(require("./remove-undefined-properties"), exports);
-__exportStar(require("./is-defined"), exports);
+__exportStar(require("./is-string"), exports);
 __exportStar(require("./calculate-price-tax-amount"), exports);
 __exportStar(require("./csv-cell-content-formatter"), exports);
 __exportStar(require("./exception-formatter"), exports);
+__exportStar(require("./db-aware-column"), exports);
 //# sourceMappingURL=index.js.map

@@ -43,13 +43,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * description: "Retrieves a OrderEdit."
  * parameters:
  *   - (path) id=* {string} The ID of the OrderEdit.
+ * x-codegen:
+ *   method: retrieve
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
  *     source: |
  *       import Medusa from "@medusajs/medusa-js"
  *       const medusa = new Medusa({ baseUrl: MEDUSA_BACKEND_URL, maxRetries: 3 })
- *       medusa.orderEdit.retrieve(orderEditId)
+ *       medusa.orderEdits.retrieve(order_edit_id)
  *       .then(({ order_edit }) => {
  *         console.log(order_edit.id);
  *       });
@@ -65,9 +67,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order_edit:
- *               $ref: "#/components/schemas/order_edit"
+ *           $ref: "#/components/schemas/StoreOrderEditsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

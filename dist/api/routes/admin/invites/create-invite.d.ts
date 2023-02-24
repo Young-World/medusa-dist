@@ -9,18 +9,9 @@ import { UserRoles } from "../../../../models/user";
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - user
- *           - role
- *         properties:
- *           user:
- *             description: "The email for the user to be created."
- *             type: string
- *             format: email
- *           role:
- *             description: "The role of the user to be created."
- *             type: string
- *             enum: [admin, member, developer]
+ *         $ref: "#/components/schemas/AdminPostInvitesReq"
+ * x-codegen:
+ *   method: create
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -71,6 +62,22 @@ import { UserRoles } from "../../../../models/user";
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostInvitesReq
+ * type: object
+ * required:
+ *   - user
+ *   - role
+ * properties:
+ *   user:
+ *     description: "The email for the user to be created."
+ *     type: string
+ *     format: email
+ *   role:
+ *     description: "The role of the user to be created."
+ *     type: string
+ *     enum: [admin, member, developer]
+ */
 export declare class AdminPostInvitesReq {
     user: string;
     role: UserRoles;

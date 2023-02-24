@@ -62,29 +62,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - first_name
- *           - last_name
- *           - email
- *           - password
- *         properties:
- *           first_name:
- *             description: "The Customer's first name."
- *             type: string
- *           last_name:
- *             description: "The Customer's last name."
- *             type: string
- *           email:
- *             description: "The email of the customer."
- *             type: string
- *             format: email
- *           password:
- *             description: "The Customer's password."
- *             type: string
- *             format: password
- *           phone:
- *             description: "The Customer's phone number."
- *             type: string
+ *         $ref: "#/components/schemas/StorePostCustomersReq"
+ * x-codegen:
+ *   method: create
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -119,14 +99,13 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             customer:
- *               $ref: "#/components/schemas/customer"
+ *           $ref: "#/components/schemas/StoreCustomersRes"
  *   422:
  *     description: A customer with the same email exists
  *     content:
  *       application/json:
  *         schema:
+ *           type: object
  *           properties:
  *             code:
  *               type: string
@@ -168,35 +147,64 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                 case 1: return [2 /*return*/, _a.sent()];
                             }
                         });
-                    }); })
-                    // Add JWT to cookie
-                ];
+                    }); })];
             case 2:
                 customer = _a.sent();
-                jwt_secret = req.scope.resolve("configModule").projectConfig.jwt_secret;
-                req.session.jwt = jsonwebtoken_1.default.sign({ customer_id: customer.id }, jwt_secret, {
-                    expiresIn: "30d",
-                });
                 return [4 /*yield*/, customerService.retrieve(customer.id, {
                         relations: _1.defaultStoreCustomersRelations,
                         select: _1.defaultStoreCustomersFields,
-                    })];
+                    })
+                    // Add JWT to cookie
+                ];
             case 3:
                 customer = _a.sent();
+                jwt_secret = req.scope.resolve("configModule").projectConfig.jwt_secret;
+                req.session.jwt_store = jsonwebtoken_1.default.sign({ customer_id: customer.id }, jwt_secret, {
+                    expiresIn: "30d",
+                });
                 res.status(200).json({ customer: customer });
                 return [2 /*return*/];
         }
     });
 }); });
+/**
+ * @schema StorePostCustomersReq
+ * type: object
+ * required:
+ *   - first_name
+ *   - last_name
+ *   - email
+ *   - password
+ * properties:
+ *   first_name:
+ *     description: "The Customer's first name."
+ *     type: string
+ *   last_name:
+ *     description: "The Customer's last name."
+ *     type: string
+ *   email:
+ *     description: "The email of the customer."
+ *     type: string
+ *     format: email
+ *   password:
+ *     description: "The Customer's password."
+ *     type: string
+ *     format: password
+ *   phone:
+ *     description: "The Customer's phone number."
+ *     type: string
+ */
 var StorePostCustomersReq = /** @class */ (function () {
     function StorePostCustomersReq() {
     }
     __decorate([
         (0, class_validator_1.IsString)(),
+        (0, class_validator_1.IsOptional)(),
         __metadata("design:type", String)
     ], StorePostCustomersReq.prototype, "first_name", void 0);
     __decorate([
         (0, class_validator_1.IsString)(),
+        (0, class_validator_1.IsOptional)(),
         __metadata("design:type", String)
     ], StorePostCustomersReq.prototype, "last_name", void 0);
     __decorate([

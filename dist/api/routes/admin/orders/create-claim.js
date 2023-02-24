@@ -1,4 +1,30 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -45,14 +71,12 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AdminPostOrdersOrderClaimsReq = void 0;
-var models_1 = require("../../../../models");
+exports.AdminPostOrdersOrderClaimsParams = exports.AdminPostOrdersOrderClaimsReq = void 0;
 var class_validator_1 = require("class-validator");
-var _1 = require(".");
-var common_1 = require("../../../../types/common");
-var medusa_core_utils_1 = require("medusa-core-utils");
+var models_1 = require("../../../../models");
 var class_transformer_1 = require("class-transformer");
-var validator_1 = require("../../../../utils/validator");
+var medusa_core_utils_1 = require("medusa-core-utils");
+var common_1 = require("../../../../types/common");
 /**
  * @oas [post] /order/{id}/claims
  * operationId: "PostOrdersOrderClaims"
@@ -61,105 +85,16 @@ var validator_1 = require("../../../../utils/validator");
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {string} The ID of the Order.
+ *   - (query) expand {string} Comma separated list of relations to include in the result.
+ *   - (query) fields {string} Comma separated list of fields to include in the result.
  * requestBody:
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - type
- *           - claim_items
- *         properties:
- *           type:
- *             description: "The type of the Claim. This will determine how the Claim is treated: `replace` Claims will result in a Fulfillment with new items being created, while a `refund` Claim will refund the amount paid for the claimed items."
- *             type: string
- *             enum:
- *               - replace
- *               - refund
- *           claim_items:
- *             description: The Claim Items that the Claim will consist of.
- *             type: array
- *             items:
- *               required:
- *                 - item_id
- *                 - quantity
- *               properties:
- *                 item_id:
- *                   description: The ID of the Line Item that will be claimed.
- *                   type: string
- *                 quantity:
- *                   description: The number of items that will be returned
- *                   type: integer
- *                 note:
- *                   description: Short text describing the Claim Item in further detail.
- *                   type: string
- *                 reason:
- *                   description: The reason for the Claim
- *                   type: string
- *                   enum:
- *                     - missing_item
- *                     - wrong_item
- *                     - production_failure
- *                     - other
- *                 tags:
- *                   description: A list o tags to add to the Claim Item
- *                   type: array
- *                   items:
- *                     type: string
- *                 images:
- *                   description: A list of image URL's that will be associated with the Claim
- *                   items:
- *                     type: string
- *           return_shipping:
- *              description: Optional details for the Return Shipping Method, if the items are to be sent back.
- *              type: object
- *              properties:
- *                option_id:
- *                  type: string
- *                  description: The ID of the Shipping Option to create the Shipping Method from.
- *                price:
- *                  type: integer
- *                  description: The price to charge for the Shipping Method.
- *           additional_items:
- *              description: The new items to send to the Customer when the Claim type is Replace.
- *              type: array
- *              items:
- *                required:
- *                  - variant_id
- *                  - quantity
- *                properties:
- *                  variant_id:
- *                    description: The ID of the Product Variant to ship.
- *                    type: string
- *                  quantity:
- *                    description: The quantity of the Product Variant to ship.
- *                    type: integer
- *           shipping_methods:
- *              description: The Shipping Methods to send the additional Line Items with.
- *              type: array
- *              items:
- *                 properties:
- *                   id:
- *                     description: The ID of an existing Shipping Method
- *                     type: string
- *                   option_id:
- *                     description: The ID of the Shipping Option to create a Shipping Method from
- *                     type: string
- *                   price:
- *                     description: The price to charge for the Shipping Method
- *                     type: integer
- *           shipping_address:
- *              type: object
- *              description: "An optional shipping address to send the claim to. Defaults to the parent order's shipping address"
- *              $ref: "#/components/schemas/address"
- *           refund_amount:
- *              description: The amount to refund the Customer when the Claim type is `refund`.
- *              type: integer
- *           no_notification:
- *              description: If set to true no notification will be send related to this Claim.
- *              type: boolean
- *           metadata:
- *              description: An optional set of key-value pairs to hold additional information.
- *              type: object
+ *         $ref: "#/components/schemas/AdminPostOrdersOrderClaimsReq"
+ * x-codegen:
+ *   method: createClaim
+ *   params: AdminPostOrdersOrderClaimsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -205,9 +140,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/order"
+ *           $ref: "#/components/schemas/AdminOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -227,15 +160,13 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         switch (_b.label) {
             case 0:
                 id = req.params.id;
-                return [4 /*yield*/, (0, validator_1.validator)(AdminPostOrdersOrderClaimsReq, req.body)];
-            case 1:
-                value = _b.sent();
+                value = req.validatedBody;
                 idempotencyKeyService = req.scope.resolve("idempotencyKeyService");
                 manager = req.scope.resolve("manager");
                 headerKey = req.get("Idempotency-Key") || "";
-                _b.label = 2;
-            case 2:
-                _b.trys.push([2, 4, , 5]);
+                _b.label = 1;
+            case 1:
+                _b.trys.push([1, 3, , 4]);
                 return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
                         return __generator(this, function (_a) {
                             switch (_a.label) {
@@ -248,14 +179,14 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                             }
                         });
                     }); })];
-            case 3:
+            case 2:
                 _b.sent();
-                return [3 /*break*/, 5];
-            case 4:
+                return [3 /*break*/, 4];
+            case 3:
                 error_1 = _b.sent();
                 res.status(409).send("Failed to create idempotency key");
                 return [2 /*return*/];
-            case 5:
+            case 4:
                 res.setHeader("Access-Control-Expose-Headers", "Idempotency-Key");
                 res.setHeader("Idempotency-Key", idempotencyKey.idempotency_key);
                 orderService = req.scope.resolve("orderService");
@@ -263,21 +194,21 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                 returnService = req.scope.resolve("returnService");
                 inProgress = true;
                 err = false;
-                _b.label = 6;
-            case 6:
-                if (!inProgress) return [3 /*break*/, 17];
+                _b.label = 5;
+            case 5:
+                if (!inProgress) return [3 /*break*/, 16];
                 _a = idempotencyKey.recovery_point;
                 switch (_a) {
-                    case "started": return [3 /*break*/, 7];
-                    case "claim_created": return [3 /*break*/, 9];
-                    case "refund_handled": return [3 /*break*/, 11];
-                    case "finished": return [3 /*break*/, 13];
+                    case "started": return [3 /*break*/, 6];
+                    case "claim_created": return [3 /*break*/, 8];
+                    case "refund_handled": return [3 /*break*/, 10];
+                    case "finished": return [3 /*break*/, 12];
                 }
-                return [3 /*break*/, 14];
-            case 7: return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
-                    var _a, key, error;
-                    return __generator(this, function (_b) {
-                        switch (_b.label) {
+                return [3 /*break*/, 13];
+            case 6: return [4 /*yield*/, manager
+                    .transaction("SERIALIZABLE", function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
                             case 0: return [4 /*yield*/, idempotencyKeyService
                                     .withTransaction(transactionManager)
                                     .workStage(idempotencyKey.idempotency_key, function (manager) { return __awaiter(void 0, void 0, void 0, function () {
@@ -305,18 +236,7 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                                 })];
                                             case 1:
                                                 order = _a.sent();
-                                                return [4 /*yield*/, claimService.withTransaction(manager).create({
-                                                        idempotency_key: idempotencyKey.idempotency_key,
-                                                        order: order,
-                                                        type: value.type,
-                                                        shipping_address: value.shipping_address,
-                                                        claim_items: value.claim_items,
-                                                        return_shipping: value.return_shipping,
-                                                        additional_items: value.additional_items,
-                                                        shipping_methods: value.shipping_methods,
-                                                        no_notification: value.no_notification,
-                                                        metadata: value.metadata,
-                                                    })];
+                                                return [4 /*yield*/, claimService.withTransaction(manager).create(__assign({ idempotency_key: idempotencyKey.idempotency_key, order: order }, value))];
                                             case 2:
                                                 _a.sent();
                                                 return [2 /*return*/, {
@@ -326,25 +246,22 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                     });
                                 }); })];
                             case 1:
-                                _a = _b.sent(), key = _a.key, error = _a.error;
-                                if (error) {
-                                    inProgress = false;
-                                    err = error;
-                                }
-                                else {
-                                    idempotencyKey = key;
-                                }
+                                idempotencyKey = _a.sent();
                                 return [2 /*return*/];
                         }
                     });
-                }); })];
-            case 8:
+                }); })
+                    .catch(function (e) {
+                    inProgress = false;
+                    err = e;
+                })];
+            case 7:
                 _b.sent();
-                return [3 /*break*/, 16];
-            case 9: return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
-                    var _a, key, error;
-                    return __generator(this, function (_b) {
-                        switch (_b.label) {
+                return [3 /*break*/, 15];
+            case 8: return [4 /*yield*/, manager
+                    .transaction("SERIALIZABLE", function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
                             case 0: return [4 /*yield*/, idempotencyKeyService
                                     .withTransaction(transactionManager)
                                     .workStage(idempotencyKey.idempotency_key, function (manager) { return __awaiter(void 0, void 0, void 0, function () {
@@ -374,25 +291,22 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                     });
                                 }); })];
                             case 1:
-                                _a = _b.sent(), key = _a.key, error = _a.error;
-                                if (error) {
-                                    inProgress = false;
-                                    err = error;
-                                }
-                                else {
-                                    idempotencyKey = key;
-                                }
+                                idempotencyKey = _a.sent();
                                 return [2 /*return*/];
                         }
                     });
-                }); })];
-            case 10:
+                }); })
+                    .catch(function (e) {
+                    inProgress = false;
+                    err = e;
+                })];
+            case 9:
                 _b.sent();
-                return [3 /*break*/, 16];
-            case 11: return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
-                    var _a, key, error;
-                    return __generator(this, function (_b) {
-                        switch (_b.label) {
+                return [3 /*break*/, 15];
+            case 10: return [4 /*yield*/, manager
+                    .transaction("SERIALIZABLE", function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
                             case 0: return [4 /*yield*/, idempotencyKeyService
                                     .withTransaction(transactionManager)
                                     .workStage(idempotencyKey.idempotency_key, function (manager) { return __awaiter(void 0, void 0, void 0, function () {
@@ -424,9 +338,10 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                             case 3:
                                                 _a.sent();
                                                 _a.label = 4;
-                                            case 4: return [4 /*yield*/, orderService.withTransaction(manager).retrieve(id, {
-                                                    select: _1.defaultAdminOrdersFields,
-                                                    relations: _1.defaultAdminOrdersRelations,
+                                            case 4: return [4 /*yield*/, orderService
+                                                    .withTransaction(manager)
+                                                    .retrieveWithTotals(id, req.retrieveConfig, {
+                                                    includes: req.includes,
                                                 })];
                                             case 5:
                                                 order = _a.sent();
@@ -438,28 +353,25 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                                     });
                                 }); })];
                             case 1:
-                                _a = _b.sent(), key = _a.key, error = _a.error;
-                                if (error) {
-                                    inProgress = false;
-                                    err = error;
-                                }
-                                else {
-                                    idempotencyKey = key;
-                                }
+                                idempotencyKey = _a.sent();
                                 return [2 /*return*/];
                         }
                     });
-                }); })];
-            case 12:
+                }); })
+                    .catch(function (e) {
+                    inProgress = false;
+                    err = e;
+                })];
+            case 11:
                 _b.sent();
-                return [3 /*break*/, 16];
-            case 13:
+                return [3 /*break*/, 15];
+            case 12:
                 {
                     inProgress = false;
-                    return [3 /*break*/, 16];
+                    return [3 /*break*/, 15];
                 }
-                _b.label = 14;
-            case 14: return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
+                _b.label = 13;
+            case 13: return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: return [4 /*yield*/, idempotencyKeyService
@@ -475,11 +387,11 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                         }
                     });
                 }); })];
-            case 15:
+            case 14:
                 _b.sent();
-                return [3 /*break*/, 16];
-            case 16: return [3 /*break*/, 6];
-            case 17:
+                return [3 /*break*/, 15];
+            case 15: return [3 /*break*/, 5];
+            case 16:
                 if (err) {
                     throw err;
                 }
@@ -488,6 +400,111 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostOrdersOrderClaimsReq
+ * type: object
+ * required:
+ *   - type
+ *   - claim_items
+ * properties:
+ *   type:
+ *     description: "The type of the Claim. This will determine how the Claim is treated: `replace` Claims will result in a Fulfillment with new items being created, while a `refund` Claim will refund the amount paid for the claimed items."
+ *     type: string
+ *     enum:
+ *       - replace
+ *       - refund
+ *   claim_items:
+ *     description: The Claim Items that the Claim will consist of.
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - item_id
+ *         - quantity
+ *       properties:
+ *         item_id:
+ *           description: The ID of the Line Item that will be claimed.
+ *           type: string
+ *         quantity:
+ *           description: The number of items that will be returned
+ *           type: integer
+ *         note:
+ *           description: Short text describing the Claim Item in further detail.
+ *           type: string
+ *         reason:
+ *           description: The reason for the Claim
+ *           type: string
+ *           enum:
+ *             - missing_item
+ *             - wrong_item
+ *             - production_failure
+ *             - other
+ *         tags:
+ *           description: A list o tags to add to the Claim Item
+ *           type: array
+ *           items:
+ *             type: string
+ *         images:
+ *           description: A list of image URL's that will be associated with the Claim
+ *           items:
+ *             type: string
+ *   return_shipping:
+ *      description: Optional details for the Return Shipping Method, if the items are to be sent back.
+ *      type: object
+ *      properties:
+ *        option_id:
+ *          type: string
+ *          description: The ID of the Shipping Option to create the Shipping Method from.
+ *        price:
+ *          type: integer
+ *          description: The price to charge for the Shipping Method.
+ *   additional_items:
+ *      description: The new items to send to the Customer when the Claim type is Replace.
+ *      type: array
+ *      items:
+ *        type: object
+ *        required:
+ *          - variant_id
+ *          - quantity
+ *        properties:
+ *          variant_id:
+ *            description: The ID of the Product Variant to ship.
+ *            type: string
+ *          quantity:
+ *            description: The quantity of the Product Variant to ship.
+ *            type: integer
+ *   shipping_methods:
+ *      description: The Shipping Methods to send the additional Line Items with.
+ *      type: array
+ *      items:
+ *         type: object
+ *         properties:
+ *           id:
+ *             description: The ID of an existing Shipping Method
+ *             type: string
+ *           option_id:
+ *             description: The ID of the Shipping Option to create a Shipping Method from
+ *             type: string
+ *           price:
+ *             description: The price to charge for the Shipping Method
+ *             type: integer
+ *           data:
+ *             description: An optional set of key-value pairs to hold additional information.
+ *             type: object
+ *   shipping_address:
+ *      type: object
+ *      description: "An optional shipping address to send the claim to. Defaults to the parent order's shipping address"
+ *      $ref: "#/components/schemas/Address"
+ *   refund_amount:
+ *      description: The amount to refund the Customer when the Claim type is `refund`.
+ *      type: integer
+ *   no_notification:
+ *      description: If set to true no notification will be send related to this Claim.
+ *      type: boolean
+ *   metadata:
+ *      description: An optional set of key-value pairs to hold additional information.
+ *      type: object
+ */
 var AdminPostOrdersOrderClaimsReq = /** @class */ (function () {
     function AdminPostOrdersOrderClaimsReq() {
     }
@@ -581,6 +598,11 @@ var ShippingMethod = /** @class */ (function () {
         (0, class_validator_1.IsOptional)(),
         __metadata("design:type", Number)
     ], ShippingMethod.prototype, "price", void 0);
+    __decorate([
+        (0, class_validator_1.IsObject)(),
+        (0, class_validator_1.IsOptional)(),
+        __metadata("design:type", Object)
+    ], ShippingMethod.prototype, "data", void 0);
     return ShippingMethod;
 }());
 var Item = /** @class */ (function () {
@@ -635,4 +657,12 @@ var AdditionalItem = /** @class */ (function () {
     ], AdditionalItem.prototype, "quantity", void 0);
     return AdditionalItem;
 }());
+var AdminPostOrdersOrderClaimsParams = /** @class */ (function (_super) {
+    __extends(AdminPostOrdersOrderClaimsParams, _super);
+    function AdminPostOrdersOrderClaimsParams() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return AdminPostOrdersOrderClaimsParams;
+}(common_1.FindParams));
+exports.AdminPostOrdersOrderClaimsParams = AdminPostOrdersOrderClaimsParams;
 //# sourceMappingURL=create-claim.js.map

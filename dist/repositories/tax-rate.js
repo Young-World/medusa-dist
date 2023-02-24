@@ -96,12 +96,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TaxRateRepository = void 0;
 var lodash_1 = require("lodash");
 var typeorm_1 = require("typeorm");
-var tax_rate_1 = require("../models/tax-rate");
-var product_tax_rate_1 = require("../models/product-tax-rate");
-var product_type_tax_rate_1 = require("../models/product-type-tax-rate");
-var shipping_tax_rate_1 = require("../models/shipping-tax-rate");
-var product_1 = require("../models/product");
-var utils_1 = require("../utils");
+var models_1 = require("../models");
+var medusa_core_utils_1 = require("medusa-core-utils");
 var resolveableFields = [
     "product_count",
     "product_type_count",
@@ -117,7 +113,7 @@ var TaxRateRepository = /** @class */ (function (_super) {
         var qb = this.createQueryBuilder("tr");
         var cleanOptions = findOptions;
         var resolverFields = [];
-        if ((0, utils_1.isDefined)(findOptions.select)) {
+        if ((0, medusa_core_utils_1.isDefined)(findOptions.select)) {
             var selectableCols = [];
             try {
                 for (var _b = __values(findOptions.select), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -219,7 +215,7 @@ var TaxRateRepository = /** @class */ (function (_super) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.createQueryBuilder()
                             .delete()
-                            .from(product_tax_rate_1.ProductTaxRate)
+                            .from(models_1.ProductTaxRate)
                             .where({ rate_id: id, product_id: (0, typeorm_1.In)(productIds) })
                             .execute()];
                     case 1: return [2 /*return*/, _a.sent()];
@@ -238,7 +234,7 @@ var TaxRateRepository = /** @class */ (function (_super) {
                         return [4 /*yield*/, this.createQueryBuilder()
                                 .insert()
                                 .orIgnore(true)
-                                .into(product_tax_rate_1.ProductTaxRate)
+                                .into(models_1.ProductTaxRate)
                                 .values(toInsert)
                                 .execute()];
                     case 1:
@@ -246,14 +242,14 @@ var TaxRateRepository = /** @class */ (function (_super) {
                         if (!overrideExisting) return [3 /*break*/, 3];
                         return [4 /*yield*/, this.createQueryBuilder()
                                 .delete()
-                                .from(product_tax_rate_1.ProductTaxRate)
+                                .from(models_1.ProductTaxRate)
                                 .where({ rate_id: id, product_id: (0, typeorm_1.Not)((0, typeorm_1.In)(productIds)) })
                                 .execute()];
                     case 2:
                         _a.sent();
                         _a.label = 3;
                     case 3: return [4 /*yield*/, this.manager
-                            .createQueryBuilder(product_tax_rate_1.ProductTaxRate, "ptr")
+                            .createQueryBuilder(models_1.ProductTaxRate, "ptr")
                             .select()
                             .where(insertResult.identifiers)
                             .getMany()];
@@ -268,7 +264,7 @@ var TaxRateRepository = /** @class */ (function (_super) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.createQueryBuilder()
                             .delete()
-                            .from(product_type_tax_rate_1.ProductTypeTaxRate)
+                            .from(models_1.ProductTypeTaxRate)
                             .where({ rate_id: id, product_type_id: (0, typeorm_1.In)(productTypeIds) })
                             .execute()];
                     case 1: return [2 /*return*/, _a.sent()];
@@ -290,7 +286,7 @@ var TaxRateRepository = /** @class */ (function (_super) {
                         return [4 /*yield*/, this.createQueryBuilder()
                                 .insert()
                                 .orIgnore(true)
-                                .into(product_type_tax_rate_1.ProductTypeTaxRate)
+                                .into(models_1.ProductTypeTaxRate)
                                 .values(toInsert)
                                 .execute()];
                     case 1:
@@ -298,14 +294,14 @@ var TaxRateRepository = /** @class */ (function (_super) {
                         if (!overrideExisting) return [3 /*break*/, 3];
                         return [4 /*yield*/, this.createQueryBuilder()
                                 .delete()
-                                .from(product_type_tax_rate_1.ProductTypeTaxRate)
+                                .from(models_1.ProductTypeTaxRate)
                                 .where({ rate_id: id, product_type_id: (0, typeorm_1.Not)((0, typeorm_1.In)(productTypeIds)) })
                                 .execute()];
                     case 2:
                         _a.sent();
                         _a.label = 3;
                     case 3: return [4 /*yield*/, this.manager
-                            .createQueryBuilder(product_type_tax_rate_1.ProductTypeTaxRate, "ptr")
+                            .createQueryBuilder(models_1.ProductTypeTaxRate, "ptr")
                             .select()
                             .where(insertResult.identifiers)
                             .getMany()];
@@ -320,7 +316,7 @@ var TaxRateRepository = /** @class */ (function (_super) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.createQueryBuilder()
                             .delete()
-                            .from(shipping_tax_rate_1.ShippingTaxRate)
+                            .from(models_1.ShippingTaxRate)
                             .where({ rate_id: id, shipping_option_id: (0, typeorm_1.In)(optionIds) })
                             .execute()];
                     case 1: return [2 /*return*/, _a.sent()];
@@ -342,7 +338,7 @@ var TaxRateRepository = /** @class */ (function (_super) {
                         return [4 /*yield*/, this.createQueryBuilder()
                                 .insert()
                                 .orIgnore(true)
-                                .into(shipping_tax_rate_1.ShippingTaxRate)
+                                .into(models_1.ShippingTaxRate)
                                 .values(toInsert)
                                 .execute()];
                     case 1:
@@ -350,14 +346,14 @@ var TaxRateRepository = /** @class */ (function (_super) {
                         if (!overrideExisting) return [3 /*break*/, 3];
                         return [4 /*yield*/, this.createQueryBuilder()
                                 .delete()
-                                .from(shipping_tax_rate_1.ShippingTaxRate)
+                                .from(models_1.ShippingTaxRate)
                                 .where({ rate_id: id, shipping_option_id: (0, typeorm_1.Not)((0, typeorm_1.In)(optionIds)) })
                                 .execute()];
                     case 2:
                         _a.sent();
                         _a.label = 3;
                     case 3: return [4 /*yield*/, this.manager
-                            .createQueryBuilder(shipping_tax_rate_1.ShippingTaxRate, "str")
+                            .createQueryBuilder(models_1.ShippingTaxRate, "str")
                             .select()
                             .where(insertResult.identifiers)
                             .getMany()];
@@ -373,14 +369,14 @@ var TaxRateRepository = /** @class */ (function (_super) {
                 switch (_a.label) {
                     case 0:
                         productRates = this.createQueryBuilder("txr")
-                            .leftJoin(product_tax_rate_1.ProductTaxRate, "ptr", "ptr.rate_id = txr.id")
-                            .leftJoin(product_1.Product, "prod", "prod.id = ptr.product_id")
+                            .leftJoin(models_1.ProductTaxRate, "ptr", "ptr.rate_id = txr.id")
+                            .leftJoin(models_1.Product, "prod", "prod.id = ptr.product_id")
                             .where("prod.id = :productId", { productId: productId });
                         typeRates = this.createQueryBuilder("txr")
-                            .leftJoin(product_type_tax_rate_1.ProductTypeTaxRate, "pttr", "pttr.rate_id = txr.id")
-                            .leftJoin(product_1.Product, "prod", "prod.type_id = pttr.product_type_id")
+                            .leftJoin(models_1.ProductTypeTaxRate, "pttr", "pttr.rate_id = txr.id")
+                            .leftJoin(models_1.Product, "prod", "prod.type_id = pttr.product_type_id")
                             .where("prod.id = :productId", { productId: productId });
-                        if ((0, utils_1.isDefined)(config.region_id)) {
+                        if ((0, medusa_core_utils_1.isDefined)(config.region_id)) {
                             productRates.andWhere("txr.region_id = :regionId", {
                                 regionId: config.region_id,
                             });
@@ -411,7 +407,7 @@ var TaxRateRepository = /** @class */ (function (_super) {
                 switch (_a.label) {
                     case 0:
                         rates = this.createQueryBuilder("txr")
-                            .leftJoin(shipping_tax_rate_1.ShippingTaxRate, "ptr", "ptr.rate_id = txr.id")
+                            .leftJoin(models_1.ShippingTaxRate, "ptr", "ptr.rate_id = txr.id")
                             .where("ptr.shipping_option_id = :optionId", { optionId: optionId });
                         return [4 /*yield*/, rates.getMany()];
                     case 1: return [2 /*return*/, _a.sent()];
@@ -420,7 +416,7 @@ var TaxRateRepository = /** @class */ (function (_super) {
         });
     };
     TaxRateRepository = __decorate([
-        (0, typeorm_1.EntityRepository)(tax_rate_1.TaxRate)
+        (0, typeorm_1.EntityRepository)(models_1.TaxRate)
     ], TaxRateRepository);
     return TaxRateRepository;
 }(typeorm_1.Repository));

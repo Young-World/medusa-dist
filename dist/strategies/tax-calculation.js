@@ -70,9 +70,10 @@ var TaxCalculationStrategy = /** @class */ (function () {
     };
     TaxCalculationStrategy.prototype.calculateLineItemsTax = function (items, taxLines, context) {
         var e_1, _a;
+        var _b, _c;
         var taxTotal = 0;
         var _loop_1 = function (item) {
-            var e_2, _b;
+            var e_2, _d;
             var allocations = context.allocation_map[item.id] || {};
             var filteredTaxLines = taxLines.filter(function (tl) { return tl.item_id === item.id; });
             var includesTax = this_1.featureFlagRouter_.isFeatureEnabled(tax_inclusive_pricing_1.default.key) && item.includes_tax;
@@ -91,9 +92,7 @@ var TaxCalculationStrategy = /** @class */ (function () {
             else {
                 taxableAmount = item.unit_price * item.quantity;
             }
-            taxableAmount -=
-                ((allocations.discount && allocations.discount.unit_amount) || 0) *
-                    item.quantity;
+            taxableAmount -= (_c = (_b = allocations.discount) === null || _b === void 0 ? void 0 : _b.amount) !== null && _c !== void 0 ? _c : 0;
             try {
                 for (var filteredTaxLines_1 = (e_2 = void 0, __values(filteredTaxLines)), filteredTaxLines_1_1 = filteredTaxLines_1.next(); !filteredTaxLines_1_1.done; filteredTaxLines_1_1 = filteredTaxLines_1.next()) {
                     var filteredTaxLine = filteredTaxLines_1_1.value;
@@ -106,7 +105,7 @@ var TaxCalculationStrategy = /** @class */ (function () {
             catch (e_2_1) { e_2 = { error: e_2_1 }; }
             finally {
                 try {
-                    if (filteredTaxLines_1_1 && !filteredTaxLines_1_1.done && (_b = filteredTaxLines_1.return)) _b.call(filteredTaxLines_1);
+                    if (filteredTaxLines_1_1 && !filteredTaxLines_1_1.done && (_d = filteredTaxLines_1.return)) _d.call(filteredTaxLines_1);
                 }
                 finally { if (e_2) throw e_2.error; }
             }

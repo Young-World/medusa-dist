@@ -1,4 +1,13 @@
 "use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -39,7 +48,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.AdminGetGroupsGroupCustomersParams = void 0;
 var customers_1 = __importDefault(require("../../../../controllers/customers"));
+var class_validator_1 = require("class-validator");
+var class_transformer_1 = require("class-transformer");
 /**
  * @oas [get] /customer-groups/{id}/customers
  * operationId: "GetCustomerGroupsGroupCustomers"
@@ -48,6 +60,13 @@ var customers_1 = __importDefault(require("../../../../controllers/customers"));
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {string} The ID of the customer group.
+ *   - (query) limit=50 {integer} The number of items to return.
+ *   - (query) offset=0 {integer} The items to skip before result.
+ *   - (query) expand {string} (Comma separated) Which fields should be expanded in each customer.
+ *   - (query) q {string} a search term to search email, first_name, and last_name.
+ * x-codegen:
+ *   method: listCustomers
+ *   queryParams: AdminGetGroupsGroupCustomersParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -75,20 +94,7 @@ var customers_1 = __importDefault(require("../../../../controllers/customers"));
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             customers:
- *               type: array
- *               items:
- *                  $ref: "#/components/schemas/customer"
- *             count:
- *               type: integer
- *               description: The total number of items available
- *             offset:
- *               type: integer
- *               description: The number of items skipped before these items
- *             limit:
- *               type: integer
- *               description: The number of items per page
+ *           $ref: "#/components/schemas/AdminCustomersListRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -117,4 +123,36 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+// eslint-disable-next-line max-len
+var AdminGetGroupsGroupCustomersParams = /** @class */ (function () {
+    function AdminGetGroupsGroupCustomersParams() {
+        this.limit = 50;
+        this.offset = 0;
+    }
+    __decorate([
+        (0, class_validator_1.IsString)(),
+        (0, class_validator_1.IsOptional)(),
+        __metadata("design:type", String)
+    ], AdminGetGroupsGroupCustomersParams.prototype, "q", void 0);
+    __decorate([
+        (0, class_validator_1.IsNumber)(),
+        (0, class_validator_1.IsOptional)(),
+        (0, class_transformer_1.Type)(function () { return Number; }),
+        __metadata("design:type", Object)
+    ], AdminGetGroupsGroupCustomersParams.prototype, "limit", void 0);
+    __decorate([
+        (0, class_validator_1.IsOptional)(),
+        (0, class_validator_1.IsNumber)(),
+        (0, class_validator_1.IsOptional)(),
+        (0, class_transformer_1.Type)(function () { return Number; }),
+        __metadata("design:type", Object)
+    ], AdminGetGroupsGroupCustomersParams.prototype, "offset", void 0);
+    __decorate([
+        (0, class_validator_1.IsString)(),
+        (0, class_validator_1.IsOptional)(),
+        __metadata("design:type", String)
+    ], AdminGetGroupsGroupCustomersParams.prototype, "expand", void 0);
+    return AdminGetGroupsGroupCustomersParams;
+}());
+exports.AdminGetGroupsGroupCustomersParams = AdminGetGroupsGroupCustomersParams;
 //# sourceMappingURL=get-customer-group-customers.js.map

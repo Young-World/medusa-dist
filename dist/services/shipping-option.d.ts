@@ -5,10 +5,10 @@ import { ShippingMethodRepository } from "../repositories/shipping-method";
 import { ShippingOptionRepository } from "../repositories/shipping-option";
 import { ShippingOptionRequirementRepository } from "../repositories/shipping-option-requirement";
 import { FindConfig, Selector } from "../types/common";
-import { CreateShippingMethodDto, ShippingMethodUpdate, UpdateShippingOptionInput, CreateShippingOptionInput } from "../types/shipping-options";
+import { CreateShippingMethodDto, CreateShippingOptionInput, ShippingMethodUpdate, UpdateShippingOptionInput } from "../types/shipping-options";
+import { FlagRouter } from "../utils/flag-router";
 import FulfillmentProviderService from "./fulfillment-provider";
 import RegionService from "./region";
-import { FlagRouter } from "../utils/flag-router";
 declare type InjectedDependencies = {
     manager: EntityManager;
     fulfillmentProviderService: FulfillmentProviderService;
@@ -45,11 +45,11 @@ declare class ShippingOptionService extends TransactionBaseService {
      */
     list(selector: Selector<ShippingMethod>, config?: FindConfig<ShippingOption>): Promise<ShippingOption[]>;
     /**
-     * @param {Object} selector - the query object for find
-     * @param {object} config - config object
-     * @return {Promise} the result of the find operation
+     * @param selector - the query object for find
+     * @param config - config object
+     * @return the result of the find operation
      */
-    listAndCount(selector: Selector<ShippingMethod>, config?: FindConfig<ShippingOption>): Promise<[ShippingOption[], number]>;
+    listAndCount(selector: Selector<ShippingOption>, config?: FindConfig<ShippingOption>): Promise<[ShippingOption[], number]>;
     /**
      * Gets a profile by id.
      * Throws in case of DB Error and if profile was not found.
@@ -92,6 +92,7 @@ declare class ShippingOptionService extends TransactionBaseService {
      * @return {ShippingOption} the validated shipping option
      */
     validateCartOption(option: ShippingOption, cart: Cart): Promise<ShippingOption | null>;
+    private validateAndMutatePrice;
     /**
      * Creates a new shipping option. Used both for outbound and inbound shipping
      * options. The difference is registered by the `is_return` field which
@@ -138,6 +139,13 @@ declare class ShippingOptionService extends TransactionBaseService {
      * @return {Promise} the result of update
      */
     removeRequirement(requirementId: any): Promise<ShippingOptionRequirement | void>;
+    /**
+     *
+     * @param optionIds ID or IDs of the shipping options to update
+     * @param profileId Shipping profile ID to update the shipping options with
+     * @returns updated shipping options
+     */
+    updateShippingProfile(optionIds: string | string[], profileId: string): Promise<ShippingOption[]>;
     /**
      * Returns the amount to be paid for a shipping method. Will ask the
      * fulfillment provider to calculate the price if the shipping option has the

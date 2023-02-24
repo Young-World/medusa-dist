@@ -152,7 +152,7 @@ var AbstractBatchJobStrategy = /** @class */ (function (_super) {
                                                 context: {
                                                     retry_count: retryCount + 1,
                                                 },
-                                                result: __assign(__assign({}, result), { errors: __spreadArray(__spreadArray([], __read(existingErrors), false), [resultError], false) }),
+                                                result: __assign(__assign({}, result), { errors: __spreadArray(__spreadArray([], __read(existingErrors), false), [resultError.message], false) }),
                                             })];
                                     case 3:
                                         _f.sent();
@@ -167,7 +167,9 @@ var AbstractBatchJobStrategy = /** @class */ (function (_super) {
                                 }
                             });
                         }); })];
-                    case 1: return [2 /*return*/, _a.sent()];
+                    case 1: 
+                    // TODO just throw to be handled by the subscriber
+                    return [2 /*return*/, _a.sent()];
                 }
             });
         });

@@ -1,4 +1,19 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -47,9 +62,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StoreGetOrdersParams = exports.ShippingAddressPayload = void 0;
 var class_validator_1 = require("class-validator");
-var _1 = require(".");
 var class_transformer_1 = require("class-transformer");
-var validator_1 = require("../../../../utils/validator");
+var clean_response_data_1 = require("../../../../utils/clean-response-data");
+var common_1 = require("../../../../types/common");
 /**
  * @oas [get] /orders
  * operationId: "GetOrders"
@@ -57,6 +72,8 @@ var validator_1 = require("../../../../utils/validator");
  * description: "Look up an order using filters."
  * parameters:
  *   - (query) display_id=* {number} The display id given to the Order.
+ *   - (query) fields {string} (Comma separated) Which fields should be included in the result.
+ *   - (query) expand {string} (Comma separated) Which fields should be expanded in the result.
  *   - in: query
  *     name: email
  *     style: form
@@ -77,6 +94,9 @@ var validator_1 = require("../../../../utils/validator");
  *         postal_code:
  *           type: string
  *           description: The postal code of the shipping address
+ * x-codegen:
+ *   method: lookupOrder
+ *   queryParams: StoreGetOrdersParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -102,9 +122,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/order"
+ *           $ref: "#/components/schemas/StoreOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":
@@ -120,25 +138,21 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
     var validated, orderService, orders, order;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, (0, validator_1.validator)(StoreGetOrdersParams, req.query)];
-            case 1:
-                validated = _a.sent();
+            case 0:
+                validated = req.validatedQuery;
                 orderService = req.scope.resolve("orderService");
                 return [4 /*yield*/, orderService.list({
                         display_id: validated.display_id,
                         email: validated.email,
-                    }, {
-                        select: _1.defaultStoreOrdersFields,
-                        relations: _1.defaultStoreOrdersRelations,
-                    })];
-            case 2:
+                    }, req.listConfig)];
+            case 1:
                 orders = _a.sent();
                 if (orders.length !== 1) {
                     res.sendStatus(404);
                     return [2 /*return*/];
                 }
                 order = orders[0];
-                res.json({ order: order });
+                res.json({ order: (0, clean_response_data_1.cleanResponseData)(order, req.allowedProperties || []) });
                 return [2 /*return*/];
         }
     });
@@ -154,8 +168,10 @@ var ShippingAddressPayload = /** @class */ (function () {
     return ShippingAddressPayload;
 }());
 exports.ShippingAddressPayload = ShippingAddressPayload;
-var StoreGetOrdersParams = /** @class */ (function () {
+var StoreGetOrdersParams = /** @class */ (function (_super) {
+    __extends(StoreGetOrdersParams, _super);
     function StoreGetOrdersParams() {
+        return _super !== null && _super.apply(this, arguments) || this;
     }
     __decorate([
         (0, class_validator_1.IsNumber)(),
@@ -173,6 +189,6 @@ var StoreGetOrdersParams = /** @class */ (function () {
         __metadata("design:type", ShippingAddressPayload)
     ], StoreGetOrdersParams.prototype, "shipping_address", void 0);
     return StoreGetOrdersParams;
-}());
+}(common_1.FindParams));
 exports.StoreGetOrdersParams = StoreGetOrdersParams;
 //# sourceMappingURL=lookup-order.js.map

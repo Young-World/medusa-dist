@@ -61,16 +61,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - key
- *           - value
- *         properties:
- *           key:
- *             description: The metadata key
- *             type: string
- *           value:
- *             description: The metadata value
- *             type: string
+ *         $ref: "#/components/schemas/AdminPostProductsProductMetadataReq"
+ * x-codegen:
+ *   method: setMetadata
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -106,9 +99,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             product:
- *               $ref: "#/components/schemas/product"
+ *           $ref: "#/components/schemas/AdminProductsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -157,6 +148,20 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostProductsProductMetadataReq
+ * type: object
+ * required:
+ *   - key
+ *   - value
+ * properties:
+ *   key:
+ *     description: The metadata key
+ *     type: string
+ *   value:
+ *     description: The metadata value
+ *     type: string
+ */
 var AdminPostProductsProductMetadataReq = /** @class */ (function () {
     function AdminPostProductsProductMetadataReq() {
     }

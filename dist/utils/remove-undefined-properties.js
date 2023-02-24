@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.removeUndefinedProperties = void 0;
-var is_defined_1 = require("./is-defined");
+var medusa_core_utils_1 = require("medusa-core-utils");
 function removeUndefinedProperties(inputObj) {
     var removeProperties = function (obj) {
         var res = {};
@@ -18,7 +18,7 @@ function removeUndefinedProperties(inputObj) {
 }
 exports.removeUndefinedProperties = removeUndefinedProperties;
 function removeUndefinedDeeply(input) {
-    if ((0, is_defined_1.isDefined)(input)) {
+    if ((0, medusa_core_utils_1.isDefined)(input)) {
         if (input === null || input === "null") {
             return null;
         }
@@ -27,7 +27,7 @@ function removeUndefinedDeeply(input) {
                 .map(function (item) {
                 return removeUndefinedDeeply(item);
             })
-                .filter(function (v) { return (0, is_defined_1.isDefined)(v); });
+                .filter(function (v) { return (0, medusa_core_utils_1.isDefined)(v); });
         }
         else if (Object.prototype.toString.call(input) === "[object Date]") {
             return input;

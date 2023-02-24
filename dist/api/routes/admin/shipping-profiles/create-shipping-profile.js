@@ -47,6 +47,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminPostShippingProfilesReq = void 0;
 var class_validator_1 = require("class-validator");
+var models_1 = require("../../../../models");
 var validator_1 = require("../../../../utils/validator");
 /**
  * @oas [post] /shipping-profiles
@@ -58,12 +59,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - name
- *         properties:
- *           name:
- *             description: "The name of the Shipping Profile"
- *             type: string
+ *         $ref: "#/components/schemas/AdminPostShippingProfilesReq"
+ * x-codegen:
+ *   method: create
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -97,9 +95,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             shipping_profile:
- *               $ref: "#/components/schemas/shipping_profile"
+ *           $ref: "#/components/schemas/AdminShippingProfilesRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -139,6 +135,21 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostShippingProfilesReq
+ * type: object
+ * required:
+ *   - name
+ *   - type
+ * properties:
+ *   name:
+ *     description: The name of the Shipping Profile
+ *     type: string
+ *   type:
+ *     description: The type of the Shipping Profile
+ *     type: string
+ *     enum: [default, gift_card, custom]
+ */
 var AdminPostShippingProfilesReq = /** @class */ (function () {
     function AdminPostShippingProfilesReq() {
     }
@@ -146,6 +157,17 @@ var AdminPostShippingProfilesReq = /** @class */ (function () {
         (0, class_validator_1.IsString)(),
         __metadata("design:type", String)
     ], AdminPostShippingProfilesReq.prototype, "name", void 0);
+    __decorate([
+        (0, class_validator_1.IsEnum)(models_1.ShippingProfileType, {
+            message: "type must be one of 'default', 'custom', 'gift_card'",
+        }),
+        __metadata("design:type", String)
+    ], AdminPostShippingProfilesReq.prototype, "type", void 0);
+    __decorate([
+        (0, class_validator_1.IsOptional)(),
+        (0, class_validator_1.IsObject)(),
+        __metadata("design:type", Object)
+    ], AdminPostShippingProfilesReq.prototype, "metadata", void 0);
     return AdminPostShippingProfilesReq;
 }());
 exports.AdminPostShippingProfilesReq = AdminPostShippingProfilesReq;

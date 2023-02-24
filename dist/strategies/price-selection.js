@@ -81,17 +81,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var price_selection_strategy_1 = require("../interfaces/price-selection-strategy");
+var interfaces_1 = require("../interfaces");
+var medusa_core_utils_1 = require("medusa-core-utils");
 var tax_inclusive_pricing_1 = __importDefault(require("../loaders/feature-flags/tax-inclusive-pricing"));
-var is_defined_1 = require("../utils/is-defined");
 var PriceSelectionStrategy = /** @class */ (function (_super) {
     __extends(PriceSelectionStrategy, _super);
     function PriceSelectionStrategy(_a) {
-        var manager = _a.manager, featureFlagRouter = _a.featureFlagRouter, moneyAmountRepository = _a.moneyAmountRepository;
+        var manager = _a.manager, featureFlagRouter = _a.featureFlagRouter, moneyAmountRepository = _a.moneyAmountRepository, cacheService = _a.cacheService;
         var _this = _super.call(this) || this;
         _this.manager_ = manager;
         _this.moneyAmountRepository_ = moneyAmountRepository;
         _this.featureFlagRouter_ = featureFlagRouter;
+        _this.cacheService_ = cacheService;
         return _this;
     }
     PriceSelectionStrategy.prototype.withTransaction = function (manager) {
@@ -102,15 +103,38 @@ var PriceSelectionStrategy = /** @class */ (function (_super) {
             manager: manager,
             moneyAmountRepository: this.moneyAmountRepository_,
             featureFlagRouter: this.featureFlagRouter_,
+            cacheService: this.cacheService_,
         });
     };
     PriceSelectionStrategy.prototype.calculateVariantPrice = function (variant_id, context) {
         return __awaiter(this, void 0, void 0, function () {
+            var cacheKey, cached, result;
             return __generator(this, function (_a) {
-                if (this.featureFlagRouter_.isFeatureEnabled(tax_inclusive_pricing_1.default.key)) {
-                    return [2 /*return*/, this.calculateVariantPrice_new(variant_id, context)];
+                switch (_a.label) {
+                    case 0:
+                        cacheKey = this.getCacheKey(variant_id, context);
+                        return [4 /*yield*/, this.cacheService_
+                                .get(cacheKey)
+                                .catch(function () { return void 0; })];
+                    case 1:
+                        cached = _a.sent();
+                        if (cached) {
+                            return [2 /*return*/, cached];
+                        }
+                        if (!this.featureFlagRouter_.isFeatureEnabled(tax_inclusive_pricing_1.default.key)) return [3 /*break*/, 3];
+                        return [4 /*yield*/, this.calculateVariantPrice_new(variant_id, context)];
+                    case 2:
+                        result = _a.sent();
+                        return [3 /*break*/, 5];
+                    case 3: return [4 /*yield*/, this.calculateVariantPrice_old(variant_id, context)];
+                    case 4:
+                        result = _a.sent();
+                        _a.label = 5;
+                    case 5: return [4 /*yield*/, this.cacheService_.set(cacheKey, result)];
+                    case 6:
+                        _a.sent();
+                        return [2 /*return*/, result];
                 }
-                return [2 /*return*/, this.calculateVariantPrice_old(variant_id, context)];
             });
         });
     };
@@ -177,7 +201,7 @@ var PriceSelectionStrategy = /** @class */ (function (_super) {
                                         ma.currency_code === context.currency_code) ||
                                         (context.region_id && ma.region_id === context.region_id))) {
                                     result.calculatedPrice = ma.amount;
-                                    result.calculatedPriceType = ((_e = ma.price_list) === null || _e === void 0 ? void 0 : _e.type) || price_selection_strategy_1.PriceType.DEFAULT;
+                                    result.calculatedPriceType = ((_e = ma.price_list) === null || _e === void 0 ? void 0 : _e.type) || interfaces_1.PriceType.DEFAULT;
                                     result.calculatedPriceIncludesTax = isTaxInclusive;
                                 }
                             }
@@ -249,7 +273,7 @@ var PriceSelectionStrategy = /** @class */ (function (_super) {
                                         ma.currency_code === context.currency_code) ||
                                         (context.region_id && ma.region_id === context.region_id))) {
                                     result.calculatedPrice = ma.amount;
-                                    result.calculatedPriceType = ((_a = ma.price_list) === null || _a === void 0 ? void 0 : _a.type) || price_selection_strategy_1.PriceType.DEFAULT;
+                                    result.calculatedPriceType = ((_a = ma.price_list) === null || _a === void 0 ? void 0 : _a.type) || interfaces_1.PriceType.DEFAULT;
                                 }
                             }
                         }
@@ -265,8 +289,15 @@ var PriceSelectionStrategy = /** @class */ (function (_super) {
             });
         });
     };
+    PriceSelectionStrategy.prototype.getCacheKey = function (variantId, context) {
+        var _a;
+        var taxRate = ((_a = context.tax_rates) === null || _a === void 0 ? void 0 : _a.reduce(function (accRate, nextTaxRate) {
+            return accRate + (nextTaxRate.rate || 0) / 100;
+        }, 0)) || 0;
+        return "ps:".concat(variantId, ":").concat(context.region_id, ":").concat(context.currency_code, ":").concat(context.customer_id, ":").concat(context.quantity, ":").concat(context.include_discount_prices, ":").concat(taxRate);
+    };
     return PriceSelectionStrategy;
-}(price_selection_strategy_1.AbstractPriceSelectionStrategy));
+}(interfaces_1.AbstractPriceSelectionStrategy));
 var isValidAmount = function (amount, result, isTaxInclusive, taxRate) {
     if (result.calculatedPrice === null) {
         return true;
@@ -284,7 +315,7 @@ var isValidAmount = function (amount, result, isTaxInclusive, taxRate) {
     return false;
 };
 var isValidQuantity = function (price, quantity) {
-    return ((0, is_defined_1.isDefined)(quantity) && isValidPriceWithQuantity(price, quantity)) ||
+    return ((0, medusa_core_utils_1.isDefined)(quantity) && isValidPriceWithQuantity(price, quantity)) ||
         (typeof quantity === "undefined" && isValidPriceWithoutQuantity(price));
 };
 var isValidPriceWithoutQuantity = function (price) {

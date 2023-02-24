@@ -46,17 +46,8 @@ var discount_condition_1 = require("../models/discount-condition");
 var discount_condition_product_1 = require("../models/discount-condition-product");
 var discount_rule_1 = require("../models/discount-rule");
 var discount_condition_2 = require("../repositories/discount-condition");
+var db_config_1 = require("./db-config");
 dotenv_1.default.config();
-var typeormConfig = {
-    type: process.env.TYPEORM_CONNECTION,
-    url: process.env.TYPEORM_URL,
-    username: process.env.TYPEORM_USERNAME,
-    password: process.env.TYPEORM_PASSWORD,
-    database: process.env.TYPEORM_DATABASE,
-    migrations: [process.env.TYPEORM_MIGRATIONS],
-    entities: [process.env.TYPEORM_ENTITIES],
-    logging: true,
-};
 var migrate = function (_a) {
     var typeormConfig = _a.typeormConfig;
     return __awaiter(this, void 0, void 0, function () {
@@ -179,7 +170,7 @@ var migrate = function (_a) {
         });
     });
 };
-migrate({ typeormConfig: typeormConfig })
+migrate({ typeormConfig: db_config_1.typeormConfig })
     .then(function () {
     logger_1.default.info("Database migration completed successfully");
     process.exit();

@@ -99,6 +99,15 @@ var __read = (this && this.__read) || function (o, n) {
     }
     return ar;
 };
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 var medusa_core_utils_1 = require("medusa-core-utils");
 var interfaces_1 = require("../interfaces");
@@ -196,6 +205,9 @@ var ShippingProfileService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(profileId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"profileId\" must be defined");
+                        }
                         profileRepository = this.manager_.getCustomRepository(this.shippingProfileRepository_);
                         query = (0, utils_1.buildQuery)({ id: profileId }, options);
                         return [4 /*yield*/, profileRepository.findOne(query)];
@@ -330,7 +342,7 @@ var ShippingProfileService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var profileRepository, created, result;
+                            var profileRepository, metadata, rest, created, result;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
@@ -338,7 +350,11 @@ var ShippingProfileService = /** @class */ (function (_super) {
                                         if (profile["products"] || profile["shipping_options"]) {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Please add products and shipping_options after creating Shipping Profiles");
                                         }
-                                        created = profileRepository.create(profile);
+                                        metadata = profile.metadata, rest = __rest(profile, ["metadata"]);
+                                        created = profileRepository.create(rest);
+                                        if (metadata) {
+                                            created.metadata = (0, utils_1.setMetadata)(created, metadata);
+                                        }
                                         return [4 /*yield*/, profileRepository.save(created)];
                                     case 1:
                                         result = _a.sent();
@@ -366,10 +382,10 @@ var ShippingProfileService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var profileRepository, profile, metadata, products, shipping_options, rest, productServiceTx, products_1, products_1_1, pId, e_1_1, shippingOptionServiceTx, shipping_options_1, shipping_options_1_1, oId, e_2_1, _a, _b, _c, key, value;
-                            var e_1, _d, e_2, _e, e_3, _f;
-                            return __generator(this, function (_g) {
-                                switch (_g.label) {
+                            var profileRepository, profile, metadata, products, shipping_options, rest, _a, _b, _c, key, value;
+                            var e_1, _d;
+                            return __generator(this, function (_e) {
+                                switch (_e.label) {
                                     case 0:
                                         profileRepository = manager.getCustomRepository(this.shippingProfileRepository_);
                                         return [4 /*yield*/, this.retrieve(profileId, {
@@ -381,88 +397,38 @@ var ShippingProfileService = /** @class */ (function (_super) {
                                                 ],
                                             })];
                                     case 1:
-                                        profile = _g.sent();
+                                        profile = _e.sent();
                                         metadata = update.metadata, products = update.products, shipping_options = update.shipping_options, rest = __rest(update, ["metadata", "products", "shipping_options"]);
+                                        if (!products) return [3 /*break*/, 3];
+                                        return [4 /*yield*/, this.addProduct(profile.id, products)];
+                                    case 2:
+                                        profile = _e.sent();
+                                        _e.label = 3;
+                                    case 3:
+                                        if (!shipping_options) return [3 /*break*/, 5];
+                                        return [4 /*yield*/, this.addShippingOption(profile.id, shipping_options)];
+                                    case 4:
+                                        profile = _e.sent();
+                                        _e.label = 5;
+                                    case 5:
                                         if (metadata) {
                                             profile.metadata = (0, utils_1.setMetadata)(profile, metadata);
                                         }
-                                        if (!products) return [3 /*break*/, 9];
-                                        productServiceTx = this.productService_.withTransaction(manager);
-                                        _g.label = 2;
-                                    case 2:
-                                        _g.trys.push([2, 7, 8, 9]);
-                                        products_1 = __values(products), products_1_1 = products_1.next();
-                                        _g.label = 3;
-                                    case 3:
-                                        if (!!products_1_1.done) return [3 /*break*/, 6];
-                                        pId = products_1_1.value;
-                                        return [4 /*yield*/, productServiceTx.update(pId, {
-                                                profile_id: profile.id,
-                                            })];
-                                    case 4:
-                                        _g.sent();
-                                        _g.label = 5;
-                                    case 5:
-                                        products_1_1 = products_1.next();
-                                        return [3 /*break*/, 3];
-                                    case 6: return [3 /*break*/, 9];
-                                    case 7:
-                                        e_1_1 = _g.sent();
-                                        e_1 = { error: e_1_1 };
-                                        return [3 /*break*/, 9];
-                                    case 8:
-                                        try {
-                                            if (products_1_1 && !products_1_1.done && (_d = products_1.return)) _d.call(products_1);
-                                        }
-                                        finally { if (e_1) throw e_1.error; }
-                                        return [7 /*endfinally*/];
-                                    case 9:
-                                        if (!shipping_options) return [3 /*break*/, 17];
-                                        shippingOptionServiceTx = this.shippingOptionService_.withTransaction(manager);
-                                        _g.label = 10;
-                                    case 10:
-                                        _g.trys.push([10, 15, 16, 17]);
-                                        shipping_options_1 = __values(shipping_options), shipping_options_1_1 = shipping_options_1.next();
-                                        _g.label = 11;
-                                    case 11:
-                                        if (!!shipping_options_1_1.done) return [3 /*break*/, 14];
-                                        oId = shipping_options_1_1.value;
-                                        return [4 /*yield*/, shippingOptionServiceTx.update(oId, {
-                                                profile_id: profile.id,
-                                            })];
-                                    case 12:
-                                        _g.sent();
-                                        _g.label = 13;
-                                    case 13:
-                                        shipping_options_1_1 = shipping_options_1.next();
-                                        return [3 /*break*/, 11];
-                                    case 14: return [3 /*break*/, 17];
-                                    case 15:
-                                        e_2_1 = _g.sent();
-                                        e_2 = { error: e_2_1 };
-                                        return [3 /*break*/, 17];
-                                    case 16:
-                                        try {
-                                            if (shipping_options_1_1 && !shipping_options_1_1.done && (_e = shipping_options_1.return)) _e.call(shipping_options_1);
-                                        }
-                                        finally { if (e_2) throw e_2.error; }
-                                        return [7 /*endfinally*/];
-                                    case 17:
                                         try {
                                             for (_a = __values(Object.entries(rest)), _b = _a.next(); !_b.done; _b = _a.next()) {
                                                 _c = __read(_b.value, 2), key = _c[0], value = _c[1];
                                                 profile[key] = value;
                                             }
                                         }
-                                        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+                                        catch (e_1_1) { e_1 = { error: e_1_1 }; }
                                         finally {
                                             try {
-                                                if (_b && !_b.done && (_f = _a.return)) _f.call(_a);
+                                                if (_b && !_b.done && (_d = _a.return)) _d.call(_a);
                                             }
-                                            finally { if (e_3) throw e_3.error; }
+                                            finally { if (e_1) throw e_1.error; }
                                         }
                                         return [4 /*yield*/, profileRepository.save(profile)];
-                                    case 18: return [2 /*return*/, _g.sent()];
+                                    case 6: return [2 /*return*/, _e.sent()];
                                 }
                             });
                         }); })];
@@ -507,10 +473,9 @@ var ShippingProfileService = /** @class */ (function (_super) {
         });
     };
     /**
-     * Adds a product to a profile. The method is idempotent, so multiple calls
-     * with the same product variant will have the same result.
-     * @param profileId - the profile to add the product to.
-     * @param productId - the product to add.
+     * Adds a product of an array of products to the profile.
+     * @param profileId - the profile to add the products to.
+     * @param productId - the ID of the product or multiple products to add.
      * @return the result of update
      */
     ShippingProfileService.prototype.addProduct = function (profileId, productId) {
@@ -519,14 +484,22 @@ var ShippingProfileService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
+                            var productServiceTx;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.productService_
-                                            .withTransaction(manager)
-                                            .update(productId, { profile_id: profileId })];
+                                    case 0:
+                                        productServiceTx = this.productService_.withTransaction(manager);
+                                        return [4 /*yield*/, productServiceTx.updateShippingProfile((0, utils_1.isString)(productId) ? [productId] : productId, profileId)];
                                     case 1:
                                         _a.sent();
-                                        return [4 /*yield*/, this.retrieve(profileId)];
+                                        return [4 /*yield*/, this.retrieve(profileId, {
+                                                relations: [
+                                                    "products",
+                                                    "products.profile",
+                                                    "shipping_options",
+                                                    "shipping_options.profile",
+                                                ],
+                                            })];
                                     case 2: return [2 /*return*/, _a.sent()];
                                 }
                             });
@@ -540,7 +513,7 @@ var ShippingProfileService = /** @class */ (function (_super) {
      * Adds a shipping option to the profile. The shipping option can be used to
      * fulfill the products in the products field.
      * @param profileId - the profile to apply the shipping option to
-     * @param optionId - the option to add to the profile
+     * @param optionId - the ID of the option or multiple options to add to the profile
      * @return the result of the model update operation
      */
     ShippingProfileService.prototype.addShippingOption = function (profileId, optionId) {
@@ -549,18 +522,23 @@ var ShippingProfileService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var updated;
+                            var shippingOptionServiceTx;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.shippingOptionService_
-                                            .withTransaction(manager)
-                                            .update(optionId, { profile_id: profileId })];
+                                    case 0:
+                                        shippingOptionServiceTx = this.shippingOptionService_.withTransaction(manager);
+                                        return [4 /*yield*/, shippingOptionServiceTx.updateShippingProfile((0, utils_1.isString)(optionId) ? [optionId] : optionId, profileId)];
                                     case 1:
                                         _a.sent();
-                                        return [4 /*yield*/, this.retrieve(profileId)];
-                                    case 2:
-                                        updated = _a.sent();
-                                        return [2 /*return*/, updated];
+                                        return [4 /*yield*/, this.retrieve(profileId, {
+                                                relations: [
+                                                    "products",
+                                                    "products.profile",
+                                                    "shipping_options",
+                                                    "shipping_options.profile",
+                                                ],
+                                            })];
+                                    case 2: return [2 /*return*/, _a.sent()];
                                 }
                             });
                         }); })];
@@ -581,7 +559,7 @@ var ShippingProfileService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var profileIds, selector, customShippingOptions, hasCustomShippingOptions, rawOpts, options;
+                            var profileIds, selector, customShippingOptions, hasCustomShippingOptions, rawOpts, customShippingOptionsMap_1;
                             var _this = this;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
@@ -614,37 +592,27 @@ var ShippingProfileService = /** @class */ (function (_super) {
                                         rawOpts = _a.sent();
                                         // if there are custom shipping options associated with the cart, return cart shipping options with custom price
                                         if (hasCustomShippingOptions) {
+                                            customShippingOptionsMap_1 = new Map();
+                                            customShippingOptions.forEach(function (option) {
+                                                customShippingOptionsMap_1.set(option.shipping_option_id, option);
+                                            });
                                             return [2 /*return*/, rawOpts.map(function (so) {
-                                                    var customOption = customShippingOptions.find(function (cso) { return cso.shipping_option_id === so.id; });
+                                                    var customOption = customShippingOptionsMap_1.get(so.id);
                                                     return __assign(__assign({}, so), { amount: customOption === null || customOption === void 0 ? void 0 : customOption.price });
                                                 })];
                                         }
                                         return [4 /*yield*/, Promise.all(rawOpts.map(function (so) { return __awaiter(_this, void 0, void 0, function () {
-                                                var option, err_1;
                                                 return __generator(this, function (_a) {
                                                     switch (_a.label) {
-                                                        case 0:
-                                                            _a.trys.push([0, 2, , 3]);
-                                                            return [4 /*yield*/, this.shippingOptionService_
-                                                                    .withTransaction(manager)
-                                                                    .validateCartOption(so, cart)];
-                                                        case 1:
-                                                            option = _a.sent();
-                                                            if (option) {
-                                                                return [2 /*return*/, option];
-                                                            }
-                                                            return [2 /*return*/, null];
-                                                        case 2:
-                                                            err_1 = _a.sent();
-                                                            // if validateCartOption fails it means the option is not valid
-                                                            return [2 /*return*/, null];
-                                                        case 3: return [2 /*return*/];
+                                                        case 0: return [4 /*yield*/, this.shippingOptionService_
+                                                                .withTransaction(manager)
+                                                                .validateCartOption(so, cart)
+                                                                .catch(function () { return null; })]; // if validateCartOption fails it means the option is not valid
+                                                        case 1: return [2 /*return*/, _a.sent()]; // if validateCartOption fails it means the option is not valid
                                                     }
                                                 });
                                             }); }))];
-                                    case 3:
-                                        options = _a.sent();
-                                        return [2 /*return*/, options.filter(Boolean)];
+                                    case 3: return [2 /*return*/, (_a.sent()).filter(function (option) { return !!option; })];
                                 }
                             });
                         }); })];
@@ -659,15 +627,14 @@ var ShippingProfileService = /** @class */ (function (_super) {
      * @return a list of product ids
      */
     ShippingProfileService.prototype.getProfilesInCart = function (cart) {
-        return cart.items.reduce(function (acc, next) {
-            // We may have line items that are not associated with a product
-            if (next.variant && next.variant.product) {
-                if (!acc.includes(next.variant.product.profile_id)) {
-                    acc.push(next.variant.product.profile_id);
-                }
+        var profileIds = new Set();
+        cart.items.forEach(function (item) {
+            var _a;
+            if ((_a = item.variant) === null || _a === void 0 ? void 0 : _a.product) {
+                profileIds.add(item.variant.product.profile_id);
             }
-            return acc;
-        }, []);
+        });
+        return __spreadArray([], __read(profileIds), false);
     };
     return ShippingProfileService;
 }(interfaces_1.TransactionBaseService));

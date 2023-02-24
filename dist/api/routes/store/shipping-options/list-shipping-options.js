@@ -43,6 +43,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * description: "Retrieves a list of Shipping Options available to a cart."
  * parameters:
  *   - (path) cart_id {string} The id of the Cart.
+ * x-codegen:
+ *   method: listCartOptions
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -65,11 +67,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             shipping_options:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/shipping_option"
+ *           $ref: "#/components/schemas/StoreShippingOptionsListRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":
@@ -91,13 +89,7 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                 pricingService = req.scope.resolve("pricingService");
                 shippingProfileService = req.scope.resolve("shippingProfileService");
                 return [4 /*yield*/, cartService.retrieveWithTotals(cart_id, {
-                        relations: [
-                            "region",
-                            "items",
-                            "items.adjustments",
-                            "items.variant",
-                            "items.variant.product",
-                        ],
+                        relations: ["items.variant", "items.variant.product"],
                     })];
             case 1:
                 cart = _a.sent();

@@ -108,7 +108,7 @@ var claims1612284947120 = /** @class */ (function () {
                         return [4 /*yield*/, queryRunner.query("ALTER TABLE \"line_item\" ADD \"claim_order_id\" character varying")];
                     case 21:
                         _a.sent();
-                        return [4 /*yield*/, queryRunner.query("ALTER TYPE \"public\".\"refund_reason_enum\" RENAME TO \"refund_reason_enum_old\"")];
+                        return [4 /*yield*/, queryRunner.query("ALTER TYPE \"refund_reason_enum\" RENAME TO \"refund_reason_enum_old\"")];
                     case 22:
                         _a.sent();
                         return [4 /*yield*/, queryRunner.query("CREATE TYPE \"refund_reason_enum\" AS ENUM('discount', 'return', 'swap', 'claim', 'other')")];

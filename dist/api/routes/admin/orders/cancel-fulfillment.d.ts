@@ -1,3 +1,6 @@
+import { ProductVariantInventoryService } from "../../../../services";
+import { Fulfillment } from "../../../../models";
+import { FindParams } from "../../../../types/common";
 /**
  * @oas [post] /orders/{id}/fulfillments/{fulfillment_id}/cancel
  * operationId: "PostOrdersOrderFulfillmentsCancel"
@@ -7,6 +10,11 @@
  * parameters:
  *   - (path) id=* {string} The ID of the Order which the Fulfillment relates to.
  *   - (path) fulfillment_id=* {string} The ID of the Fulfillment
+ *   - (query) expand {string} Comma separated list of relations to include in the result.
+ *   - (query) fields {string} Comma separated list of fields to include in the result.
+ * x-codegen:
+ *   method: cancelFulfillment
+ *   params: AdminPostOrdersOrderFulfillementsCancelParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -34,9 +42,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/order"
+ *           $ref: "#/components/schemas/AdminOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -52,3 +58,8 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+export declare const adjustInventoryForCancelledFulfillment: (fulfillment: Fulfillment, context: {
+    productVariantInventoryService: ProductVariantInventoryService;
+}) => Promise<void>;
+export declare class AdminPostOrdersOrderFulfillementsCancelParams extends FindParams {
+}

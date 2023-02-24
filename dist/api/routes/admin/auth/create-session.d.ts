@@ -11,18 +11,9 @@
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - email
- *           - password
- *         properties:
- *           email:
- *             type: string
- *             description: The User's email.
- *             format: email
- *           password:
- *             type: string
- *             description: The User's password.
- *             format: password
+ *         $ref: "#/components/schemas/AdminPostAuthReq"
+ * x-codegen:
+ *   method: createSession
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -52,9 +43,7 @@
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            user:
- *              $ref: "#/components/schemas/user"
+ *          $ref: "#/components/schemas/AdminAuthRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":
@@ -70,6 +59,22 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostAuthReq
+ * type: object
+ * required:
+ *   - email
+ *   - password
+ * properties:
+ *   email:
+ *     type: string
+ *     description: The User's email.
+ *     format: email
+ *   password:
+ *     type: string
+ *     description: The User's password.
+ *     format: password
+ */
 export declare class AdminPostAuthReq {
     email: string;
     password: string;

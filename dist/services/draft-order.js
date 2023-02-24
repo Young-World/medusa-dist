@@ -86,8 +86,8 @@ var __values = (this && this.__values) || function(o) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var medusa_core_utils_1 = require("medusa-core-utils");
 var typeorm_1 = require("typeorm");
-var models_1 = require("../models");
 var interfaces_1 = require("../interfaces");
+var models_1 = require("../models");
 var utils_1 = require("../utils");
 /**
  * Handles draft orders
@@ -96,8 +96,10 @@ var utils_1 = require("../utils");
 var DraftOrderService = /** @class */ (function (_super) {
     __extends(DraftOrderService, _super);
     function DraftOrderService(_a) {
-        var manager = _a.manager, draftOrderRepository = _a.draftOrderRepository, paymentRepository = _a.paymentRepository, orderRepository = _a.orderRepository, eventBusService = _a.eventBusService, cartService = _a.cartService, lineItemService = _a.lineItemService, productVariantService = _a.productVariantService, shippingOptionService = _a.shippingOptionService;
-        var _this = _super.call(this, arguments[0]) || this;
+        var manager = _a.manager, draftOrderRepository = _a.draftOrderRepository, paymentRepository = _a.paymentRepository, orderRepository = _a.orderRepository, eventBusService = _a.eventBusService, cartService = _a.cartService, lineItemService = _a.lineItemService, productVariantService = _a.productVariantService, shippingOptionService = _a.shippingOptionService, customShippingOptionService = _a.customShippingOptionService;
+        var _this = 
+        // eslint-disable-next-line prefer-rest-params
+        _super.call(this, arguments[0]) || this;
         _this.manager_ = manager;
         _this.draftOrderRepository_ = draftOrderRepository;
         _this.paymentRepository_ = paymentRepository;
@@ -106,30 +108,34 @@ var DraftOrderService = /** @class */ (function (_super) {
         _this.cartService_ = cartService;
         _this.productVariantService_ = productVariantService;
         _this.shippingOptionService_ = shippingOptionService;
+        _this.customShippingOptionService_ = customShippingOptionService;
         _this.eventBus_ = eventBusService;
         return _this;
     }
     /**
      * Retrieves a draft order with the given id.
-     * @param id - id of the draft order to retrieve
+     * @param draftOrderId - id of the draft order to retrieve
      * @param config - query object for findOne
      * @return the draft order
      */
-    DraftOrderService.prototype.retrieve = function (id, config) {
+    DraftOrderService.prototype.retrieve = function (draftOrderId, config) {
         if (config === void 0) { config = {}; }
         return __awaiter(this, void 0, void 0, function () {
             var manager, draftOrderRepo, query, draftOrder;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(draftOrderId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"draftOrderId\" must be defined");
+                        }
                         manager = this.manager_;
                         draftOrderRepo = manager.getCustomRepository(this.draftOrderRepository_);
-                        query = (0, utils_1.buildQuery)({ id: id }, config);
+                        query = (0, utils_1.buildQuery)({ id: draftOrderId }, config);
                         return [4 /*yield*/, draftOrderRepo.findOne(query)];
                     case 1:
                         draftOrder = _a.sent();
                         if (!draftOrder) {
-                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Draft order with ".concat(id, " was not found"));
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Draft order with ".concat(draftOrderId, " was not found"));
                         }
                         return [2 /*return*/, draftOrder];
                 }
@@ -281,88 +287,56 @@ var DraftOrderService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                            var draftOrderRepo, shipping_methods, no_notification_order, items, rawCart, cartServiceTx, discounts, discounts_1, discounts_1_1, code, e_1_1, createdCart, draftOrder, result, lineItemServiceTx, items_1, items_1_1, item, line, price, e_2_1, shipping_methods_1, shipping_methods_1_1, method, e_3_1;
-                            var e_1, _a, e_2, _b, e_3, _c;
-                            return __generator(this, function (_d) {
-                                switch (_d.label) {
+                            var draftOrderRepo, shipping_methods, no_notification_order, items, idempotency_key, discounts, rawCart, cartServiceTx, createdCart, draftOrder, result, lineItemServiceTx, _a, _b, item, line, price, e_1_1, shipping_methods_1, shipping_methods_1_1, method, e_2_1;
+                            var e_1, _c, e_2, _d;
+                            return __generator(this, function (_e) {
+                                switch (_e.label) {
                                     case 0:
                                         draftOrderRepo = transactionManager.getCustomRepository(this.draftOrderRepository_);
                                         if (!data.region_id) {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "region_id is required to create a draft order");
                                         }
-                                        if (!data.items || !data.items.length) {
-                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Items are required to create a draft order");
-                                        }
-                                        shipping_methods = data.shipping_methods, no_notification_order = data.no_notification_order, items = data.items, rawCart = __rest(data, ["shipping_methods", "no_notification_order", "items"]);
+                                        shipping_methods = data.shipping_methods, no_notification_order = data.no_notification_order, items = data.items, idempotency_key = data.idempotency_key, discounts = data.discounts, rawCart = __rest(data, ["shipping_methods", "no_notification_order", "items", "idempotency_key", "discounts"]);
                                         cartServiceTx = this.cartService_.withTransaction(transactionManager);
-                                        if (!rawCart.discounts) return [3 /*break*/, 8];
-                                        discounts = rawCart.discounts;
-                                        rawCart.discounts = [];
-                                        _d.label = 1;
+                                        return [4 /*yield*/, cartServiceTx.create(__assign({ type: models_1.CartType.DRAFT_ORDER }, rawCart))];
                                     case 1:
-                                        _d.trys.push([1, 6, 7, 8]);
-                                        discounts_1 = __values(discounts), discounts_1_1 = discounts_1.next();
-                                        _d.label = 2;
-                                    case 2:
-                                        if (!!discounts_1_1.done) return [3 /*break*/, 5];
-                                        code = discounts_1_1.value.code;
-                                        return [4 /*yield*/, cartServiceTx.applyDiscount(rawCart, code)];
-                                    case 3:
-                                        _d.sent();
-                                        _d.label = 4;
-                                    case 4:
-                                        discounts_1_1 = discounts_1.next();
-                                        return [3 /*break*/, 2];
-                                    case 5: return [3 /*break*/, 8];
-                                    case 6:
-                                        e_1_1 = _d.sent();
-                                        e_1 = { error: e_1_1 };
-                                        return [3 /*break*/, 8];
-                                    case 7:
-                                        try {
-                                            if (discounts_1_1 && !discounts_1_1.done && (_a = discounts_1.return)) _a.call(discounts_1);
-                                        }
-                                        finally { if (e_1) throw e_1.error; }
-                                        return [7 /*endfinally*/];
-                                    case 8: return [4 /*yield*/, cartServiceTx.create(__assign({ type: models_1.CartType.DRAFT_ORDER }, rawCart))];
-                                    case 9:
-                                        createdCart = _d.sent();
+                                        createdCart = _e.sent();
                                         draftOrder = draftOrderRepo.create({
                                             cart_id: createdCart.id,
                                             no_notification_order: no_notification_order,
+                                            idempotency_key: idempotency_key,
                                         });
                                         return [4 /*yield*/, draftOrderRepo.save(draftOrder)];
-                                    case 10:
-                                        result = _d.sent();
+                                    case 2:
+                                        result = _e.sent();
                                         return [4 /*yield*/, this.eventBus_
                                                 .withTransaction(transactionManager)
                                                 .emit(DraftOrderService.Events.CREATED, {
                                                 id: result.id,
                                             })];
-                                    case 11:
-                                        _d.sent();
+                                    case 3:
+                                        _e.sent();
                                         lineItemServiceTx = this.lineItemService_.withTransaction(transactionManager);
-                                        _d.label = 12;
-                                    case 12:
-                                        _d.trys.push([12, 20, 21, 22]);
-                                        items_1 = __values(items), items_1_1 = items_1.next();
-                                        _d.label = 13;
-                                    case 13:
-                                        if (!!items_1_1.done) return [3 /*break*/, 19];
-                                        item = items_1_1.value;
-                                        if (!item.variant_id) return [3 /*break*/, 16];
+                                        _e.label = 4;
+                                    case 4:
+                                        _e.trys.push([4, 12, 13, 14]);
+                                        _a = __values(items || []), _b = _a.next();
+                                        _e.label = 5;
+                                    case 5:
+                                        if (!!_b.done) return [3 /*break*/, 11];
+                                        item = _b.value;
+                                        if (!item.variant_id) return [3 /*break*/, 8];
                                         return [4 /*yield*/, lineItemServiceTx.generate(item.variant_id, data.region_id, item.quantity, {
                                                 metadata: (item === null || item === void 0 ? void 0 : item.metadata) || {},
                                                 unit_price: item.unit_price,
-                                                cart: createdCart,
                                             })];
-                                    case 14:
-                                        line = _d.sent();
+                                    case 6:
+                                        line = _e.sent();
                                         return [4 /*yield*/, lineItemServiceTx.create(__assign(__assign({}, line), { cart_id: createdCart.id }))];
-                                    case 15:
-                                        _d.sent();
-                                        return [3 /*break*/, 18];
-                                    case 16:
+                                    case 7:
+                                        _e.sent();
+                                        return [3 /*break*/, 10];
+                                    case 8:
                                         price = void 0;
                                         if (typeof item.unit_price === "undefined" || item.unit_price < 0) {
                                             price = 0;
@@ -379,50 +353,67 @@ var DraftOrderService = /** @class */ (function (_super) {
                                                 unit_price: price,
                                                 quantity: item.quantity,
                                             })];
-                                    case 17:
+                                    case 9:
                                         // custom line items can be added to a draft order
-                                        _d.sent();
-                                        _d.label = 18;
-                                    case 18:
-                                        items_1_1 = items_1.next();
-                                        return [3 /*break*/, 13];
-                                    case 19: return [3 /*break*/, 22];
-                                    case 20:
-                                        e_2_1 = _d.sent();
-                                        e_2 = { error: e_2_1 };
-                                        return [3 /*break*/, 22];
-                                    case 21:
+                                        _e.sent();
+                                        _e.label = 10;
+                                    case 10:
+                                        _b = _a.next();
+                                        return [3 /*break*/, 5];
+                                    case 11: return [3 /*break*/, 14];
+                                    case 12:
+                                        e_1_1 = _e.sent();
+                                        e_1 = { error: e_1_1 };
+                                        return [3 /*break*/, 14];
+                                    case 13:
                                         try {
-                                            if (items_1_1 && !items_1_1.done && (_b = items_1.return)) _b.call(items_1);
+                                            if (_b && !_b.done && (_c = _a.return)) _c.call(_a);
+                                        }
+                                        finally { if (e_1) throw e_1.error; }
+                                        return [7 /*endfinally*/];
+                                    case 14:
+                                        if (!(discounts === null || discounts === void 0 ? void 0 : discounts.length)) return [3 /*break*/, 16];
+                                        return [4 /*yield*/, cartServiceTx.update(createdCart.id, { discounts: discounts })];
+                                    case 15:
+                                        _e.sent();
+                                        _e.label = 16;
+                                    case 16:
+                                        _e.trys.push([16, 23, 24, 25]);
+                                        shipping_methods_1 = __values(shipping_methods), shipping_methods_1_1 = shipping_methods_1.next();
+                                        _e.label = 17;
+                                    case 17:
+                                        if (!!shipping_methods_1_1.done) return [3 /*break*/, 22];
+                                        method = shipping_methods_1_1.value;
+                                        if (!(typeof method.price !== "undefined")) return [3 /*break*/, 19];
+                                        return [4 /*yield*/, this.customShippingOptionService_
+                                                .withTransaction(transactionManager)
+                                                .create({
+                                                shipping_option_id: method.option_id,
+                                                cart_id: createdCart.id,
+                                                price: method.price,
+                                            })];
+                                    case 18:
+                                        _e.sent();
+                                        _e.label = 19;
+                                    case 19: return [4 /*yield*/, cartServiceTx.addShippingMethod(createdCart.id, method.option_id, method.data)];
+                                    case 20:
+                                        _e.sent();
+                                        _e.label = 21;
+                                    case 21:
+                                        shipping_methods_1_1 = shipping_methods_1.next();
+                                        return [3 /*break*/, 17];
+                                    case 22: return [3 /*break*/, 25];
+                                    case 23:
+                                        e_2_1 = _e.sent();
+                                        e_2 = { error: e_2_1 };
+                                        return [3 /*break*/, 25];
+                                    case 24:
+                                        try {
+                                            if (shipping_methods_1_1 && !shipping_methods_1_1.done && (_d = shipping_methods_1.return)) _d.call(shipping_methods_1);
                                         }
                                         finally { if (e_2) throw e_2.error; }
                                         return [7 /*endfinally*/];
-                                    case 22:
-                                        _d.trys.push([22, 27, 28, 29]);
-                                        shipping_methods_1 = __values(shipping_methods), shipping_methods_1_1 = shipping_methods_1.next();
-                                        _d.label = 23;
-                                    case 23:
-                                        if (!!shipping_methods_1_1.done) return [3 /*break*/, 26];
-                                        method = shipping_methods_1_1.value;
-                                        return [4 /*yield*/, cartServiceTx.addShippingMethod(createdCart.id, method.option_id, method.data)];
-                                    case 24:
-                                        _d.sent();
-                                        _d.label = 25;
-                                    case 25:
-                                        shipping_methods_1_1 = shipping_methods_1.next();
-                                        return [3 /*break*/, 23];
-                                    case 26: return [3 /*break*/, 29];
-                                    case 27:
-                                        e_3_1 = _d.sent();
-                                        e_3 = { error: e_3_1 };
-                                        return [3 /*break*/, 29];
-                                    case 28:
-                                        try {
-                                            if (shipping_methods_1_1 && !shipping_methods_1_1.done && (_c = shipping_methods_1.return)) _c.call(shipping_methods_1);
-                                        }
-                                        finally { if (e_3) throw e_3.error; }
-                                        return [7 /*endfinally*/];
-                                    case 29: return [2 /*return*/, result];
+                                    case 25: return [2 /*return*/, result];
                                 }
                             });
                         }); })];

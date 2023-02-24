@@ -1,5 +1,5 @@
 import { EntityManager } from "typeorm";
-import { EventBusService, ProductService, RegionService, TotalsService } from ".";
+import { EventBusService, NewTotalsService, ProductService, RegionService, TotalsService } from ".";
 import { TransactionBaseService } from "../interfaces";
 import { Cart, Discount, LineItem } from "../models";
 import { DiscountRuleType } from "../models/discount-rule";
@@ -12,6 +12,7 @@ import { CreateDiscountInput, CreateDynamicDiscountInput, FilterableDiscountProp
 import { FlagRouter } from "../utils/flag-router";
 import CustomerService from "./customer";
 import DiscountConditionService from "./discount-condition";
+import { CalculationContextData } from "../types/totals";
 /**
  * Provides layer to manipulate discounts.
  * @implements {BaseService}
@@ -26,11 +27,12 @@ declare class DiscountService extends TransactionBaseService {
     protected readonly discountConditionRepository_: typeof DiscountConditionRepository;
     protected readonly discountConditionService_: DiscountConditionService;
     protected readonly totalsService_: TotalsService;
+    protected readonly newTotalsService_: NewTotalsService;
     protected readonly productService_: ProductService;
     protected readonly regionService_: RegionService;
     protected readonly eventBus_: EventBusService;
     protected readonly featureFlagRouter_: FlagRouter;
-    constructor({ manager, discountRepository, discountRuleRepository, giftCardRepository, discountConditionRepository, discountConditionService, totalsService, productService, regionService, customerService, eventBusService, featureFlagRouter, }: {
+    constructor({ manager, discountRepository, discountRuleRepository, giftCardRepository, discountConditionRepository, discountConditionService, totalsService, newTotalsService, productService, regionService, customerService, eventBusService, featureFlagRouter, }: {
         manager: any;
         discountRepository: any;
         discountRuleRepository: any;
@@ -38,6 +40,7 @@ declare class DiscountService extends TransactionBaseService {
         discountConditionRepository: any;
         discountConditionService: any;
         totalsService: any;
+        newTotalsService: any;
         productService: any;
         regionService: any;
         customerService: any;
@@ -80,12 +83,19 @@ declare class DiscountService extends TransactionBaseService {
      */
     retrieve(discountId: string, config?: FindConfig<Discount>): Promise<Discount>;
     /**
-     * Gets a discount by discount code.
-     * @param {string} discountCode - discount code of discount to retrieve
-     * @param {Object} config - the config object containing query settings
-     * @return {Promise<Discount>} the discount document
+     * Gets the discount by discount code.
+     * @param discountCode - discount code of discount to retrieve
+     * @param config - the config object containing query settings
+     * @return the discount
      */
     retrieveByCode(discountCode: string, config?: FindConfig<Discount>): Promise<Discount>;
+    /**
+     * List all the discounts corresponding to the given codes
+     * @param discountCodes - discount codes of discounts to retrieve
+     * @param config - the config object containing query settings
+     * @return the discounts
+     */
+    listByCodes(discountCodes: string[], config?: FindConfig<Discount>): Promise<Discount[]>;
     /**
      * Updates a discount.
      * @param {string} discountId - discount id of discount to update
@@ -128,8 +138,8 @@ declare class DiscountService extends TransactionBaseService {
      */
     delete(discountId: string): Promise<void>;
     validateDiscountForProduct(discountRuleId: string, productId: string | undefined): Promise<boolean>;
-    calculateDiscountForLineItem(discountId: string, lineItem: LineItem, cart: Cart): Promise<number>;
-    validateDiscountForCartOrThrow(cart: Cart, discount: Discount): Promise<void>;
+    calculateDiscountForLineItem(discountId: string, lineItem: LineItem, calculationContextData: CalculationContextData): Promise<number>;
+    validateDiscountForCartOrThrow(cart: Cart, discount: Discount | Discount[]): Promise<void>;
     hasReachedLimit(discount: Discount): boolean;
     hasNotStarted(discount: Discount): boolean;
     hasExpired(discount: Discount): boolean;

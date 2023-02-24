@@ -66,7 +66,6 @@ var medusa_core_utils_1 = require("medusa-core-utils");
 var typeorm_1 = require("typeorm");
 var cart_1 = require("../types/cart");
 var interfaces_1 = require("../interfaces");
-var CACHE_TIME = 30; // seconds
 /**
  * Finds tax providers and assists in tax related operations.
  */
@@ -75,13 +74,13 @@ var TaxProviderService = /** @class */ (function (_super) {
     function TaxProviderService(container) {
         var _this = _super.call(this, container) || this;
         _this.container_ = container;
+        _this.cacheService_ = container["cacheService"];
         _this.taxLineRepo_ = container["lineItemTaxLineRepository"];
         _this.smTaxLineRepo_ = container["shippingMethodTaxLineRepository"];
         _this.taxRateService_ = container["taxRateService"];
         _this.eventBus_ = container["eventBusService"];
         _this.taxProviderRepo_ = container["taxProviderRepository"];
         _this.manager_ = container["manager"];
-        _this.redis_ = container["redisClient"];
         return _this;
     }
     TaxProviderService.prototype.list = function () {
@@ -101,7 +100,12 @@ var TaxProviderService = /** @class */ (function (_super) {
     TaxProviderService.prototype.retrieveProvider = function (region) {
         var provider;
         if (region.tax_provider_id) {
-            provider = this.container_["tp_".concat(region.tax_provider_id)];
+            try {
+                provider = this.container_["tp_".concat(region.tax_provider_id)];
+            }
+            catch (e) {
+                // noop
+            }
         }
         else {
             provider = this.container_["systemTaxService"];
@@ -305,18 +309,22 @@ var TaxProviderService = /** @class */ (function (_super) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, Promise.all(lineItems.map(function (l) { return __awaiter(_this, void 0, void 0, function () {
                             var _a;
-                            return __generator(this, function (_b) {
-                                switch (_b.label) {
+                            var _b;
+                            return __generator(this, function (_c) {
+                                switch (_c.label) {
                                     case 0:
                                         if (l.is_return) {
                                             return [2 /*return*/, null];
                                         }
-                                        if (!(l.variant && l.variant.product_id)) return [3 /*break*/, 2];
+                                        if (l.variant_id && !l.variant) {
+                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Unable to get the tax lines for the item ".concat(l.id, ", it contains a variant_id but the variant is missing."));
+                                        }
+                                        if (!((_b = l.variant) === null || _b === void 0 ? void 0 : _b.product_id)) return [3 /*break*/, 2];
                                         _a = {
                                             item: l
                                         };
                                         return [4 /*yield*/, this.getRegionRatesForProduct(l.variant.product_id, calculationContext.region)];
-                                    case 1: return [2 /*return*/, (_a.rates = _b.sent(),
+                                    case 1: return [2 /*return*/, (_a.rates = _c.sent(),
                                             _a)];
                                     case 2: 
                                     /*
@@ -382,6 +390,45 @@ var TaxProviderService = /** @class */ (function (_super) {
         });
     };
     /**
+     * Return a map of tax lines for line items and shipping methods
+     * @param items
+     * @param calculationContext
+     * @protected
+     */
+    TaxProviderService.prototype.getTaxLinesMap = function (items, calculationContext) {
+        return __awaiter(this, void 0, void 0, function () {
+            var lineItemsTaxLinesMap, shippingMethodsTaxLinesMap, taxLines;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        lineItemsTaxLinesMap = {};
+                        shippingMethodsTaxLinesMap = {};
+                        return [4 /*yield*/, this.getTaxLines(items, calculationContext)];
+                    case 1:
+                        taxLines = _a.sent();
+                        taxLines.forEach(function (taxLine) {
+                            var _a, _b;
+                            if ("item_id" in taxLine) {
+                                var itemTaxLines = (_a = lineItemsTaxLinesMap[taxLine.item_id]) !== null && _a !== void 0 ? _a : [];
+                                itemTaxLines.push(taxLine);
+                                lineItemsTaxLinesMap[taxLine.item_id] = itemTaxLines;
+                            }
+                            if ("shipping_method_id" in taxLine) {
+                                var shippingMethodTaxLines = (_b = shippingMethodsTaxLinesMap[taxLine.shipping_method_id]) !== null && _b !== void 0 ? _b : [];
+                                shippingMethodTaxLines.push(taxLine);
+                                shippingMethodsTaxLinesMap[taxLine.shipping_method_id] =
+                                    shippingMethodTaxLines;
+                            }
+                        });
+                        return [2 /*return*/, {
+                                lineItemsTaxLines: lineItemsTaxLinesMap,
+                                shippingMethodsTaxLines: shippingMethodsTaxLinesMap,
+                            }];
+                }
+            });
+        });
+    };
+    /**
      * Gets the tax rates configured for a shipping option. The rates are cached
      * between calls.
      * @param optionId - the option id of the shipping method.
@@ -390,10 +437,12 @@ var TaxProviderService = /** @class */ (function (_super) {
      */
     TaxProviderService.prototype.getRegionRatesForShipping = function (optionId, regionDetails) {
         return __awaiter(this, void 0, void 0, function () {
-            var cacheHit, toReturn, optionRates;
+            var cacheKey, cacheHit, toReturn, optionRates;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getCacheEntry(optionId, regionDetails.id)];
+                    case 0:
+                        cacheKey = this.getCacheKey(optionId, regionDetails.id);
+                        return [4 /*yield*/, this.cacheService_.get(cacheKey)];
                     case 1:
                         cacheHit = _a.sent();
                         if (cacheHit) {
@@ -423,7 +472,7 @@ var TaxProviderService = /** @class */ (function (_super) {
                                 },
                             ];
                         }
-                        return [4 /*yield*/, this.setCache(optionId, regionDetails.id, toReturn)];
+                        return [4 /*yield*/, this.cacheService_.set(cacheKey, toReturn)];
                     case 3:
                         _a.sent();
                         return [2 /*return*/, toReturn];
@@ -440,10 +489,12 @@ var TaxProviderService = /** @class */ (function (_super) {
      */
     TaxProviderService.prototype.getRegionRatesForProduct = function (productId, region) {
         return __awaiter(this, void 0, void 0, function () {
-            var cacheHit, toReturn, productRates;
+            var cacheKey, cacheHit, toReturn, productRates;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getCacheEntry(productId, region.id)];
+                    case 0:
+                        cacheKey = this.getCacheKey(productId, region.id);
+                        return [4 /*yield*/, this.cacheService_.get(cacheKey)];
                     case 1:
                         cacheHit = _a.sent();
                         if (cacheHit) {
@@ -475,7 +526,7 @@ var TaxProviderService = /** @class */ (function (_super) {
                                 },
                             ];
                         }
-                        return [4 /*yield*/, this.setCache(productId, region.id, toReturn)];
+                        return [4 /*yield*/, this.cacheService_.set(cacheKey, toReturn)];
                     case 3:
                         _a.sent();
                         return [2 /*return*/, toReturn];
@@ -485,69 +536,12 @@ var TaxProviderService = /** @class */ (function (_super) {
     };
     /**
      * The cache key to get cache hits by.
-     * @param productId - the product id to cache
+     * @param id - the entity id to cache
      * @param regionId - the region id to cache
      * @return the cache key to use for the id set
      */
-    TaxProviderService.prototype.getCacheKey = function (productId, regionId) {
-        return "txrtcache:".concat(productId, ":").concat(regionId);
-    };
-    /**
-     * Sets the cache results for a set of ids
-     * @param productId - the product id to cache
-     * @param regionId - the region id to cache
-     * @param value - tax rates to cache
-     * @return promise that resolves after the cache has been set
-     */
-    TaxProviderService.prototype.setCache = function (productId, regionId, value) {
-        return __awaiter(this, void 0, void 0, function () {
-            var cacheKey;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        cacheKey = this.getCacheKey(productId, regionId);
-                        return [4 /*yield*/, this.redis_.set(cacheKey, JSON.stringify(value), "EX", CACHE_TIME)];
-                    case 1: return [2 /*return*/, _a.sent()];
-                }
-            });
-        });
-    };
-    /**
-     * Gets the cache results for a set of ids
-     * @param productId - the product id to cache
-     * @param regionId - the region id to cache
-     * @return the cached result or null
-     */
-    TaxProviderService.prototype.getCacheEntry = function (productId, regionId) {
-        return __awaiter(this, void 0, void 0, function () {
-            var cacheKey, cacheHit, parsedResults, _1;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        cacheKey = this.getCacheKey(productId, regionId);
-                        _a.label = 1;
-                    case 1:
-                        _a.trys.push([1, 3, , 5]);
-                        return [4 /*yield*/, this.redis_.get(cacheKey)];
-                    case 2:
-                        cacheHit = _a.sent();
-                        if (cacheHit) {
-                            parsedResults = JSON.parse(cacheHit);
-                            return [2 /*return*/, parsedResults];
-                        }
-                        return [3 /*break*/, 5];
-                    case 3:
-                        _1 = _a.sent();
-                        // noop - cache parse failed
-                        return [4 /*yield*/, this.redis_.del(cacheKey)];
-                    case 4:
-                        // noop - cache parse failed
-                        _a.sent();
-                        return [3 /*break*/, 5];
-                    case 5: return [2 /*return*/, null];
-                }
-            });
-        });
+    TaxProviderService.prototype.getCacheKey = function (id, regionId) {
+        return "txrtcache:".concat(id, ":").concat(regionId);
     };
     TaxProviderService.prototype.registerInstalledProviders = function (providers) {
         return __awaiter(this, void 0, void 0, function () {

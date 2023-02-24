@@ -22,7 +22,7 @@ var middlewares_1 = __importDefault(require("../../../middlewares"));
 var route = (0, express_1.Router)();
 exports.default = (function (app) {
     app.use("/auth", route);
-    route.get("/", middlewares_1.default.authenticate(), middlewares_1.default.wrap(require("./get-session").default));
+    route.get("/", middlewares_1.default.requireCustomerAuthentication(), middlewares_1.default.wrap(require("./get-session").default));
     route.get("/:email", middlewares_1.default.wrap(require("./exists").default));
     route.delete("/", middlewares_1.default.wrap(require("./delete-session").default));
     route.post("/", middlewares_1.default.wrap(require("./create-session").default));

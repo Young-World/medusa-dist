@@ -63,12 +63,15 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var medusa_core_utils_1 = require("medusa-core-utils");
+var order_1 = require("../services/order");
 var interfaces_1 = require("../interfaces");
 var CartCompletionStrategy = /** @class */ (function (_super) {
     __extends(CartCompletionStrategy, _super);
     function CartCompletionStrategy(_a) {
-        var idempotencyKeyService = _a.idempotencyKeyService, cartService = _a.cartService, orderService = _a.orderService, swapService = _a.swapService, manager = _a.manager;
+        var productVariantInventoryService = _a.productVariantInventoryService, paymentProviderService = _a.paymentProviderService, idempotencyKeyService = _a.idempotencyKeyService, cartService = _a.cartService, orderService = _a.orderService, swapService = _a.swapService, manager = _a.manager;
         var _this = _super.call(this) || this;
+        _this.paymentProviderService_ = paymentProviderService;
+        _this.productVariantInventoryService_ = productVariantInventoryService;
         _this.idempotencyKeyService_ = idempotencyKeyService;
         _this.cartService_ = cartService;
         _this.orderService_ = orderService;
@@ -78,16 +81,12 @@ var CartCompletionStrategy = /** @class */ (function (_super) {
     }
     CartCompletionStrategy.prototype.complete = function (id, ikey, context) {
         return __awaiter(this, void 0, void 0, function () {
-            var idempotencyKey, idempotencyKeyService, cartService, orderService, swapService, inProgress, err, _a;
+            var idempotencyKey, inProgress, err, _a;
             var _this = this;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
                         idempotencyKey = ikey;
-                        idempotencyKeyService = this.idempotencyKeyService_;
-                        cartService = this.cartService_;
-                        orderService = this.orderService_;
-                        swapService = this.swapService_;
                         inProgress = true;
                         err = false;
                         _b.label = 1;
@@ -101,274 +100,86 @@ var CartCompletionStrategy = /** @class */ (function (_super) {
                             case "finished": return [3 /*break*/, 8];
                         }
                         return [3 /*break*/, 9];
-                    case 2: return [4 /*yield*/, this.manager_.transaction(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                            var _a, key, error;
+                    case 2: return [4 /*yield*/, this.manager_
+                            .transaction("SERIALIZABLE", function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
                             var _this = this;
-                            return __generator(this, function (_b) {
-                                switch (_b.label) {
-                                    case 0: return [4 /*yield*/, idempotencyKeyService
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0: return [4 /*yield*/, this.idempotencyKeyService_
                                             .withTransaction(transactionManager)
-                                            .workStage(idempotencyKey.idempotency_key, function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                                            var cart;
-                                            return __generator(this, function (_a) {
-                                                switch (_a.label) {
-                                                    case 0: return [4 /*yield*/, cartService
-                                                            .withTransaction(manager)
-                                                            .retrieve(id)];
-                                                    case 1:
-                                                        cart = _a.sent();
-                                                        if (cart.completed_at) {
-                                                            return [2 /*return*/, {
-                                                                    response_code: 409,
-                                                                    response_body: {
-                                                                        code: medusa_core_utils_1.MedusaError.Codes.CART_INCOMPATIBLE_STATE,
-                                                                        message: "Cart has already been completed",
-                                                                        type: medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED,
-                                                                    },
-                                                                }];
-                                                        }
-                                                        return [4 /*yield*/, cartService.withTransaction(manager).createTaxLines(id)];
-                                                    case 2:
-                                                        _a.sent();
-                                                        return [2 /*return*/, {
-                                                                recovery_point: "tax_lines_created",
-                                                            }];
-                                                }
-                                            });
-                                        }); })];
+                                            .workStage(idempotencyKey.idempotency_key, function (manager) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
+                                            switch (_a.label) {
+                                                case 0: return [4 /*yield*/, this.handleCreateTaxLines(id, { manager: manager })];
+                                                case 1: return [2 /*return*/, _a.sent()];
+                                            }
+                                        }); }); })];
                                     case 1:
-                                        _a = _b.sent(), key = _a.key, error = _a.error;
-                                        if (error) {
-                                            inProgress = false;
-                                            err = error;
-                                        }
-                                        else {
-                                            idempotencyKey = key;
-                                        }
+                                        idempotencyKey = _a.sent();
                                         return [2 /*return*/];
                                 }
                             });
-                        }); })];
+                        }); })
+                            .catch(function (e) {
+                            inProgress = false;
+                            err = e;
+                        })];
                     case 3:
                         _b.sent();
                         return [3 /*break*/, 11];
-                    case 4: return [4 /*yield*/, this.manager_.transaction(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                            var _a, key, error;
+                    case 4: return [4 /*yield*/, this.manager_
+                            .transaction("SERIALIZABLE", function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
                             var _this = this;
-                            return __generator(this, function (_b) {
-                                switch (_b.label) {
-                                    case 0: return [4 /*yield*/, idempotencyKeyService
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0: return [4 /*yield*/, this.idempotencyKeyService_
                                             .withTransaction(transactionManager)
                                             .workStage(idempotencyKey.idempotency_key, function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                                            var cart;
                                             return __generator(this, function (_a) {
                                                 switch (_a.label) {
-                                                    case 0: return [4 /*yield*/, cartService
-                                                            .withTransaction(manager)
-                                                            .authorizePayment(id, __assign(__assign({}, context), { idempotency_key: idempotencyKey.idempotency_key }))];
-                                                    case 1:
-                                                        cart = _a.sent();
-                                                        if (!cart.payment_session) return [3 /*break*/, 3];
-                                                        if (!(cart.payment_session.status === "requires_more" ||
-                                                            cart.payment_session.status === "pending")) return [3 /*break*/, 3];
-                                                        return [4 /*yield*/, cartService
-                                                                .withTransaction(transactionManager)
-                                                                .deleteTaxLines(id)];
-                                                    case 2:
-                                                        _a.sent();
-                                                        return [2 /*return*/, {
-                                                                response_code: 200,
-                                                                response_body: {
-                                                                    data: cart,
-                                                                    payment_status: cart.payment_session.status,
-                                                                    type: "cart",
-                                                                },
-                                                            }];
-                                                    case 3: return [2 /*return*/, {
-                                                            recovery_point: "payment_authorized",
-                                                        }];
+                                                    case 0: return [4 /*yield*/, this.handleTaxLineCreated(id, idempotencyKey, {
+                                                            context: context,
+                                                            manager: manager,
+                                                        })];
+                                                    case 1: return [2 /*return*/, _a.sent()];
                                                 }
                                             });
                                         }); })];
                                     case 1:
-                                        _a = _b.sent(), key = _a.key, error = _a.error;
-                                        if (error) {
-                                            inProgress = false;
-                                            err = error;
-                                        }
-                                        else {
-                                            idempotencyKey = key;
-                                        }
+                                        idempotencyKey = _a.sent();
                                         return [2 /*return*/];
                                 }
                             });
-                        }); })];
+                        }); })
+                            .catch(function (e) {
+                            inProgress = false;
+                            err = e;
+                        })];
                     case 5:
                         _b.sent();
                         return [3 /*break*/, 11];
-                    case 6: return [4 /*yield*/, this.manager_.transaction(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                            var _a, key, error;
+                    case 6: return [4 /*yield*/, this.manager_
+                            .transaction("SERIALIZABLE", function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
                             var _this = this;
-                            return __generator(this, function (_b) {
-                                switch (_b.label) {
-                                    case 0: return [4 /*yield*/, idempotencyKeyService
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0: return [4 /*yield*/, this.idempotencyKeyService_
                                             .withTransaction(transactionManager)
-                                            .workStage(idempotencyKey.idempotency_key, function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                                            var cart, _a, swapId, swap, error_1, order, error_2;
-                                            var _b;
-                                            return __generator(this, function (_c) {
-                                                switch (_c.label) {
-                                                    case 0: return [4 /*yield*/, cartService
-                                                            .withTransaction(manager)
-                                                            .retrieveWithTotals(id, {
-                                                            relations: ["payment", "payment_sessions"],
-                                                        })
-                                                        // If cart is part of swap, we register swap as complete
-                                                    ];
-                                                    case 1:
-                                                        cart = _c.sent();
-                                                        _a = cart.type;
-                                                        switch (_a) {
-                                                            case "swap": return [3 /*break*/, 2];
-                                                        }
-                                                        return [3 /*break*/, 6];
-                                                    case 2:
-                                                        _c.trys.push([2, 5, , 6]);
-                                                        swapId = (_b = cart.metadata) === null || _b === void 0 ? void 0 : _b.swap_id;
-                                                        return [4 /*yield*/, swapService
-                                                                .withTransaction(manager)
-                                                                .registerCartCompletion(swapId)];
-                                                    case 3:
-                                                        swap = _c.sent();
-                                                        return [4 /*yield*/, swapService
-                                                                .withTransaction(manager)
-                                                                .retrieve(swap.id, {
-                                                                relations: ["shipping_address"],
-                                                            })];
-                                                    case 4:
-                                                        swap = _c.sent();
-                                                        return [2 /*return*/, {
-                                                                response_code: 200,
-                                                                response_body: { data: swap, type: "swap" },
-                                                            }];
-                                                    case 5:
-                                                        error_1 = _c.sent();
-                                                        if (error_1 &&
-                                                            error_1.code ===
-                                                                medusa_core_utils_1.MedusaError.Codes.INSUFFICIENT_INVENTORY) {
-                                                            return [2 /*return*/, {
-                                                                    response_code: 409,
-                                                                    response_body: {
-                                                                        message: error_1.message,
-                                                                        type: error_1.type,
-                                                                        code: error_1.code,
-                                                                    },
-                                                                }];
-                                                        }
-                                                        else {
-                                                            throw error_1;
-                                                        }
-                                                        return [3 /*break*/, 6];
-                                                    case 6:
-                                                        if (typeof cart.total === "undefined") {
-                                                            return [2 /*return*/, {
-                                                                    response_code: 500,
-                                                                    response_body: {
-                                                                        message: "Unexpected state",
-                                                                    },
-                                                                }];
-                                                        }
-                                                        if (!cart.payment && cart.total > 0) {
-                                                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Cart payment not authorized");
-                                                        }
-                                                        order = void 0;
-                                                        _c.label = 7;
-                                                    case 7:
-                                                        _c.trys.push([7, 9, , 13]);
-                                                        return [4 /*yield*/, orderService
-                                                                .withTransaction(manager)
-                                                                .createFromCart(cart.id)];
-                                                    case 8:
-                                                        order = _c.sent();
-                                                        return [3 /*break*/, 13];
-                                                    case 9:
-                                                        error_2 = _c.sent();
-                                                        if (!(error_2 &&
-                                                            error_2.message === "Order from cart already exists")) return [3 /*break*/, 11];
-                                                        return [4 /*yield*/, orderService
-                                                                .withTransaction(manager)
-                                                                .retrieveByCartId(id, {
-                                                                select: [
-                                                                    "subtotal",
-                                                                    "tax_total",
-                                                                    "shipping_total",
-                                                                    "discount_total",
-                                                                    "total",
-                                                                ],
-                                                                relations: [
-                                                                    "shipping_address",
-                                                                    "items",
-                                                                    "payments",
-                                                                ],
-                                                            })];
-                                                    case 10:
-                                                        order = _c.sent();
-                                                        return [2 /*return*/, {
-                                                                response_code: 200,
-                                                                response_body: { data: order, type: "order" },
-                                                            }];
-                                                    case 11:
-                                                        if (error_2 &&
-                                                            error_2.code ===
-                                                                medusa_core_utils_1.MedusaError.Codes.INSUFFICIENT_INVENTORY) {
-                                                            return [2 /*return*/, {
-                                                                    response_code: 409,
-                                                                    response_body: {
-                                                                        message: error_2.message,
-                                                                        type: error_2.type,
-                                                                        code: error_2.code,
-                                                                    },
-                                                                }];
-                                                        }
-                                                        else {
-                                                            throw error_2;
-                                                        }
-                                                        _c.label = 12;
-                                                    case 12: return [3 /*break*/, 13];
-                                                    case 13: return [4 /*yield*/, orderService
-                                                            .withTransaction(manager)
-                                                            .retrieve(order.id, {
-                                                            select: [
-                                                                "subtotal",
-                                                                "tax_total",
-                                                                "shipping_total",
-                                                                "discount_total",
-                                                                "total",
-                                                            ],
-                                                            relations: ["shipping_address", "items", "payments"],
-                                                        })];
-                                                    case 14:
-                                                        order = _c.sent();
-                                                        return [2 /*return*/, {
-                                                                response_code: 200,
-                                                                response_body: { data: order, type: "order" },
-                                                            }];
-                                                }
-                                            });
-                                        }); })];
+                                            .workStage(idempotencyKey.idempotency_key, function (manager) { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
+                                            switch (_a.label) {
+                                                case 0: return [4 /*yield*/, this.handlePaymentAuthorized(id, { manager: manager })];
+                                                case 1: return [2 /*return*/, _a.sent()];
+                                            }
+                                        }); }); })];
                                     case 1:
-                                        _a = _b.sent(), key = _a.key, error = _a.error;
-                                        if (error) {
-                                            inProgress = false;
-                                            err = error;
-                                        }
-                                        else {
-                                            idempotencyKey = key;
-                                        }
+                                        idempotencyKey = _a.sent();
                                         return [2 /*return*/];
                                 }
                             });
-                        }); })];
+                        }); })
+                            .catch(function (e) {
+                            inProgress = false;
+                            err = e;
+                        })];
                     case 7:
                         _b.sent();
                         return [3 /*break*/, 11];
@@ -381,7 +192,7 @@ var CartCompletionStrategy = /** @class */ (function (_super) {
                     case 9: return [4 /*yield*/, this.manager_.transaction(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, idempotencyKeyService
+                                    case 0: return [4 /*yield*/, this.idempotencyKeyService_
                                             .withTransaction(transactionManager)
                                             .update(idempotencyKey.idempotency_key, {
                                             recovery_point: "finished",
@@ -402,20 +213,20 @@ var CartCompletionStrategy = /** @class */ (function (_super) {
                         if (!err) return [3 /*break*/, 15];
                         if (!(idempotencyKey.recovery_point !== "started")) return [3 /*break*/, 14];
                         return [4 /*yield*/, this.manager_.transaction(function (transactionManager) { return __awaiter(_this, void 0, void 0, function () {
-                                var error_3;
+                                var error_1;
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
                                         case 0:
                                             _a.trys.push([0, 2, , 4]);
-                                            return [4 /*yield*/, orderService
+                                            return [4 /*yield*/, this.orderService_
                                                     .withTransaction(transactionManager)
                                                     .retrieveByCartId(id)];
                                         case 1:
                                             _a.sent();
                                             return [3 /*break*/, 4];
                                         case 2:
-                                            error_3 = _a.sent();
-                                            return [4 /*yield*/, cartService
+                                            error_1 = _a.sent();
+                                            return [4 /*yield*/, this.cartService_
                                                     .withTransaction(transactionManager)
                                                     .deleteTaxLines(id)];
                                         case 3:
@@ -433,6 +244,260 @@ var CartCompletionStrategy = /** @class */ (function (_super) {
                             response_body: idempotencyKey.response_body,
                             response_code: idempotencyKey.response_code,
                         }];
+                }
+            });
+        });
+    };
+    CartCompletionStrategy.prototype.handleCreateTaxLines = function (id, _a) {
+        var manager = _a.manager;
+        return __awaiter(this, void 0, void 0, function () {
+            var cart;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0: return [4 /*yield*/, this.cartService_.withTransaction(manager).retrieve(id, {
+                            relations: [
+                                "customer",
+                                "discounts",
+                                "discounts.rule",
+                                "gift_cards",
+                                "items",
+                                "items.adjustments",
+                                "region",
+                                "region.tax_rates",
+                                "shipping_address",
+                                "shipping_methods",
+                            ],
+                        })];
+                    case 1:
+                        cart = _b.sent();
+                        if (cart.completed_at) {
+                            return [2 /*return*/, {
+                                    response_code: 409,
+                                    response_body: {
+                                        code: medusa_core_utils_1.MedusaError.Codes.CART_INCOMPATIBLE_STATE,
+                                        message: "Cart has already been completed",
+                                        type: medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED,
+                                    },
+                                }];
+                        }
+                        return [4 /*yield*/, this.cartService_.withTransaction(manager).createTaxLines(cart)];
+                    case 2:
+                        _b.sent();
+                        return [2 /*return*/, {
+                                recovery_point: "tax_lines_created",
+                            }];
+                }
+            });
+        });
+    };
+    CartCompletionStrategy.prototype.handleTaxLineCreated = function (id, idempotencyKey, _a) {
+        var context = _a.context, manager = _a.manager;
+        return __awaiter(this, void 0, void 0, function () {
+            var res, cart;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0: return [4 /*yield*/, this.handleCreateTaxLines(id, { manager: manager })];
+                    case 1:
+                        res = _b.sent();
+                        if (res.response_code) {
+                            return [2 /*return*/, res];
+                        }
+                        return [4 /*yield*/, this.cartService_
+                                .withTransaction(manager)
+                                .authorizePayment(id, __assign(__assign({}, context), { cart_id: id, idempotency_key: idempotencyKey }))];
+                    case 2:
+                        cart = _b.sent();
+                        if (!cart.payment_session) return [3 /*break*/, 4];
+                        if (!(cart.payment_session.status === "requires_more" ||
+                            cart.payment_session.status === "pending")) return [3 /*break*/, 4];
+                        return [4 /*yield*/, this.cartService_.withTransaction(manager).deleteTaxLines(id)];
+                    case 3:
+                        _b.sent();
+                        return [2 /*return*/, {
+                                response_code: 200,
+                                response_body: {
+                                    data: cart,
+                                    payment_status: cart.payment_session.status,
+                                    type: "cart",
+                                },
+                            }];
+                    case 4: return [2 /*return*/, {
+                            recovery_point: "payment_authorized",
+                        }];
+                }
+            });
+        });
+    };
+    CartCompletionStrategy.prototype.handlePaymentAuthorized = function (id, _a) {
+        var _b;
+        var manager = _a.manager;
+        return __awaiter(this, void 0, void 0, function () {
+            var res, orderServiceTx, swapServiceTx, cartServiceTx, cart, allowBackorder, swapId, swap, productVariantInventoryServiceTx_1, error_2, swapId_1, swap, error_3, order, error_4;
+            var _this = this;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0: return [4 /*yield*/, this.handleCreateTaxLines(id, { manager: manager })];
+                    case 1:
+                        res = _c.sent();
+                        if (res.response_code) {
+                            return [2 /*return*/, res];
+                        }
+                        orderServiceTx = this.orderService_.withTransaction(manager);
+                        swapServiceTx = this.swapService_.withTransaction(manager);
+                        cartServiceTx = this.cartService_.withTransaction(manager);
+                        return [4 /*yield*/, cartServiceTx.retrieveWithTotals(id, {
+                                relations: ["region", "payment", "payment_sessions"],
+                            })];
+                    case 2:
+                        cart = _c.sent();
+                        allowBackorder = false;
+                        if (!(cart.type === "swap")) return [3 /*break*/, 4];
+                        return [4 /*yield*/, swapServiceTx.retrieveByCartId(id)];
+                    case 3:
+                        swap = _c.sent();
+                        allowBackorder = swap.allow_backorder;
+                        swapId = swap.id;
+                        _c.label = 4;
+                    case 4:
+                        if (!!allowBackorder) return [3 /*break*/, 13];
+                        productVariantInventoryServiceTx_1 = this.productVariantInventoryService_.withTransaction(manager);
+                        _c.label = 5;
+                    case 5:
+                        _c.trys.push([5, 7, , 13]);
+                        return [4 /*yield*/, Promise.all(cart.items.map(function (item) { return __awaiter(_this, void 0, void 0, function () {
+                                var inventoryConfirmed;
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
+                                        case 0:
+                                            if (!item.variant_id) return [3 /*break*/, 3];
+                                            return [4 /*yield*/, productVariantInventoryServiceTx_1.confirmInventory(item.variant_id, item.quantity, { salesChannelId: cart.sales_channel_id })];
+                                        case 1:
+                                            inventoryConfirmed = _a.sent();
+                                            if (!inventoryConfirmed) {
+                                                throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_ALLOWED, "Variant with id: ".concat(item.variant_id, " does not have the required inventory"), medusa_core_utils_1.MedusaError.Codes.INSUFFICIENT_INVENTORY);
+                                            }
+                                            return [4 /*yield*/, productVariantInventoryServiceTx_1.reserveQuantity(item.variant_id, item.quantity, {
+                                                    lineItemId: item.id,
+                                                    salesChannelId: cart.sales_channel_id,
+                                                })];
+                                        case 2:
+                                            _a.sent();
+                                            _a.label = 3;
+                                        case 3: return [2 /*return*/];
+                                    }
+                                });
+                            }); }))];
+                    case 6:
+                        _c.sent();
+                        return [3 /*break*/, 13];
+                    case 7:
+                        error_2 = _c.sent();
+                        if (!(error_2 && error_2.code === medusa_core_utils_1.MedusaError.Codes.INSUFFICIENT_INVENTORY)) return [3 /*break*/, 11];
+                        if (!cart.payment) return [3 /*break*/, 9];
+                        return [4 /*yield*/, this.paymentProviderService_
+                                .withTransaction(manager)
+                                .cancelPayment(cart.payment)];
+                    case 8:
+                        _c.sent();
+                        _c.label = 9;
+                    case 9: return [4 /*yield*/, cartServiceTx.update(cart.id, {
+                            payment_authorized_at: null,
+                        })];
+                    case 10:
+                        _c.sent();
+                        return [2 /*return*/, {
+                                response_code: 409,
+                                response_body: {
+                                    message: error_2.message,
+                                    type: error_2.type,
+                                    code: error_2.code,
+                                },
+                            }];
+                    case 11: throw error_2;
+                    case 12: return [3 /*break*/, 13];
+                    case 13:
+                        if (!(cart.type === "swap")) return [3 /*break*/, 18];
+                        _c.label = 14;
+                    case 14:
+                        _c.trys.push([14, 17, , 18]);
+                        swapId_1 = (_b = cart.metadata) === null || _b === void 0 ? void 0 : _b.swap_id;
+                        return [4 /*yield*/, swapServiceTx.registerCartCompletion(swapId_1)];
+                    case 15:
+                        swap = _c.sent();
+                        return [4 /*yield*/, swapServiceTx.retrieve(swap.id, {
+                                relations: ["shipping_address"],
+                            })];
+                    case 16:
+                        swap = _c.sent();
+                        return [2 /*return*/, {
+                                response_code: 200,
+                                response_body: { data: swap, type: "swap" },
+                            }];
+                    case 17:
+                        error_3 = _c.sent();
+                        if (error_3 && error_3.code === medusa_core_utils_1.MedusaError.Codes.INSUFFICIENT_INVENTORY) {
+                            return [2 /*return*/, {
+                                    response_code: 409,
+                                    response_body: {
+                                        message: error_3.message,
+                                        type: error_3.type,
+                                        code: error_3.code,
+                                    },
+                                }];
+                        }
+                        else {
+                            throw error_3;
+                        }
+                        return [3 /*break*/, 18];
+                    case 18:
+                        if (!cart.payment && cart.total > 0) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Cart payment not authorized");
+                        }
+                        _c.label = 19;
+                    case 19:
+                        _c.trys.push([19, 21, , 25]);
+                        return [4 /*yield*/, orderServiceTx.createFromCart(cart)];
+                    case 20:
+                        order = _c.sent();
+                        return [3 /*break*/, 25];
+                    case 21:
+                        error_4 = _c.sent();
+                        if (!(error_4 && error_4.message === order_1.ORDER_CART_ALREADY_EXISTS_ERROR)) return [3 /*break*/, 23];
+                        return [4 /*yield*/, orderServiceTx.retrieveByCartId(id, {
+                                relations: ["shipping_address", "payments"],
+                            })];
+                    case 22:
+                        order = _c.sent();
+                        return [2 /*return*/, {
+                                response_code: 200,
+                                response_body: { data: order, type: "order" },
+                            }];
+                    case 23:
+                        if (error_4 &&
+                            error_4.code === medusa_core_utils_1.MedusaError.Codes.INSUFFICIENT_INVENTORY) {
+                            return [2 /*return*/, {
+                                    response_code: 409,
+                                    response_body: {
+                                        message: error_4.message,
+                                        type: error_4.type,
+                                        code: error_4.code,
+                                    },
+                                }];
+                        }
+                        else {
+                            throw error_4;
+                        }
+                        _c.label = 24;
+                    case 24: return [3 /*break*/, 25];
+                    case 25: return [4 /*yield*/, orderServiceTx.retrieveWithTotals(order.id, {
+                            relations: ["shipping_address", "items", "payments"],
+                        })];
+                    case 26:
+                        order = _c.sent();
+                        return [2 /*return*/, {
+                                response_code: 200,
+                                response_body: { data: order, type: "order" },
+                            }];
                 }
             });
         });

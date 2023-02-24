@@ -45,6 +45,8 @@ var _1 = require(".");
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {string} The ID of the Draft Order.
+ * x-codegen:
+ *   method: retrieve
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -72,9 +74,7 @@ var _1 = require(".");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             draft_order:
- *               $ref: "#/components/schemas/draft-order"
+ *           $ref: "#/components/schemas/AdminDraftOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -103,7 +103,7 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
             case 1:
                 draftOrder = _b.sent();
                 _a = draftOrder;
-                return [4 /*yield*/, cartService.retrieve(draftOrder.cart_id, {
+                return [4 /*yield*/, cartService.retrieveWithTotals(draftOrder.cart_id, {
                         relations: _1.defaultAdminDraftOrdersCartRelations,
                         select: _1.defaultAdminDraftOrdersCartFields,
                     })];

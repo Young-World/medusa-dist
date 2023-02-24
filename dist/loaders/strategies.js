@@ -8,29 +8,34 @@ var path_1 = __importDefault(require("path"));
 var awilix_1 = require("awilix");
 var format_registration_name_1 = __importDefault(require("../utils/format-registration-name"));
 var interfaces_1 = require("../interfaces");
-var utils_1 = require("../utils");
+var medusa_core_utils_1 = require("medusa-core-utils");
 /**
  * Registers all strategies in the strategies directory
  * @returns void
  */
 exports.default = (function (_a) {
     var container = _a.container, configModule = _a.configModule, isTest = _a.isTest;
-    var useMock = (0, utils_1.isDefined)(isTest) ? isTest : process.env.NODE_ENV === "test";
+    var useMock = (0, medusa_core_utils_1.isDefined)(isTest) ? isTest : process.env.NODE_ENV === "test";
     var corePath = useMock
         ? "../strategies/__mocks__/[!__]*.js"
         : "../strategies/**/[!__]*.js";
     var coreFull = path_1.default.join(__dirname, corePath);
+    var ignore = [
+        "**/__fixtures__/**",
+        "**/index.js",
+        "**/index.ts",
+        "**/utils.js",
+        "**/utils.ts",
+        "**/types.js",
+        "**/types.ts",
+        "**/types/**",
+    ];
+    if (!useMock) {
+        ignore.push("**/__tests__/**", "**/__mocks__/**");
+    }
     var core = glob_1.default.sync(coreFull, {
         cwd: __dirname,
-        ignore: [
-            "**/__fixtures__/**",
-            "**/index.js",
-            "**/index.ts",
-            "**/utils.js",
-            "**/utils.ts",
-            "**/types.js",
-            "**/types.ts",
-        ],
+        ignore: ignore,
     });
     core.forEach(function (fn) {
         var _a, _b;

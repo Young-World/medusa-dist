@@ -79,14 +79,10 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - products
- *         properties:
- *           products:
- *             type: array
- *             description: "The IDs of the products to associate with this tax rate"
- *             items:
- *               type: string
+ *         $ref: "#/components/schemas/AdminPostTaxRatesTaxRateProductsReq"
+ * x-codegen:
+ *   method: addProducts
+ *   queryParams: AdminPostTaxRatesTaxRateProductsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -124,9 +120,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             tax_rate:
- *               $ref: "#/components/schemas/tax_rate"
+ *           $ref: "#/components/schemas/AdminTaxRatesRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -174,6 +168,18 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostTaxRatesTaxRateProductsReq
+ * type: object
+ * required:
+ *   - products
+ * properties:
+ *   products:
+ *     type: array
+ *     description: "The IDs of the products to associate with this tax rate"
+ *     items:
+ *       type: string
+ */
 var AdminPostTaxRatesTaxRateProductsReq = /** @class */ (function () {
     function AdminPostTaxRatesTaxRateProductsReq() {
     }

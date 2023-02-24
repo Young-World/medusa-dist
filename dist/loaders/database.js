@@ -41,35 +41,42 @@ var naming_strategy_1 = require("../utils/naming-strategy");
 exports.default = (function (_a) {
     var container = _a.container, configModule = _a.configModule;
     return __awaiter(void 0, void 0, void 0, function () {
-        var entities, isSqlite, connection;
+        var entities, isSqlite, cnnManager, connection;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
                     entities = container.resolve("db_entities");
                     isSqlite = configModule.projectConfig.database_type === "sqlite";
-                    return [4 /*yield*/, (0, typeorm_1.createConnection)({
-                            type: configModule.projectConfig.database_type,
-                            url: configModule.projectConfig.database_url,
-                            database: configModule.projectConfig.database_database,
-                            extra: configModule.projectConfig.database_extra || {},
-                            entities: entities,
-                            namingStrategy: new naming_strategy_1.ShortenedNamingStrategy(),
-                            logging: configModule.projectConfig.database_logging || false,
-                        })];
+                    cnnManager = (0, typeorm_1.getConnectionManager)();
+                    if (!(cnnManager.has("default") && (0, typeorm_1.getConnection)().isConnected)) return [3 /*break*/, 2];
+                    return [4 /*yield*/, (0, typeorm_1.getConnection)().close()];
                 case 1:
-                    connection = _b.sent();
-                    if (!isSqlite) return [3 /*break*/, 5];
-                    return [4 /*yield*/, connection.query("PRAGMA foreign_keys = OFF")];
-                case 2:
                     _b.sent();
-                    return [4 /*yield*/, connection.synchronize()];
+                    _b.label = 2;
+                case 2: return [4 /*yield*/, (0, typeorm_1.createConnection)({
+                        type: configModule.projectConfig.database_type,
+                        url: configModule.projectConfig.database_url,
+                        database: configModule.projectConfig.database_database,
+                        extra: configModule.projectConfig.database_extra || {},
+                        schema: configModule.projectConfig.database_schema,
+                        entities: entities,
+                        namingStrategy: new naming_strategy_1.ShortenedNamingStrategy(),
+                        logging: configModule.projectConfig.database_logging || false,
+                    })];
                 case 3:
-                    _b.sent();
-                    return [4 /*yield*/, connection.query("PRAGMA foreign_keys = ON")];
+                    connection = _b.sent();
+                    if (!isSqlite) return [3 /*break*/, 7];
+                    return [4 /*yield*/, connection.query("PRAGMA foreign_keys = OFF")];
                 case 4:
                     _b.sent();
-                    _b.label = 5;
-                case 5: return [2 /*return*/, connection];
+                    return [4 /*yield*/, connection.synchronize()];
+                case 5:
+                    _b.sent();
+                    return [4 /*yield*/, connection.query("PRAGMA foreign_keys = ON")];
+                case 6:
+                    _b.sent();
+                    _b.label = 7;
+                case 7: return [2 /*return*/, connection];
             }
         });
     });

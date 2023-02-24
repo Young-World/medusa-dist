@@ -97,6 +97,8 @@ exports.OrderRepository = void 0;
 var lodash_1 = require("lodash");
 var typeorm_1 = require("typeorm");
 var models_1 = require("../models");
+var ITEMS_REL_NAME = "items";
+var REGION_REL_NAME = "region";
 var OrderRepository = /** @class */ (function (_super) {
     __extends(OrderRepository, _super);
     function OrderRepository() {
@@ -139,12 +141,14 @@ var OrderRepository = /** @class */ (function (_super) {
                             finally { if (e_1) throw e_1.error; }
                         }
                         return [4 /*yield*/, Promise.all(Object.entries(groupedRelations).map(function (_a) {
-                                var _b = __read(_a, 2), _ = _b[0], rels = _b[1];
+                                var _b = __read(_a, 2), topLevel = _b[0], rels = _b[1];
                                 return __awaiter(_this, void 0, void 0, function () {
                                     return __generator(this, function (_c) {
+                                        // If top level is region or items then get deleted region as well
                                         return [2 /*return*/, this.findByIds(entitiesIds, {
                                                 select: ["id"],
                                                 relations: rels,
+                                                withDeleted: topLevel === ITEMS_REL_NAME || topLevel === REGION_REL_NAME,
                                             })];
                                     });
                                 });

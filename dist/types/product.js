@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ProductTypeReq = exports.ProductTagReq = exports.ProductSalesChannelReq = exports.FilterableProductTypeProps = exports.FilterableProductTagProps = exports.FilterableProductProps = void 0;
+exports.ProductTypeReq = exports.ProductTagReq = exports.ProductProductCategoryReq = exports.ProductSalesChannelReq = exports.FilterableProductProps = void 0;
 var class_transformer_1 = require("class-transformer");
 var class_validator_1 = require("class-validator");
 var sales_channels_1 = __importDefault(require("../loaders/feature-flags/sales-channels"));
@@ -82,17 +82,33 @@ var FilterableProductProps = /** @class */ (function () {
         __metadata("design:type", Boolean)
     ], FilterableProductProps.prototype, "is_giftcard", void 0);
     __decorate([
+        (0, class_validator_1.IsArray)(),
+        (0, class_validator_1.IsOptional)(),
+        __metadata("design:type", Array)
+    ], FilterableProductProps.prototype, "type_id", void 0);
+    __decorate([
+        (0, feature_flag_decorators_1.FeatureFlagDecorators)(sales_channels_1.default.key, [(0, class_validator_1.IsOptional)(), (0, class_validator_1.IsArray)()]),
+        __metadata("design:type", Array)
+    ], FilterableProductProps.prototype, "sales_channel_id", void 0);
+    __decorate([
         (0, class_validator_1.IsString)(),
         (0, class_validator_1.IsOptional)(),
         __metadata("design:type", String)
-    ], FilterableProductProps.prototype, "type", void 0);
+    ], FilterableProductProps.prototype, "discount_condition_id", void 0);
     __decorate([
-        (0, feature_flag_decorators_1.FeatureFlagDecorators)(sales_channels_1.default.key, [
-            (0, class_validator_1.IsOptional)(),
-            (0, class_validator_1.IsArray)(),
-        ]),
+        (0, class_validator_1.IsArray)(),
+        (0, class_validator_1.IsOptional)(),
         __metadata("design:type", Array)
-    ], FilterableProductProps.prototype, "sales_channel_id", void 0);
+    ], FilterableProductProps.prototype, "category_id", void 0);
+    __decorate([
+        (0, class_validator_1.IsBoolean)(),
+        (0, class_validator_1.IsOptional)(),
+        (0, class_transformer_1.Transform)(function (_a) {
+            var value = _a.value;
+            return is_boolean_1.optionalBooleanMapper.get(value.toLowerCase());
+        }),
+        __metadata("design:type", Boolean)
+    ], FilterableProductProps.prototype, "include_category_children", void 0);
     __decorate([
         (0, class_validator_1.IsOptional)(),
         (0, class_validator_1.ValidateNested)(),
@@ -114,68 +130,6 @@ var FilterableProductProps = /** @class */ (function () {
     return FilterableProductProps;
 }());
 exports.FilterableProductProps = FilterableProductProps;
-var FilterableProductTagProps = /** @class */ (function () {
-    function FilterableProductTagProps() {
-    }
-    __decorate([
-        (0, class_validator_1.IsOptional)(),
-        (0, is_type_1.IsType)([String, [String], common_1.StringComparisonOperator]),
-        __metadata("design:type", Object)
-    ], FilterableProductTagProps.prototype, "id", void 0);
-    __decorate([
-        (0, class_validator_1.IsOptional)(),
-        (0, is_type_1.IsType)([String, [String], common_1.StringComparisonOperator]),
-        __metadata("design:type", Object)
-    ], FilterableProductTagProps.prototype, "value", void 0);
-    __decorate([
-        (0, class_validator_1.IsOptional)(),
-        (0, is_type_1.IsType)([common_1.DateComparisonOperator]),
-        __metadata("design:type", common_1.DateComparisonOperator)
-    ], FilterableProductTagProps.prototype, "created_at", void 0);
-    __decorate([
-        (0, class_validator_1.IsOptional)(),
-        (0, is_type_1.IsType)([common_1.DateComparisonOperator]),
-        __metadata("design:type", common_1.DateComparisonOperator)
-    ], FilterableProductTagProps.prototype, "updated_at", void 0);
-    __decorate([
-        (0, class_validator_1.IsString)(),
-        (0, class_validator_1.IsOptional)(),
-        __metadata("design:type", String)
-    ], FilterableProductTagProps.prototype, "q", void 0);
-    return FilterableProductTagProps;
-}());
-exports.FilterableProductTagProps = FilterableProductTagProps;
-var FilterableProductTypeProps = /** @class */ (function () {
-    function FilterableProductTypeProps() {
-    }
-    __decorate([
-        (0, class_validator_1.IsOptional)(),
-        (0, is_type_1.IsType)([String, [String], common_1.StringComparisonOperator]),
-        __metadata("design:type", Object)
-    ], FilterableProductTypeProps.prototype, "id", void 0);
-    __decorate([
-        (0, class_validator_1.IsOptional)(),
-        (0, is_type_1.IsType)([String, [String], common_1.StringComparisonOperator]),
-        __metadata("design:type", Object)
-    ], FilterableProductTypeProps.prototype, "value", void 0);
-    __decorate([
-        (0, class_validator_1.IsOptional)(),
-        (0, is_type_1.IsType)([common_1.DateComparisonOperator]),
-        __metadata("design:type", common_1.DateComparisonOperator)
-    ], FilterableProductTypeProps.prototype, "created_at", void 0);
-    __decorate([
-        (0, class_validator_1.IsOptional)(),
-        (0, is_type_1.IsType)([common_1.DateComparisonOperator]),
-        __metadata("design:type", common_1.DateComparisonOperator)
-    ], FilterableProductTypeProps.prototype, "updated_at", void 0);
-    __decorate([
-        (0, class_validator_1.IsString)(),
-        (0, class_validator_1.IsOptional)(),
-        __metadata("design:type", String)
-    ], FilterableProductTypeProps.prototype, "q", void 0);
-    return FilterableProductTypeProps;
-}());
-exports.FilterableProductTypeProps = FilterableProductTypeProps;
 var ProductSalesChannelReq = /** @class */ (function () {
     function ProductSalesChannelReq() {
     }
@@ -186,6 +140,16 @@ var ProductSalesChannelReq = /** @class */ (function () {
     return ProductSalesChannelReq;
 }());
 exports.ProductSalesChannelReq = ProductSalesChannelReq;
+var ProductProductCategoryReq = /** @class */ (function () {
+    function ProductProductCategoryReq() {
+    }
+    __decorate([
+        (0, class_validator_1.IsString)(),
+        __metadata("design:type", String)
+    ], ProductProductCategoryReq.prototype, "id", void 0);
+    return ProductProductCategoryReq;
+}());
+exports.ProductProductCategoryReq = ProductProductCategoryReq;
 var ProductTagReq = /** @class */ (function () {
     function ProductTagReq() {
     }

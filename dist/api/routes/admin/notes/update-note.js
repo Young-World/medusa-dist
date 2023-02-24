@@ -60,12 +60,9 @@ var validator_1 = require("../../../../utils/validator");
  *  content:
  *    application/json:
  *      schema:
- *        required:
- *          - value
- *        properties:
- *          value:
- *            type: string
- *            description: The updated description of the Note.
+ *        $ref: "#/components/schemas/AdminPostNotesNoteReq"
+ * x-codegen:
+ *   method: update
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -99,9 +96,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             note:
- *               $ref: "#/components/schemas/note"
+ *           $ref: "#/components/schemas/AdminNotesRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -143,6 +138,16 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostNotesNoteReq
+ * type: object
+ * required:
+ *   - value
+ * properties:
+ *   value:
+ *     type: string
+ *     description: The updated description of the Note.
+ */
 var AdminPostNotesNoteReq = /** @class */ (function () {
     function AdminPostNotesNoteReq() {
     }

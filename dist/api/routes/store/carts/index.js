@@ -36,21 +36,53 @@ var __values = (this && this.__values) || function(o) {
     };
     throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
 };
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.defaultStoreCartRelations = exports.defaultStoreCartFields = void 0;
-var express_1 = require("express");
 require("reflect-metadata");
+var express_1 = require("express");
 var common_1 = require("../../../../types/common");
 var middlewares_1 = __importStar(require("../../../middlewares"));
 var update_cart_1 = require("./update-cart");
 var create_cart_1 = require("./create-cart");
+var sales_channels_1 = __importDefault(require("../../../../loaders/feature-flags/sales-channels"));
+var publishable_api_keys_1 = __importDefault(require("../../../../loaders/feature-flags/publishable-api-keys"));
+var extend_request_params_1 = require("../../../middlewares/publishable-api-key/extend-request-params");
+var validate_sales_channel_param_1 = require("../../../middlewares/publishable-api-key/validate-sales-channel-param");
 var route = (0, express_1.Router)();
 exports.default = (function (app, container) {
     var e_1, _a;
     var middlewareService = container.resolve("middlewareService");
     var featureFlagRouter = container.resolve("featureFlagRouter");
     app.use("/carts", route);
-    if (featureFlagRouter.isFeatureEnabled("sales_channels")) {
+    if (featureFlagRouter.isFeatureEnabled(sales_channels_1.default.key)) {
         exports.defaultStoreCartRelations.push("sales_channel");
     }
     // Inject plugin routes
@@ -73,7 +105,14 @@ exports.default = (function (app, container) {
         defaultFields: exports.defaultStoreCartFields,
         isList: false,
     }), middlewares_1.default.wrap(require("./get-cart").default));
-    route.post("/", middlewareService.usePreCartCreation(), (0, middlewares_1.transformBody)(create_cart_1.StorePostCartReq), middlewares_1.default.wrap(require("./create-cart").default));
+    var createMiddlewares = [
+        middlewareService.usePreCartCreation(),
+        (0, middlewares_1.transformBody)(create_cart_1.StorePostCartReq),
+    ];
+    if (featureFlagRouter.isFeatureEnabled(publishable_api_keys_1.default.key)) {
+        createMiddlewares.push(extend_request_params_1.extendRequestParams, validate_sales_channel_param_1.validateSalesChannelParam);
+    }
+    route.post.apply(route, __spreadArray(__spreadArray(["/"], __read(createMiddlewares), false), [middlewares_1.default.wrap(require("./create-cart").default)], false));
     route.post("/:id", (0, middlewares_1.transformBody)(update_cart_1.StorePostCartsCartReq), middlewares_1.default.wrap(require("./update-cart").default));
     route.post("/:id/complete", middlewares_1.default.wrap(require("./complete-cart").default));
     // DEPRECATION

@@ -1,5 +1,5 @@
 import { EntityManager } from "typeorm";
-import { ShippingProfileService } from ".";
+import { ProductVariantInventoryService, ShippingProfileService } from ".";
 import { TransactionBaseService } from "../interfaces";
 import { Fulfillment, LineItem, ShippingMethod } from "../models";
 import { FulfillmentRepository } from "../repositories/fulfillment";
@@ -19,6 +19,7 @@ declare type InjectedDependencies = {
     fulfillmentRepository: typeof FulfillmentRepository;
     trackingLinkRepository: typeof TrackingLinkRepository;
     lineItemRepository: typeof LineItemRepository;
+    productVariantInventoryService: ProductVariantInventoryService;
 };
 /**
  * Handles Fulfillments
@@ -33,7 +34,8 @@ declare class FulfillmentService extends TransactionBaseService {
     protected readonly fulfillmentRepository_: typeof FulfillmentRepository;
     protected readonly trackingLinkRepository_: typeof TrackingLinkRepository;
     protected readonly lineItemRepository_: typeof LineItemRepository;
-    constructor({ manager, totalsService, fulfillmentRepository, trackingLinkRepository, shippingProfileService, lineItemService, fulfillmentProviderService, lineItemRepository, }: InjectedDependencies);
+    protected readonly productVariantInventoryService_: ProductVariantInventoryService;
+    constructor({ manager, totalsService, fulfillmentRepository, trackingLinkRepository, shippingProfileService, lineItemService, fulfillmentProviderService, lineItemRepository, productVariantInventoryService, }: InjectedDependencies);
     partitionItems_(shippingMethods: ShippingMethod[], items: LineItem[]): FulfillmentItemPartition[];
     /**
      * Retrieves the order line items, given an array of items.
@@ -60,11 +62,11 @@ declare class FulfillmentService extends TransactionBaseService {
     validateFulfillmentLineItem_(item: LineItem | undefined, quantity: number): LineItem | null;
     /**
      * Retrieves a fulfillment by its id.
-     * @param id - the id of the fulfillment to retrieve
+     * @param fulfillmentId - the id of the fulfillment to retrieve
      * @param config - optional values to include with fulfillmentRepository query
      * @return the fulfillment
      */
-    retrieve(id: string, config?: FindConfig<Fulfillment>): Promise<Fulfillment>;
+    retrieve(fulfillmentId: string, config?: FindConfig<Fulfillment>): Promise<Fulfillment>;
     /**
      * Creates an order fulfillment
      * If items needs to be fulfilled by different provider, we make
@@ -75,7 +77,9 @@ declare class FulfillmentService extends TransactionBaseService {
      * @param custom - potential custom values to add
      * @return the created fulfillments
      */
-    createFulfillment(order: CreateFulfillmentOrder, itemsToFulfill: FulFillmentItemType[], custom?: Partial<Fulfillment>): Promise<Fulfillment[]>;
+    createFulfillment(order: CreateFulfillmentOrder, itemsToFulfill: FulFillmentItemType[], custom?: Partial<Fulfillment>, context?: {
+        locationId?: string;
+    }): Promise<Fulfillment[]>;
     /**
      * Cancels a fulfillment with the fulfillment provider. Will decrement the
      * fulfillment_quantity on the line items associated with the fulfillment.

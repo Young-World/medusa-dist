@@ -1,3 +1,4 @@
+import { FindParams } from "../../../../types/common";
 /**
  * @oas [post] /orders/{id}/fulfillment
  * operationId: "PostOrdersOrderFulfillments"
@@ -6,33 +7,16 @@
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {string} The ID of the Order.
+ *   - (query) expand {string} Comma separated list of relations to include in the result.
+ *   - (query) fields {string} Comma separated list of fields to include in the result.
  * requestBody:
  *   content:
  *     application/json:
  *       schema:
- *         required:
- *           - items
- *         properties:
- *           items:
- *             description: The Line Items to include in the Fulfillment.
- *             type: array
- *             items:
- *               required:
- *                 - item_id
- *                 - quantity
- *               properties:
- *                 item_id:
- *                   description: The ID of Line Item to fulfill.
- *                   type: string
- *                 quantity:
- *                   description: The quantity of the Line Item to fulfill.
- *                   type: integer
- *           no_notification:
- *             description: If set to true no notification will be send related to this Swap.
- *             type: boolean
- *           metadata:
- *             description: An optional set of key-value pairs to hold additional information.
- *             type: object
+ *         $ref: "#/components/schemas/AdminPostOrdersOrderFulfillmentsReq"
+ * x-codegen:
+ *   method: createFulfillment
+ *   params: AdminPostOrdersOrderFulfillmentsParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -76,9 +60,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/order"
+ *           $ref: "#/components/schemas/AdminOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -94,12 +76,43 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostOrdersOrderFulfillmentsReq
+ * type: object
+ * required:
+ *   - items
+ * properties:
+ *   items:
+ *     description: The Line Items to include in the Fulfillment.
+ *     type: array
+ *     items:
+ *       type: object
+ *       required:
+ *         - item_id
+ *         - quantity
+ *       properties:
+ *         item_id:
+ *           description: The ID of Line Item to fulfill.
+ *           type: string
+ *         quantity:
+ *           description: The quantity of the Line Item to fulfill.
+ *           type: integer
+ *   no_notification:
+ *     description: If set to true no notification will be send related to this Swap.
+ *     type: boolean
+ *   metadata:
+ *     description: An optional set of key-value pairs to hold additional information.
+ *     type: object
+ */
 export declare class AdminPostOrdersOrderFulfillmentsReq {
     items: Item[];
+    location_id?: string;
     no_notification?: boolean;
     metadata?: Record<string, unknown>;
 }
 declare class Item {
     item_id: string;
     quantity: number;
+}
+export declare class AdminPostOrdersOrderFulfillmentsParams extends FindParams {
 }

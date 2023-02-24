@@ -1,4 +1,19 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -36,8 +51,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var _1 = require(".");
+exports.AdminPostOrdersOrderFulfillementsCancelParams = exports.adjustInventoryForCancelledFulfillment = void 0;
 var medusa_core_utils_1 = require("medusa-core-utils");
+var common_1 = require("../../../../types/common");
 /**
  * @oas [post] /orders/{id}/fulfillments/{fulfillment_id}/cancel
  * operationId: "PostOrdersOrderFulfillmentsCancel"
@@ -47,6 +63,11 @@ var medusa_core_utils_1 = require("medusa-core-utils");
  * parameters:
  *   - (path) id=* {string} The ID of the Order which the Fulfillment relates to.
  *   - (path) fulfillment_id=* {string} The ID of the Fulfillment
+ *   - (query) expand {string} Comma separated list of relations to include in the result.
+ *   - (query) fields {string} Comma separated list of fields to include in the result.
+ * x-codegen:
+ *   method: cancelFulfillment
+ *   params: AdminPostOrdersOrderFulfillementsCancelParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -74,9 +95,7 @@ var medusa_core_utils_1 = require("medusa-core-utils");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             order:
- *               $ref: "#/components/schemas/order"
+ *           $ref: "#/components/schemas/AdminOrdersRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -91,12 +110,14 @@ var medusa_core_utils_1 = require("medusa-core-utils");
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, id, fulfillment_id, orderService, fulfillmentService, fulfillment, manager, order;
+    var _a, id, fulfillment_id, orderService, inventoryService, productVariantInventoryService, fulfillmentService, fulfillment, manager, order;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
                 _a = req.params, id = _a.id, fulfillment_id = _a.fulfillment_id;
                 orderService = req.scope.resolve("orderService");
+                inventoryService = req.scope.resolve("inventoryService");
+                productVariantInventoryService = req.scope.resolve("productVariantInventoryService");
                 fulfillmentService = req.scope.resolve("fulfillmentService");
                 return [4 /*yield*/, fulfillmentService.retrieve(fulfillment_id)];
             case 1:
@@ -106,20 +127,34 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
                 }
                 manager = req.scope.resolve("manager");
                 return [4 /*yield*/, manager.transaction(function (transactionManager) { return __awaiter(void 0, void 0, void 0, function () {
+                        var fulfillment;
                         return __generator(this, function (_a) {
                             switch (_a.label) {
                                 case 0: return [4 /*yield*/, orderService
                                         .withTransaction(transactionManager)
                                         .cancelFulfillment(fulfillment_id)];
-                                case 1: return [2 /*return*/, _a.sent()];
+                                case 1:
+                                    _a.sent();
+                                    return [4 /*yield*/, fulfillmentService
+                                            .withTransaction(transactionManager)
+                                            .retrieve(fulfillment_id, { relations: ["items", "items.item"] })];
+                                case 2:
+                                    fulfillment = _a.sent();
+                                    if (!(fulfillment.location_id && inventoryService)) return [3 /*break*/, 4];
+                                    return [4 /*yield*/, (0, exports.adjustInventoryForCancelledFulfillment)(fulfillment, {
+                                            productVariantInventoryService: productVariantInventoryService.withTransaction(transactionManager),
+                                        })];
+                                case 3:
+                                    _a.sent();
+                                    _a.label = 4;
+                                case 4: return [2 /*return*/];
                             }
                         });
                     }); })];
             case 2:
                 _b.sent();
-                return [4 /*yield*/, orderService.retrieve(id, {
-                        select: _1.defaultAdminOrdersFields,
-                        relations: _1.defaultAdminOrdersRelations,
+                return [4 /*yield*/, orderService.retrieveWithTotals(id, req.retrieveConfig, {
+                        includes: req.includes,
                     })];
             case 3:
                 order = _b.sent();
@@ -128,4 +163,41 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+var adjustInventoryForCancelledFulfillment = function (fulfillment, context) { return __awaiter(void 0, void 0, void 0, function () {
+    var productVariantInventoryService;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                productVariantInventoryService = context.productVariantInventoryService;
+                return [4 /*yield*/, Promise.all(fulfillment.items.map(function (_a) {
+                        var item = _a.item, quantity = _a.quantity;
+                        return __awaiter(void 0, void 0, void 0, function () {
+                            return __generator(this, function (_b) {
+                                switch (_b.label) {
+                                    case 0:
+                                        if (!item.variant_id) return [3 /*break*/, 2];
+                                        return [4 /*yield*/, productVariantInventoryService.adjustInventory(item.variant_id, fulfillment.location_id, quantity)];
+                                    case 1:
+                                        _b.sent();
+                                        _b.label = 2;
+                                    case 2: return [2 /*return*/];
+                                }
+                            });
+                        });
+                    }))];
+            case 1:
+                _a.sent();
+                return [2 /*return*/];
+        }
+    });
+}); };
+exports.adjustInventoryForCancelledFulfillment = adjustInventoryForCancelledFulfillment;
+var AdminPostOrdersOrderFulfillementsCancelParams = /** @class */ (function (_super) {
+    __extends(AdminPostOrdersOrderFulfillementsCancelParams, _super);
+    function AdminPostOrdersOrderFulfillementsCancelParams() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return AdminPostOrdersOrderFulfillementsCancelParams;
+}(common_1.FindParams));
+exports.AdminPostOrdersOrderFulfillementsCancelParams = AdminPostOrdersOrderFulfillementsCancelParams;
 //# sourceMappingURL=cancel-fulfillment.js.map

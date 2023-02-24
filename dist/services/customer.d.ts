@@ -1,4 +1,5 @@
 import { DeepPartial, EntityManager } from "typeorm";
+import { EventBusService } from ".";
 import { StorePostCustomersCustomerAddressesAddressReq } from "../api";
 import { TransactionBaseService } from "../interfaces";
 import { Address, Customer } from "../models";
@@ -6,7 +7,6 @@ import { AddressRepository } from "../repositories/address";
 import { CustomerRepository } from "../repositories/customer";
 import { AddressCreatePayload, FindConfig, Selector } from "../types/common";
 import { CreateCustomerInput, UpdateCustomerInput } from "../types/customers";
-import EventBusService from "./event-bus";
 declare type InjectedDependencies = {
     manager: EntityManager;
     eventBusService: EventBusService;
@@ -61,12 +61,16 @@ declare class CustomerService extends TransactionBaseService {
     count(): Promise<number>;
     private retrieve_;
     /**
-     * Gets a customer by email.
+     * Gets a registered customer by email.
      * @param {string} email - the email of the customer to get.
      * @param {Object} config - the config object containing query settings
      * @return {Promise<Customer>} the customer document.
+     * @deprecated
      */
     retrieveByEmail(email: string, config?: FindConfig<Customer>): Promise<Customer | never>;
+    retrieveUnregisteredByEmail(email: string, config?: FindConfig<Customer>): Promise<Customer | never>;
+    retrieveRegisteredByEmail(email: string, config?: FindConfig<Customer>): Promise<Customer | never>;
+    listByEmail(email: string, config?: FindConfig<Customer>): Promise<Customer[]>;
     /**
      * Gets a customer by phone.
      * @param {string} phone - the phone of the customer to get.

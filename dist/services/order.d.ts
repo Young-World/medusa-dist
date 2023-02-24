@@ -1,28 +1,15 @@
 import { EntityManager } from "typeorm";
 import { TransactionBaseService } from "../interfaces";
-import { Address, LineItem, Order, Return, TrackingLink } from "../models";
+import { Address, Cart, GiftCard, LineItem, Order, Return, TrackingLink } from "../models";
 import { AddressRepository } from "../repositories/address";
 import { OrderRepository } from "../repositories/order";
 import { FindConfig, QuerySelector, Selector } from "../types/common";
 import { FulFillmentItemType } from "../types/fulfillment";
-import { UpdateOrderInput } from "../types/orders";
+import { TotalsContext, UpdateOrderInput } from "../types/orders";
 import { CreateShippingMethodDto } from "../types/shipping-options";
 import { FlagRouter } from "../utils/flag-router";
-import CartService from "./cart";
-import CustomerService from "./customer";
-import DiscountService from "./discount";
-import DraftOrderService from "./draft-order";
-import EventBusService from "./event-bus";
-import FulfillmentService from "./fulfillment";
-import FulfillmentProviderService from "./fulfillment-provider";
-import GiftCardService from "./gift-card";
-import InventoryService from "./inventory";
-import LineItemService from "./line-item";
-import PaymentProviderService from "./payment-provider";
-import RegionService from "./region";
-import ShippingOptionService from "./shipping-option";
-import ShippingProfileService from "./shipping-profile";
-import TotalsService from "./totals";
+import { CartService, CustomerService, DiscountService, DraftOrderService, EventBusService, FulfillmentProviderService, FulfillmentService, GiftCardService, LineItemService, NewTotalsService, PaymentProviderService, ProductVariantInventoryService, RegionService, ShippingOptionService, ShippingProfileService, TaxProviderService, TotalsService } from ".";
+export declare const ORDER_CART_ALREADY_EXISTS_ERROR = "Order from cart already exists";
 declare type InjectedDependencies = {
     manager: EntityManager;
     orderRepository: typeof OrderRepository;
@@ -35,14 +22,16 @@ declare type InjectedDependencies = {
     fulfillmentService: FulfillmentService;
     lineItemService: LineItemService;
     totalsService: TotalsService;
+    newTotalsService: NewTotalsService;
+    taxProviderService: TaxProviderService;
     regionService: RegionService;
     cartService: CartService;
     addressRepository: typeof AddressRepository;
     giftCardService: GiftCardService;
     draftOrderService: DraftOrderService;
-    inventoryService: InventoryService;
     eventBusService: EventBusService;
     featureFlagRouter: FlagRouter;
+    productVariantInventoryService: ProductVariantInventoryService;
 };
 declare class OrderService extends TransactionBaseService {
     static readonly Events: {
@@ -75,15 +64,17 @@ declare class OrderService extends TransactionBaseService {
     protected readonly fulfillmentService_: FulfillmentService;
     protected readonly lineItemService_: LineItemService;
     protected readonly totalsService_: TotalsService;
+    protected readonly newTotalsService_: NewTotalsService;
+    protected readonly taxProviderService_: TaxProviderService;
     protected readonly regionService_: RegionService;
     protected readonly cartService_: CartService;
     protected readonly addressRepository_: typeof AddressRepository;
     protected readonly giftCardService_: GiftCardService;
     protected readonly draftOrderService_: DraftOrderService;
-    protected readonly inventoryService_: InventoryService;
     protected readonly eventBus_: EventBusService;
     protected readonly featureFlagRouter_: FlagRouter;
-    constructor({ manager, orderRepository, customerService, paymentProviderService, shippingOptionService, shippingProfileService, discountService, fulfillmentProviderService, fulfillmentService, lineItemService, totalsService, regionService, cartService, addressRepository, giftCardService, draftOrderService, inventoryService, eventBusService, featureFlagRouter, }: InjectedDependencies);
+    protected readonly productVariantInventoryService_: ProductVariantInventoryService;
+    constructor({ manager, orderRepository, customerService, paymentProviderService, shippingOptionService, shippingProfileService, discountService, fulfillmentProviderService, fulfillmentService, lineItemService, totalsService, newTotalsService, taxProviderService, regionService, cartService, addressRepository, giftCardService, draftOrderService, eventBusService, featureFlagRouter, productVariantInventoryService, }: InjectedDependencies);
     /**
      * @param selector the query object for find
      * @param config the config to be used for find
@@ -103,11 +94,13 @@ declare class OrderService extends TransactionBaseService {
     };
     /**
      * Gets an order by id.
-     * @param orderId - id of order to retrieve
+     * @param orderId - id or selector of order to retrieve
      * @param config - config of order to retrieve
      * @return the order document
      */
     retrieve(orderId: string, config?: FindConfig<Order>): Promise<Order>;
+    protected retrieveLegacy(orderIdOrSelector: string | Selector<Order>, config?: FindConfig<Order>): Promise<Order>;
+    retrieveWithTotals(orderId: string, options?: FindConfig<Order>, context?: TotalsContext): Promise<Order>;
     /**
      * Gets an order by cart id.
      * @param cartId - cart id to find order
@@ -123,22 +116,17 @@ declare class OrderService extends TransactionBaseService {
      */
     retrieveByExternalId(externalId: string, config?: FindConfig<Order>): Promise<Order>;
     /**
-     * Checks the existence of an order by cart id.
-     * @param cartId - cart id to find order
-     * @return the order document
-     */
-    existsByCartId(cartId: string): Promise<boolean>;
-    /**
      * @param orderId - id of the order to complete
      * @return the result of the find operation
      */
     completeOrder(orderId: string): Promise<Order>;
     /**
      * Creates an order from a cart
-     * @param cartId - id of the cart to create an order from
      * @return resolves to the creation result.
+     * @param cartOrId
      */
-    createFromCart(cartId: string): Promise<Order | never>;
+    createFromCart(cartOrId: string | Cart): Promise<Order | never>;
+    protected createGiftCardsFromLineItem_(order: Order, lineItem: LineItem, manager: EntityManager): Promise<GiftCard>[];
     /**
      * Adds a shipment to the order to indicate that an order has left the
      * warehouse. Will ask the fulfillment provider for any documents that may
@@ -217,6 +205,7 @@ declare class OrderService extends TransactionBaseService {
      */
     createFulfillment(orderId: string, itemsToFulfill: FulFillmentItemType[], config?: {
         no_notification?: boolean;
+        location_id?: string;
         metadata?: Record<string, unknown>;
     }): Promise<Order>;
     /**
@@ -255,7 +244,9 @@ declare class OrderService extends TransactionBaseService {
     createRefund(orderId: string, refundAmount: number, reason: string, note?: string, config?: {
         no_notification?: boolean;
     }): Promise<Order>;
-    protected decorateTotals(order: Order, totalsFields?: string[]): Promise<Order>;
+    protected decorateTotalsLegacy(order: Order, totalsFields?: string[]): Promise<Order>;
+    decorateTotals(order: Order, totalsFields?: string[]): Promise<Order>;
+    decorateTotals(order: Order, context?: TotalsContext): Promise<Order>;
     /**
      * Handles receiving a return. This will create a
      * refund to the customer. If the returned items don't match the requested
@@ -270,5 +261,6 @@ declare class OrderService extends TransactionBaseService {
      * @return the result of the update operation
      */
     registerReturnReceived(orderId: string, receivedReturn: Return, customRefundAmount?: number): Promise<Order>;
+    private getTotalsRelations;
 }
 export default OrderService;

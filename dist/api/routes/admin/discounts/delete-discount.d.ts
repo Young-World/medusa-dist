@@ -6,6 +6,8 @@
  * x-authenticated: true
  * parameters:
  *   - (path) id=* {string} The ID of the Discount
+ * x-codegen:
+ *   method: delete
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -33,18 +35,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             id:
- *               type: string
- *               description: The ID of the deleted Discount
- *             object:
- *               type: string
- *               description: The type of the object that was deleted.
- *               default: discount
- *             deleted:
- *               type: boolean
- *               description: Whether the discount was deleted successfully or not.
- *               default: true
+ *           $ref: "#/components/schemas/AdminDiscountsDeleteRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

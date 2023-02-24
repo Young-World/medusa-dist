@@ -8,20 +8,9 @@
  *  content:
  *    application/json:
  *      schema:
- *        required:
- *          - resource_id
- *          - resource_type
- *          - value
- *        properties:
- *          resource_id:
- *            type: string
- *            description: The ID of the resource which the Note relates to.
- *          resource_type:
- *            type: string
- *            description: The type of resource which the Note relates to.
- *          value:
- *            type: string
- *            description: The content of the Note to create.
+ *        $ref: "#/components/schemas/AdminPostNotesReq"
+ * x-codegen:
+ *   method: create
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -59,9 +48,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             note:
- *               $ref: "#/components/schemas/note"
+ *           $ref: "#/components/schemas/AdminNotesRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -78,6 +65,24 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostNotesReq
+ * type: object
+ * required:
+ *   - resource_id
+ *   - resource_type
+ *   - value
+ * properties:
+ *   resource_id:
+ *     type: string
+ *     description: The ID of the resource which the Note relates to.
+ *   resource_type:
+ *     type: string
+ *     description: The type of resource which the Note relates to.
+ *   value:
+ *     type: string
+ *     description: The content of the Note to create.
+ */
 export declare class AdminPostNotesReq {
     resource_id: string;
     resource_type: string;

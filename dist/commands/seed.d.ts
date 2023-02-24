@@ -1,6 +1,7 @@
-export default t;
-declare function t({ directory, migrate, seedFile }: {
-    directory: any;
-    migrate: any;
-    seedFile: any;
-}): Promise<void>;
+declare type SeedOptions = {
+    directory: string;
+    migrate: boolean;
+    seedFile: string;
+};
+declare const seed: ({ directory, migrate, seedFile }: SeedOptions) => Promise<void>;
+export default seed;

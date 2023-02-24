@@ -64,11 +64,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var os_1 = require("os");
+var boxen_1 = __importDefault(require("boxen"));
 var path_1 = __importDefault(require("path"));
 var child_process_1 = require("child_process");
 var cross_spawn_1 = __importDefault(require("cross-spawn"));
 var chokidar_1 = __importDefault(require("chokidar"));
+var store_1 = __importDefault(require("medusa-telemetry/dist/store"));
 var logger_1 = __importDefault(require("../loaders/logger"));
+var defaultConfig = {
+    padding: 5,
+    borderColor: "blue",
+    borderStyle: "double",
+};
 function default_1(_a) {
     var port = _a.port, directory = _a.directory;
     return __awaiter(this, void 0, void 0, function () {
@@ -78,6 +86,22 @@ function default_1(_a) {
             args.shift();
             args.shift();
             args.shift();
+            process.on("SIGINT", function () {
+                var _a;
+                var configStore = new store_1.default();
+                var hasPrompted = (_a = configStore.getConfig("star.prompted")) !== null && _a !== void 0 ? _a : false;
+                if (!hasPrompted) {
+                    var defaultMessage = "\u2728 Thanks for using Medusa. \u2728".concat(os_1.EOL).concat(os_1.EOL) +
+                        "If you liked it, please consider starring us on GitHub".concat(os_1.EOL) +
+                        "https://medusajs.com/star".concat(os_1.EOL) +
+                        "".concat(os_1.EOL) +
+                        "Note: you will not see this message again.";
+                    console.log();
+                    console.log((0, boxen_1.default)(defaultMessage, defaultConfig));
+                    configStore.setConfig("star.prompted", true);
+                }
+                process.exit(0);
+            });
             babelPath = path_1.default.join(directory, "node_modules", ".bin", "babel");
             (0, child_process_1.execSync)("\"".concat(babelPath, "\" src -d dist"), {
                 cwd: directory,

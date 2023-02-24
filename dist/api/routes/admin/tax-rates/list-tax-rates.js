@@ -131,6 +131,9 @@ var validator_1 = require("../../../../utils/validator");
  *       type: array
  *       items:
  *         type: string
+ * x-codegen:
+ *   method: list
+ *   queryParams: AdminGetTaxRatesParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -158,20 +161,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             tax_rates:
- *               type: array
- *               items:
- *                 $ref: "#/components/schemas/tax_rate"
- *             count:
- *               type: integer
- *               description: The total number of items available
- *             offset:
- *               type: integer
- *               description: The number of items skipped before these items
- *             limit:
- *               type: integer
- *               description: The number of items per page
+ *           $ref: "#/components/schemas/AdminTaxRatesListRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":

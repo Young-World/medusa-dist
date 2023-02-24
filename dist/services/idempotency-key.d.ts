@@ -2,7 +2,7 @@ import { TransactionBaseService } from "../interfaces";
 import { DeepPartial, EntityManager } from "typeorm";
 import { IdempotencyKeyRepository } from "../repositories/idempotency-key";
 import { IdempotencyKey } from "../models";
-import { CreateIdempotencyKeyInput } from "../types/idempotency-key";
+import { CreateIdempotencyKeyInput, IdempotencyCallbackResult } from "../types/idempotency-key";
 declare type InjectedDependencies = {
     manager: EntityManager;
     idempotencyKeyRepository: typeof IdempotencyKeyRepository;
@@ -58,13 +58,6 @@ declare class IdempotencyKeyService extends TransactionBaseService {
      * @param callback - functionality to execute within the phase
      * @return new updated idempotency key
      */
-    workStage(idempotencyKey: string, callback: (transactionManager: EntityManager) => Promise<{
-        recovery_point?: string;
-        response_code?: number;
-        response_body?: Record<string, unknown>;
-    } | never>): Promise<{
-        key?: IdempotencyKey;
-        error?: unknown;
-    }>;
+    workStage(idempotencyKey: string, callback: (transactionManager: EntityManager) => Promise<IdempotencyCallbackResult | never>): Promise<IdempotencyKey>;
 }
 export default IdempotencyKeyService;

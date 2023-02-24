@@ -1,3 +1,5 @@
+import { Request, Response } from "express";
+import { FindParams } from "../../../../types/common";
 /**
  * @oas [get] /discounts/{discount_id}/conditions/{condition_id}
  * operationId: "GetDiscountsDiscountConditionsCondition"
@@ -9,6 +11,9 @@
  *   - (path) condition_id=* {string} The ID of the DiscountCondition.
  *   - (query) expand {string} Comma separated list of relations to include in the results.
  *   - (query) fields {string} Comma separated list of fields to include in the results.
+ * x-codegen:
+ *   method: getCondition
+ *   queryParams: AdminGetDiscountsDiscountConditionsConditionParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -36,9 +41,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             discount_condition:
- *               $ref: "#/components/schemas/discount_condition"
+ *           $ref: "#/components/schemas/AdminDiscountConditionsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -52,9 +55,7 @@
  *   "500":
  *     $ref: "#/components/responses/500_error"
  */
-declare const _default: (req: any, res: any) => Promise<void>;
+declare const _default: (req: Request, res: Response) => Promise<void>;
 export default _default;
-export declare class AdminGetDiscountsDiscountConditionsConditionParams {
-    expand?: string;
-    fields?: string;
+export declare class AdminGetDiscountsDiscountConditionsConditionParams extends FindParams {
 }

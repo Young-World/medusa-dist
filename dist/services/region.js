@@ -555,6 +555,9 @@ var RegionService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        if (!(0, medusa_core_utils_1.isDefined)(regionId)) {
+                            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "\"regionId\" must be defined");
+                        }
                         regionRepository = this.manager_.getCustomRepository(this.regionRepository_);
                         query = (0, utils_1.buildQuery)({ id: regionId }, config);
                         return [4 /*yield*/, regionRepository.findOne(query)];

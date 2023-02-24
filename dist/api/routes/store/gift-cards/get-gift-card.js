@@ -41,9 +41,11 @@ var _1 = require(".");
  * @oas [get] /gift-cards/{code}
  * operationId: "GetGiftCardsCode"
  * summary: "Get Gift Card by Code"
- * description: "Retrieves a Gift Card by its associated unqiue code."
+ * description: "Retrieves a Gift Card by its associated unique code."
  * parameters:
  *   - (path) code=* {string} The unique Gift Card code.
+ * x-codegen:
+ *   method: retrieve
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -66,9 +68,7 @@ var _1 = require(".");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             gift_card:
- *               $ref: "#/components/schemas/gift_card"
+ *           $ref: "#/components/schemas/StoreGiftCardsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":

@@ -109,12 +109,7 @@ var StoreService = /** @class */ (function (_super) {
     __extends(StoreService, _super);
     function StoreService(_a) {
         var manager = _a.manager, storeRepository = _a.storeRepository, currencyRepository = _a.currencyRepository, eventBusService = _a.eventBusService;
-        var _this = _super.call(this, {
-            manager: manager,
-            storeRepository: storeRepository,
-            currencyRepository: currencyRepository,
-            eventBusService: eventBusService,
-        }) || this;
+        var _this = _super.call(this, arguments[0]) || this;
         _this.manager_ = manager;
         _this.storeRepository_ = storeRepository;
         _this.currencyRepository_ = currencyRepository;

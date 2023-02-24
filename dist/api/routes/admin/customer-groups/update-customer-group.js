@@ -62,13 +62,9 @@ var validator_1 = require("../../../../utils/validator");
  *   content:
  *     application/json:
  *       schema:
- *         properties:
- *           name:
- *             description: "Name of the customer group"
- *             type: string
- *           metadata:
- *             description: "Metadata for the customer."
- *             type: object
+ *         $ref: "#/components/schemas/AdminPostCustomerGroupsGroupReq"
+ * x-codegen:
+ *   method: update
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -102,9 +98,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             customer_group:
- *               $ref: "#/components/schemas/customer_group"
+ *           $ref: "#/components/schemas/AdminCustomerGroupsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -161,6 +155,17 @@ exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0
         }
     });
 }); });
+/**
+ * @schema AdminPostCustomerGroupsGroupReq
+ * type: object
+ * properties:
+ *   name:
+ *     description: "Name of the customer group"
+ *     type: string
+ *   metadata:
+ *     description: "Metadata for the customer."
+ *     type: object
+ */
 var AdminPostCustomerGroupsGroupReq = /** @class */ (function () {
     function AdminPostCustomerGroupsGroupReq() {
     }

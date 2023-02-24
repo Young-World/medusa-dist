@@ -10,12 +10,9 @@
  *  content:
  *    application/json:
  *      schema:
- *        required:
- *          - value
- *        properties:
- *          value:
- *            type: string
- *            description: The updated description of the Note.
+ *        $ref: "#/components/schemas/AdminPostNotesNoteReq"
+ * x-codegen:
+ *   method: update
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -49,9 +46,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             note:
- *               $ref: "#/components/schemas/note"
+ *           $ref: "#/components/schemas/AdminNotesRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "401":
@@ -67,6 +62,16 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+/**
+ * @schema AdminPostNotesNoteReq
+ * type: object
+ * required:
+ *   - value
+ * properties:
+ *   value:
+ *     type: string
+ *     description: The updated description of the Note.
+ */
 export declare class AdminPostNotesNoteReq {
     value: string;
 }

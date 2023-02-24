@@ -3,7 +3,7 @@ import { TransactionBaseService } from "../interfaces";
 import { ProductCollection } from "../models";
 import { ProductRepository } from "../repositories/product";
 import { ProductCollectionRepository } from "../repositories/product-collection";
-import { FindConfig, QuerySelector } from "../types/common";
+import { FindConfig, Selector } from "../types/common";
 import { CreateProductCollection, UpdateProductCollection } from "../types/product-collection";
 import EventBusService from "./event-bus";
 declare type InjectedDependencies = {
@@ -63,7 +63,10 @@ declare class ProductCollectionService extends TransactionBaseService {
      * @param config - the config to be used for find
      * @return the result of the find operation
      */
-    list(selector?: {}, config?: {
+    list(selector?: Selector<ProductCollection> & {
+        q?: string;
+        discount_condition_id?: string;
+    }, config?: {
         skip: number;
         take: number;
     }): Promise<ProductCollection[]>;
@@ -73,6 +76,9 @@ declare class ProductCollectionService extends TransactionBaseService {
      * @param config - the config to be used for find
      * @return the result of the find operation
      */
-    listAndCount(selector?: QuerySelector<ProductCollection>, config?: FindConfig<ProductCollection>): Promise<[ProductCollection[], number]>;
+    listAndCount(selector?: Selector<ProductCollection> & {
+        q?: string;
+        discount_condition_id?: string;
+    }, config?: FindConfig<ProductCollection>): Promise<[ProductCollection[], number]>;
 }
 export default ProductCollectionService;

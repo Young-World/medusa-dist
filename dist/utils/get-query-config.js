@@ -27,8 +27,7 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.prepareRetrieveQuery = exports.prepareListQuery = exports.getListConfig = exports.getRetrieveConfig = exports.pickByConfig = void 0;
 var lodash_1 = require("lodash");
-var dist_1 = require("medusa-core-utils/dist");
-var _1 = require(".");
+var medusa_core_utils_1 = require("medusa-core-utils");
 function pickByConfig(obj, config) {
     var _a, _b;
     var fields = __spreadArray(__spreadArray([], __read(((_a = config.select) !== null && _a !== void 0 ? _a : [])), false), __read(((_b = config.relations) !== null && _b !== void 0 ? _b : [])), false);
@@ -45,26 +44,27 @@ function pickByConfig(obj, config) {
 exports.pickByConfig = pickByConfig;
 function getRetrieveConfig(defaultFields, defaultRelations, fields, expand) {
     var includeFields = [];
-    if ((0, _1.isDefined)(fields)) {
+    if ((0, medusa_core_utils_1.isDefined)(fields)) {
         includeFields = Array.from(new Set(__spreadArray(__spreadArray([], __read(fields), false), ["id"], false))).map(function (field) {
             return typeof field === "string" ? field.trim() : field;
         });
     }
     var expandFields = [];
-    if ((0, _1.isDefined)(expand)) {
+    if ((0, medusa_core_utils_1.isDefined)(expand)) {
         expandFields = expand.map(function (expandRelation) { return expandRelation.trim(); });
     }
     return {
         select: includeFields.length ? includeFields : defaultFields,
-        relations: expandFields.length ? expandFields : defaultRelations,
+        relations: (0, medusa_core_utils_1.isDefined)(expand) ? expandFields : defaultRelations,
     };
 }
 exports.getRetrieveConfig = getRetrieveConfig;
 function getListConfig(defaultFields, defaultRelations, fields, expand, limit, offset, order) {
     if (limit === void 0) { limit = 50; }
     if (offset === void 0) { offset = 0; }
+    if (order === void 0) { order = {}; }
     var includeFields = [];
-    if ((0, _1.isDefined)(fields)) {
+    if ((0, medusa_core_utils_1.isDefined)(fields)) {
         var fieldSet = new Set(fields);
         // Ensure created_at is included, since we are sorting on this
         fieldSet.add("created_at");
@@ -72,15 +72,16 @@ function getListConfig(defaultFields, defaultRelations, fields, expand, limit, o
         includeFields = Array.from(fieldSet);
     }
     var expandFields = [];
-    if ((0, _1.isDefined)(expand)) {
+    if ((0, medusa_core_utils_1.isDefined)(expand)) {
         expandFields = expand;
     }
-    var orderBy = order !== null && order !== void 0 ? order : {
-        created_at: "DESC",
-    };
+    var orderBy = order;
+    if (!Object.keys(order).length) {
+        orderBy["created_at"] = "DESC";
+    }
     return {
         select: includeFields.length ? includeFields : defaultFields,
-        relations: expandFields.length ? expandFields : defaultRelations,
+        relations: (0, medusa_core_utils_1.isDefined)(expand) ? expandFields : defaultRelations,
         skip: offset,
         take: limit,
         order: orderBy,
@@ -92,12 +93,12 @@ function prepareListQuery(validated, queryConfig) {
     var _c, _d, _e, _f;
     var order = validated.order, fields = validated.fields, expand = validated.expand, limit = validated.limit, offset = validated.offset;
     var expandRelations = undefined;
-    if (expand) {
-        expandRelations = expand.split(",");
+    if ((0, medusa_core_utils_1.isDefined)(expand)) {
+        expandRelations = expand.split(",").filter(function (v) { return v; });
     }
     var expandFields = undefined;
-    if (fields) {
-        expandFields = fields.split(",");
+    if ((0, medusa_core_utils_1.isDefined)(fields)) {
+        expandFields = fields.split(",").filter(function (v) { return v; });
     }
     if ((expandFields === null || expandFields === void 0 ? void 0 : expandFields.length) && ((_c = queryConfig === null || queryConfig === void 0 ? void 0 : queryConfig.allowedFields) === null || _c === void 0 ? void 0 : _c.length)) {
         validateFields(expandFields, queryConfig.allowedFields);
@@ -106,7 +107,7 @@ function prepareListQuery(validated, queryConfig) {
         validateRelations(expandRelations, queryConfig.allowedRelations);
     }
     var orderBy;
-    if ((0, _1.isDefined)(order)) {
+    if ((0, medusa_core_utils_1.isDefined)(order)) {
         var orderField = order;
         if (order.startsWith("-")) {
             var _g = __read(order.split("-"), 2), field = _g[1];
@@ -118,7 +119,7 @@ function prepareListQuery(validated, queryConfig) {
         }
         if (((_e = queryConfig === null || queryConfig === void 0 ? void 0 : queryConfig.allowedFields) === null || _e === void 0 ? void 0 : _e.length) &&
             !(queryConfig === null || queryConfig === void 0 ? void 0 : queryConfig.allowedFields.includes(orderField))) {
-            throw new dist_1.MedusaError(dist_1.MedusaError.Types.INVALID_DATA, "Order field ".concat(orderField, " is not valid"));
+            throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Order field ".concat(orderField, " is not valid"));
         }
     }
     return getListConfig(queryConfig === null || queryConfig === void 0 ? void 0 : queryConfig.defaultFields, ((_f = queryConfig === null || queryConfig === void 0 ? void 0 : queryConfig.defaultRelations) !== null && _f !== void 0 ? _f : []), expandFields, expandRelations, limit !== null && limit !== void 0 ? limit : queryConfig === null || queryConfig === void 0 ? void 0 : queryConfig.defaultLimit, offset !== null && offset !== void 0 ? offset : 0, orderBy);
@@ -127,13 +128,13 @@ exports.prepareListQuery = prepareListQuery;
 function prepareRetrieveQuery(validated, queryConfig) {
     var _a, _b, _c;
     var fields = validated.fields, expand = validated.expand;
-    var expandRelations = [];
-    if (expand) {
-        expandRelations = expand.split(",");
+    var expandRelations = undefined;
+    if ((0, medusa_core_utils_1.isDefined)(expand)) {
+        expandRelations = expand.split(",").filter(function (v) { return v; });
     }
     var expandFields = undefined;
-    if (fields) {
-        expandFields = fields.split(",");
+    if ((0, medusa_core_utils_1.isDefined)(fields)) {
+        expandFields = fields.split(",").filter(function (v) { return v; });
     }
     if ((expandFields === null || expandFields === void 0 ? void 0 : expandFields.length) && ((_a = queryConfig === null || queryConfig === void 0 ? void 0 : queryConfig.allowedFields) === null || _a === void 0 ? void 0 : _a.length)) {
         validateFields(expandFields, queryConfig.allowedFields);
@@ -152,7 +153,7 @@ function validateRelations(relations, allowed) {
         }
     });
     if (disallowedRelationsFound.length) {
-        throw new dist_1.MedusaError(dist_1.MedusaError.Types.INVALID_DATA, "Relations [".concat(disallowedRelationsFound.join(", "), "] are not valid"));
+        throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Relations [".concat(disallowedRelationsFound.join(", "), "] are not valid"));
     }
 }
 function validateFields(fields, allowed) {
@@ -163,7 +164,7 @@ function validateFields(fields, allowed) {
         }
     });
     if (disallowedFieldsFound.length) {
-        throw new dist_1.MedusaError(dist_1.MedusaError.Types.INVALID_DATA, "Fields [".concat(disallowedFieldsFound.join(", "), "] are not valid"));
+        throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.INVALID_DATA, "Fields [".concat(disallowedFieldsFound.join(", "), "] are not valid"));
     }
 }
 //# sourceMappingURL=get-query-config.js.map

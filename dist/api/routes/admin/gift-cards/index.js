@@ -26,11 +26,12 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.allowedAdminGiftCardRelations = exports.allowedAdminGiftCardFields = exports.defaultAdminGiftCardRelations = exports.defaultAdminGiftCardFields = void 0;
+exports.defaultAdminGiftCardRelations = exports.defaultAdminGiftCardFields = void 0;
 var express_1 = require("express");
 require("reflect-metadata");
 var middlewares_1 = __importStar(require("../../../middlewares"));
 var list_gift_cards_1 = require("./list-gift-cards");
+var create_gift_card_1 = require("./create-gift-card");
 var route = (0, express_1.Router)();
 exports.default = (function (app) {
     app.use("/gift-cards", route);
@@ -39,7 +40,7 @@ exports.default = (function (app) {
         defaultRelations: exports.defaultAdminGiftCardRelations,
         isList: true,
     }), middlewares_1.default.wrap(require("./list-gift-cards").default));
-    route.post("/", middlewares_1.default.wrap(require("./create-gift-card").default));
+    route.post("/", (0, middlewares_1.transformBody)(create_gift_card_1.AdminPostGiftCardsReq), middlewares_1.default.wrap(require("./create-gift-card").default));
     route.get("/:id", middlewares_1.default.wrap(require("./get-gift-card").default));
     route.post("/:id", middlewares_1.default.wrap(require("./update-gift-card").default));
     route.delete("/:id", middlewares_1.default.wrap(require("./delete-gift-card").default));
@@ -53,26 +54,13 @@ exports.defaultAdminGiftCardFields = [
     "region_id",
     "is_disabled",
     "ends_at",
+    "tax_rate",
     "created_at",
     "updated_at",
     "deleted_at",
     "metadata",
 ];
 exports.defaultAdminGiftCardRelations = ["region", "order"];
-exports.allowedAdminGiftCardFields = [
-    "id",
-    "code",
-    "value",
-    "balance",
-    "region_id",
-    "is_disabled",
-    "ends_at",
-    "created_at",
-    "updated_at",
-    "deleted_at",
-    "metadata",
-];
-exports.allowedAdminGiftCardRelations = ["region"];
 __exportStar(require("./create-gift-card"), exports);
 __exportStar(require("./list-gift-cards"), exports);
 __exportStar(require("./update-gift-card"), exports);

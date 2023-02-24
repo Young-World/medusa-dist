@@ -1,9 +1,9 @@
 import { EntityManager } from "typeorm";
 import { AbstractBatchJobStrategy, IFileService } from "../../../interfaces";
 import CsvParser from "../../../services/csv-parser";
-import { BatchJobService, ProductVariantService, PriceListService, RegionService } from "../../../services";
+import { BatchJobService, PriceListService, ProductVariantService, RegionService } from "../../../services";
 import { CreateBatchJobInput } from "../../../types/batch-job";
-import { InjectedProps, OperationType, PriceListImportOperation, PriceListImportOperationPrice, ParsedPriceListImportPrice, PriceListImportCsvSchema, TParsedPriceListImportRowData } from "./types";
+import { InjectedProps, OperationType, ParsedPriceListImportPrice, PriceListImportCsvSchema, PriceListImportOperation, PriceListImportOperationPrice, TParsedPriceListImportRowData } from "./types";
 declare class PriceListImportStrategy extends AbstractBatchJobStrategy {
     static identifier: string;
     static batchType: string;

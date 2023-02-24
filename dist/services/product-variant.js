@@ -117,7 +117,9 @@ var ProductVariantService = /** @class */ (function (_super) {
     __extends(ProductVariantService, _super);
     function ProductVariantService(_a) {
         var manager = _a.manager, productVariantRepository = _a.productVariantRepository, productRepository = _a.productRepository, eventBusService = _a.eventBusService, regionService = _a.regionService, moneyAmountRepository = _a.moneyAmountRepository, productOptionValueRepository = _a.productOptionValueRepository, cartRepository = _a.cartRepository, priceSelectionStrategy = _a.priceSelectionStrategy;
-        var _this = _super.call(this, arguments[0]) || this;
+        var _this = 
+        // eslint-disable-next-line prefer-rest-params
+        _super.call(this, arguments[0]) || this;
         _this.manager_ = manager;
         _this.productVariantRepository_ = productVariantRepository;
         _this.productRepository_ = productRepository;
@@ -336,7 +338,7 @@ var ProductVariantService = /** @class */ (function (_super) {
                                             })];
                                     case 1:
                                         variantRes = _f.sent();
-                                        if (!(0, utils_1.isDefined)(variantRes)) {
+                                        if (!(0, medusa_core_utils_1.isDefined)(variantRes)) {
                                             throw new medusa_core_utils_1.MedusaError(medusa_core_utils_1.MedusaError.Types.NOT_FOUND, "Variant with id ".concat(variantOrVariantId, " was not found"));
                                         }
                                         else {
@@ -437,15 +439,18 @@ var ProductVariantService = /** @class */ (function (_super) {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.atomicPhase_(function (manager) { return __awaiter(_this, void 0, void 0, function () {
-                            var moneyAmountRepo, obsoletePrices, prices_2, prices_2_1, price, region, e_4_1;
+                            var moneyAmountRepo, regionsServiceTx, prices_2, prices_2_1, price, region, e_4_1;
                             var e_4, _a;
                             return __generator(this, function (_b) {
                                 switch (_b.label) {
                                     case 0:
                                         moneyAmountRepo = manager.getCustomRepository(this.moneyAmountRepository_);
-                                        return [4 /*yield*/, moneyAmountRepo.findVariantPricesNotIn(variantId, prices)];
+                                        // Delete obsolete prices
+                                        return [4 /*yield*/, moneyAmountRepo.deleteVariantPricesNotIn(variantId, prices)];
                                     case 1:
-                                        obsoletePrices = _b.sent();
+                                        // Delete obsolete prices
+                                        _b.sent();
+                                        regionsServiceTx = this.regionService_.withTransaction(manager);
                                         _b.label = 2;
                                     case 2:
                                         _b.trys.push([2, 10, 11, 12]);
@@ -455,7 +460,7 @@ var ProductVariantService = /** @class */ (function (_super) {
                                         if (!!prices_2_1.done) return [3 /*break*/, 9];
                                         price = prices_2_1.value;
                                         if (!price.region_id) return [3 /*break*/, 6];
-                                        return [4 /*yield*/, this.regionService_.retrieve(price.region_id)];
+                                        return [4 /*yield*/, regionsServiceTx.retrieve(price.region_id)];
                                     case 4:
                                         region = _b.sent();
                                         return [4 /*yield*/, this.setRegionPrice(variantId, {
@@ -484,10 +489,7 @@ var ProductVariantService = /** @class */ (function (_super) {
                                         }
                                         finally { if (e_4) throw e_4.error; }
                                         return [7 /*endfinally*/];
-                                    case 12: return [4 /*yield*/, moneyAmountRepo.remove(obsoletePrices)];
-                                    case 13:
-                                        _b.sent();
-                                        return [2 /*return*/];
+                                    case 12: return [2 /*return*/];
                                 }
                             });
                         }); })];
@@ -832,7 +834,7 @@ var ProductVariantService = /** @class */ (function (_super) {
                                         variantRepo = manager.getCustomRepository(this.productVariantRepository_);
                                         return [4 /*yield*/, variantRepo.findOne({
                                                 where: { id: variantId },
-                                                relations: ["prices", "options"],
+                                                relations: ["prices", "options", "inventory_items"],
                                             })];
                                     case 1:
                                         variant = _a.sent();
@@ -861,6 +863,30 @@ var ProductVariantService = /** @class */ (function (_super) {
         });
     };
     /**
+     * Check if the variant is assigned to at least one of the provided sales channels.
+     *
+     * @param id - product variant id
+     * @param salesChannelIds - an array of sales channel ids
+     */
+    ProductVariantService.prototype.isVariantInSalesChannels = function (id, salesChannelIds) {
+        return __awaiter(this, void 0, void 0, function () {
+            var variant, productsSalesChannels;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.retrieve(id, {
+                            relations: ["product", "product.sales_channels"],
+                        })
+                        // TODO: reimplement this to use db level check
+                    ];
+                    case 1:
+                        variant = _a.sent();
+                        productsSalesChannels = variant.product.sales_channels.map(function (channel) { return channel.id; });
+                        return [2 /*return*/, productsSalesChannels.some(function (id) { return salesChannelIds.includes(id); })];
+                }
+            });
+        });
+    };
+    /**
      * Creates a query object to be used for list queries.
      * @param selector - the selector to create the query from
      * @param config - the config to use for the query
@@ -869,7 +895,7 @@ var ProductVariantService = /** @class */ (function (_super) {
      */
     ProductVariantService.prototype.prepareListQuery_ = function (selector, config) {
         var q;
-        if ((0, utils_1.isDefined)(selector.q)) {
+        if ((0, medusa_core_utils_1.isDefined)(selector.q)) {
             q = selector.q;
             delete selector.q;
         }

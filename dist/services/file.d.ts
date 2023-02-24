@@ -4,6 +4,7 @@ import { EntityManager } from "typeorm";
 import { AbstractFileService, FileServiceGetUploadStreamResult, FileServiceUploadResult, GetUploadedFileType, UploadStreamDescriptorType } from "../interfaces";
 declare class DefaultFileService extends AbstractFileService {
     upload(fileData: Express.Multer.File): Promise<FileServiceUploadResult>;
+    uploadProtected(fileData: Express.Multer.File): Promise<FileServiceUploadResult>;
     delete(fileData: Record<string, any>): Promise<void>;
     getUploadStreamDescriptor(fileData: UploadStreamDescriptorType): Promise<FileServiceGetUploadStreamResult>;
     getDownloadStream(fileData: GetUploadedFileType): Promise<NodeJS.ReadableStream>;

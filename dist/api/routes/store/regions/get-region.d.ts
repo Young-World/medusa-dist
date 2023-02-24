@@ -5,6 +5,8 @@
  * description: "Retrieves a Region."
  * parameters:
  *   - (path) id=* {string} The id of the Region.
+ * x-codegen:
+ *   method: retrieve
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -27,9 +29,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             region:
- *               $ref: "#/components/schemas/region"
+ *           $ref: "#/components/schemas/StoreRegionsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":

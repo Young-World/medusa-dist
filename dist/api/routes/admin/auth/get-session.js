@@ -46,6 +46,8 @@ var lodash_1 = __importDefault(require("lodash"));
  * summary: "Get Current User"
  * x-authenticated: true
  * description: "Gets the currently logged in User."
+ * x-codegen:
+ *   method: getSession
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -73,9 +75,7 @@ var lodash_1 = __importDefault(require("lodash"));
  *    content:
  *      application/json:
  *        schema:
- *          properties:
- *            user:
- *              $ref: "#/components/schemas/user"
+ *          $ref: "#/components/schemas/AdminAuthRes"
  *  "400":
  *    $ref: "#/components/responses/400_error"
  *  "401":

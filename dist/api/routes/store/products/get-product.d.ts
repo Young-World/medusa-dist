@@ -1,3 +1,4 @@
+import { PriceSelectionParams } from "../../../../types/price-selection";
 /**
  * @oas [get] /products/{id}
  * operationId: GetProductsProduct
@@ -5,8 +6,11 @@
  * description: "Retrieves a Product."
  * parameters:
  *   - (path) id=* {string} The id of the Product.
+ *   - (query) sales_channel_id {string} The sales channel used when fetching the product.
  *   - (query) cart_id {string} The ID of the customer's cart.
  *   - (query) region_id {string} The ID of the region the customer is using. This is helpful to ensure correct prices are retrieved for a region.
+ *   - (query) fields {string} (Comma separated) Which fields should be included in the result.
+ *   - (query) expand {string} (Comma separated) Which fields should be expanded in each product of the result.
  *   - in: query
  *     name: currency_code
  *     style: form
@@ -17,6 +21,9 @@
  *       externalDocs:
  *         url: https://en.wikipedia.org/wiki/ISO_4217#Active_codes
  *         description: See a list of codes.
+ * x-codegen:
+ *   method: retrieve
+ *   queryParams: StoreGetProductsProductParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -39,9 +46,7 @@
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             product:
- *               $ref: "#/components/schemas/product"
+ *           $ref: "#/components/schemas/StoreProductsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":
@@ -55,3 +60,8 @@
  */
 declare const _default: (req: any, res: any) => Promise<void>;
 export default _default;
+export declare class StoreGetProductsProductParams extends PriceSelectionParams {
+    sales_channel_id?: string;
+    fields?: string;
+    expand?: string;
+}

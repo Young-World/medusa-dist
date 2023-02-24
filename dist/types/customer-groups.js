@@ -46,6 +46,11 @@ var FilterableCustomerGroupProps = /** @class */ (function () {
         (0, class_transformer_1.Type)(function () { return common_1.DateComparisonOperator; }),
         __metadata("design:type", common_1.DateComparisonOperator)
     ], FilterableCustomerGroupProps.prototype, "created_at", void 0);
+    __decorate([
+        (0, class_validator_1.IsString)(),
+        (0, class_validator_1.IsOptional)(),
+        __metadata("design:type", String)
+    ], FilterableCustomerGroupProps.prototype, "discount_condition_id", void 0);
     return FilterableCustomerGroupProps;
 }());
 exports.FilterableCustomerGroupProps = FilterableCustomerGroupProps;

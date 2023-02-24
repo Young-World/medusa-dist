@@ -1,4 +1,28 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -51,10 +75,15 @@ var __read = (this && this.__read) || function (o, n) {
     }
     return ar;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-var _1 = require(".");
+exports.StoreGetProductsProductParams = void 0;
+var class_validator_1 = require("class-validator");
+var publishable_api_keys_1 = __importDefault(require("../../../../loaders/feature-flags/publishable-api-keys"));
 var price_selection_1 = require("../../../../types/price-selection");
-var validator_1 = require("../../../../utils/validator");
+var clean_response_data_1 = require("../../../../utils/clean-response-data");
 /**
  * @oas [get] /products/{id}
  * operationId: GetProductsProduct
@@ -62,8 +91,11 @@ var validator_1 = require("../../../../utils/validator");
  * description: "Retrieves a Product."
  * parameters:
  *   - (path) id=* {string} The id of the Product.
+ *   - (query) sales_channel_id {string} The sales channel used when fetching the product.
  *   - (query) cart_id {string} The ID of the customer's cart.
  *   - (query) region_id {string} The ID of the region the customer is using. This is helpful to ensure correct prices are retrieved for a region.
+ *   - (query) fields {string} (Comma separated) Which fields should be included in the result.
+ *   - (query) expand {string} (Comma separated) Which fields should be expanded in each product of the result.
  *   - in: query
  *     name: currency_code
  *     style: form
@@ -74,6 +106,9 @@ var validator_1 = require("../../../../utils/validator");
  *       externalDocs:
  *         url: https://en.wikipedia.org/wiki/ISO_4217#Active_codes
  *         description: See a list of codes.
+ * x-codegen:
+ *   method: retrieve
+ *   queryParams: StoreGetProductsProductParams
  * x-codeSamples:
  *   - lang: JavaScript
  *     label: JS Client
@@ -96,9 +131,7 @@ var validator_1 = require("../../../../utils/validator");
  *     content:
  *       application/json:
  *         schema:
- *           properties:
- *             product:
- *               $ref: "#/components/schemas/product"
+ *           $ref: "#/components/schemas/StoreProductsRes"
  *   "400":
  *     $ref: "#/components/responses/400_error"
  *   "404":
@@ -111,53 +144,85 @@ var validator_1 = require("../../../../utils/validator");
  *     $ref: "#/components/responses/500_error"
  */
 exports.default = (function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var id, validated, customer_id, productService, pricingService, cartService, regionService, rawProduct, regionId, currencyCode, cart, region, _a, product;
-    var _b;
-    return __generator(this, function (_c) {
-        switch (_c.label) {
+    var id, validated, customer_id, productVariantInventoryService, productService, pricingService, cartService, regionService, rawProduct, sales_channel_id, featureFlagRouter, regionId, currencyCode, cart, region, pricedProductArray, _a, product;
+    var _b, _c;
+    return __generator(this, function (_d) {
+        switch (_d.label) {
             case 0:
                 id = req.params.id;
-                return [4 /*yield*/, (0, validator_1.validator)(price_selection_1.PriceSelectionParams, req.query)];
-            case 1:
-                validated = _c.sent();
+                validated = req.validatedQuery;
                 customer_id = (_b = req.user) === null || _b === void 0 ? void 0 : _b.customer_id;
+                productVariantInventoryService = req.scope.resolve("productVariantInventoryService");
                 productService = req.scope.resolve("productService");
                 pricingService = req.scope.resolve("pricingService");
                 cartService = req.scope.resolve("cartService");
                 regionService = req.scope.resolve("regionService");
-                return [4 /*yield*/, productService.retrieve(id, {
-                        relations: _1.defaultStoreProductsRelations,
-                    })];
-            case 2:
-                rawProduct = _c.sent();
+                return [4 /*yield*/, productService.retrieve(id, req.retrieveConfig)];
+            case 1:
+                rawProduct = _d.sent();
+                sales_channel_id = validated.sales_channel_id;
+                featureFlagRouter = req.scope.resolve("featureFlagRouter");
+                if (featureFlagRouter.isFeatureEnabled(publishable_api_keys_1.default.key)) {
+                    if (((_c = req.publishableApiKeyScopes) === null || _c === void 0 ? void 0 : _c.sales_channel_id.length) === 1) {
+                        sales_channel_id = req.publishableApiKeyScopes.sales_channel_id[0];
+                    }
+                }
                 regionId = validated.region_id;
                 currencyCode = validated.currency_code;
-                if (!validated.cart_id) return [3 /*break*/, 5];
+                if (!validated.cart_id) return [3 /*break*/, 4];
                 return [4 /*yield*/, cartService.retrieve(validated.cart_id, {
                         select: ["id", "region_id"],
                     })];
-            case 3:
-                cart = _c.sent();
+            case 2:
+                cart = _d.sent();
                 return [4 /*yield*/, regionService.retrieve(cart.region_id, {
                         select: ["id", "currency_code"],
                     })];
-            case 4:
-                region = _c.sent();
+            case 3:
+                region = _d.sent();
                 regionId = region.id;
                 currencyCode = region.currency_code;
-                _c.label = 5;
-            case 5: return [4 /*yield*/, pricingService.setProductPrices([rawProduct], {
+                _d.label = 4;
+            case 4: return [4 /*yield*/, pricingService.setProductPrices([rawProduct], {
                     cart_id: validated.cart_id,
                     customer_id: customer_id,
                     region_id: regionId,
                     currency_code: currencyCode,
                     include_discount_prices: true,
                 })];
+            case 5:
+                pricedProductArray = _d.sent();
+                return [4 /*yield*/, productVariantInventoryService.setProductAvailability(pricedProductArray, sales_channel_id)];
             case 6:
-                _a = __read.apply(void 0, [_c.sent(), 1]), product = _a[0];
-                res.json({ product: product });
+                _a = __read.apply(void 0, [_d.sent(), 1]), product = _a[0];
+                res.json({
+                    product: (0, clean_response_data_1.cleanResponseData)(product, req.allowedProperties || []),
+                });
                 return [2 /*return*/];
         }
     });
 }); });
+var StoreGetProductsProductParams = /** @class */ (function (_super) {
+    __extends(StoreGetProductsProductParams, _super);
+    function StoreGetProductsProductParams() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    __decorate([
+        (0, class_validator_1.IsString)(),
+        (0, class_validator_1.IsOptional)(),
+        __metadata("design:type", String)
+    ], StoreGetProductsProductParams.prototype, "sales_channel_id", void 0);
+    __decorate([
+        (0, class_validator_1.IsString)(),
+        (0, class_validator_1.IsOptional)(),
+        __metadata("design:type", String)
+    ], StoreGetProductsProductParams.prototype, "fields", void 0);
+    __decorate([
+        (0, class_validator_1.IsString)(),
+        (0, class_validator_1.IsOptional)(),
+        __metadata("design:type", String)
+    ], StoreGetProductsProductParams.prototype, "expand", void 0);
+    return StoreGetProductsProductParams;
+}(price_selection_1.PriceSelectionParams));
+exports.StoreGetProductsProductParams = StoreGetProductsProductParams;
 //# sourceMappingURL=get-product.js.map

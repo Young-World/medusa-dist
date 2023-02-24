@@ -23,11 +23,11 @@ declare class ReturnReasonService extends TransactionBaseService {
     list(selector: Selector<ReturnReason>, config?: FindConfig<ReturnReason>): Promise<ReturnReason[]>;
     /**
      * Gets an order by id.
-     * @param {string} id - id of order to retrieve
+     * @param {string} returnReasonId - id of order to retrieve
      * @param {Object} config - config object
      * @return {Promise<Order>} the order document
      */
-    retrieve(id: string, config?: FindConfig<ReturnReason>): Promise<ReturnReason | never>;
+    retrieve(returnReasonId: string, config?: FindConfig<ReturnReason>): Promise<ReturnReason | never>;
     delete(returnReasonId: string): Promise<void>;
 }
 export default ReturnReasonService;

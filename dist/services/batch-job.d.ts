@@ -43,7 +43,7 @@ declare class BatchJobService extends TransactionBaseService {
     cancel(batchJobOrId: string | BatchJob): Promise<BatchJob | never>;
     setPreProcessingDone(batchJobOrId: string | BatchJob): Promise<BatchJob | never>;
     setProcessing(batchJobOrId: string | BatchJob): Promise<BatchJob | never>;
-    setFailed(batchJobOrId: string | BatchJob, error?: BatchJobResultError): Promise<BatchJob | never>;
+    setFailed(batchJobOrId: string | BatchJob, error?: BatchJobResultError | string): Promise<BatchJob | never>;
     prepareBatchJobForProcessing(data: CreateBatchJobInput, req: Request): Promise<CreateBatchJobInput | never>;
 }
 export default BatchJobService;

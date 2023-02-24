@@ -55,7 +55,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.registerServices = exports.registerStrategies = exports.registerPluginModels = void 0;
+exports.registerServices = exports.registerStrategies = exports.registerPluginModels = exports.isSearchEngineInstalledResolutionKey = void 0;
 var awilix_1 = require("awilix");
 var fs_1 = __importDefault(require("fs"));
 var fs_exists_cached_1 = require("fs-exists-cached");
@@ -63,11 +63,13 @@ var glob_1 = __importDefault(require("glob"));
 var lodash_1 = __importDefault(require("lodash"));
 var medusa_core_utils_1 = require("medusa-core-utils");
 var medusa_interfaces_1 = require("medusa-interfaces");
+var medusa_telemetry_1 = require("medusa-telemetry");
 var path_1 = __importDefault(require("path"));
 var typeorm_1 = require("typeorm");
 var interfaces_1 = require("../interfaces");
 var format_registration_name_1 = __importDefault(require("../utils/format-registration-name"));
 var logger_1 = __importDefault(require("./logger"));
+exports.isSearchEngineInstalledResolutionKey = "isSearchEngineInstalled";
 /**
  * Registers all services in the services directory
  */
@@ -104,6 +106,7 @@ exports.default = (function (_a) {
                         }); }); }))];
                 case 2:
                     _b.sent();
+                    resolved.forEach(function (plugin) { return (0, medusa_telemetry_1.trackInstallation)(plugin.name, "plugin"); });
                     return [2 /*return*/];
             }
         });
@@ -232,11 +235,11 @@ function registerStrategies(pluginDetails, container) {
             }
             case (0, interfaces_1.isBatchJobStrategy)(module.prototype): {
                 container.registerAdd("batchJobStrategies", (0, awilix_1.asFunction)(function (cradle) { return new module(cradle, pluginDetails.options); }));
-                var name = (0, format_registration_name_1.default)(file);
+                var name_1 = (0, format_registration_name_1.default)(file);
                 container.register((_a = {},
-                    _a[name] = (0, awilix_1.asFunction)(function (cradle) { return new module(cradle, pluginDetails.options); }).singleton(),
-                    _a["batch_".concat(module.identifier)] = (0, awilix_1.aliasTo)(name),
-                    _a["batchType_".concat(module.batchType)] = (0, awilix_1.aliasTo)(name),
+                    _a[name_1] = (0, awilix_1.asFunction)(function (cradle) { return new module(cradle, pluginDetails.options); }).singleton(),
+                    _a["batch_".concat(module.identifier)] = (0, awilix_1.aliasTo)(name_1),
+                    _a["batchType_".concat(module.batchType)] = (0, awilix_1.aliasTo)(name_1),
                     _a));
                 break;
             }
@@ -339,7 +342,7 @@ function registerServices(pluginDetails, container) {
                 case 0:
                     files = glob_1.default.sync("".concat(pluginDetails.resolve, "/services/[!__]*.js"), {});
                     return [4 /*yield*/, Promise.all(files.map(function (fn) { return __awaiter(_this, void 0, void 0, function () {
-                            var loaded, name, logger_3, message, appDetails, oauthService, name_1;
+                            var loaded, name, logger_3, message, appDetails, oauthService, name_2;
                             var _a, _b, _c, _d, _e, _f, _g, _h;
                             return __generator(this, function (_j) {
                                 switch (_j.label) {
@@ -370,9 +373,9 @@ function registerServices(pluginDetails, container) {
                                         return [4 /*yield*/, oauthService.registerOauthApp(appDetails)];
                                     case 2:
                                         _j.sent();
-                                        name_1 = appDetails.application_name;
+                                        name_2 = appDetails.application_name;
                                         container.register((_b = {},
-                                            _b["".concat(name_1, "Oauth")] = (0, awilix_1.asFunction)(function (cradle) { return new loaded(cradle, pluginDetails.options); }),
+                                            _b["".concat(name_2, "Oauth")] = (0, awilix_1.asFunction)(function (cradle) { return new loaded(cradle, pluginDetails.options); }),
                                             _b));
                                         return [3 /*break*/, 4];
                                     case 3:
@@ -411,6 +414,7 @@ function registerServices(pluginDetails, container) {
                                                 _f[name] = (0, awilix_1.asFunction)(function (cradle) { return new loaded(cradle, pluginDetails.options); }),
                                                 _f["searchService"] = (0, awilix_1.aliasTo)(name),
                                                 _f));
+                                            container.register(exports.isSearchEngineInstalledResolutionKey, (0, awilix_1.asValue)(true));
                                         }
                                         else if (loaded.prototype instanceof interfaces_1.AbstractTaxService) {
                                             container.registerAdd("taxProviders", (0, awilix_1.asFunction)(function (cradle) { return new loaded(cradle, pluginDetails.options); }));
@@ -470,9 +474,9 @@ function registerRepositories(pluginDetails, container) {
             var _b;
             var _c = __read(_a, 2), val = _c[1];
             if (typeof val === "function") {
-                var name = (0, format_registration_name_1.default)(fn);
+                var name_3 = (0, format_registration_name_1.default)(fn);
                 container.register((_b = {},
-                    _b[name] = (0, awilix_1.asClass)(val),
+                    _b[name_3] = (0, awilix_1.asClass)(val),
                     _b));
             }
         });
@@ -497,9 +501,9 @@ function registerModels(pluginDetails, container) {
             var _b;
             var _c = __read(_a, 2), val = _c[1];
             if (typeof val === "function" || val instanceof typeorm_1.EntitySchema) {
-                var name = (0, format_registration_name_1.default)(fn);
+                var name_4 = (0, format_registration_name_1.default)(fn);
                 container.register((_b = {},
-                    _b[name] = (0, awilix_1.asValue)(val),
+                    _b[name_4] = (0, awilix_1.asValue)(val),
                     _b));
                 container.registerAdd("db_entities", (0, awilix_1.asValue)(val));
             }
@@ -526,12 +530,12 @@ function resolvePlugin(pluginName) {
         if ((0, fs_exists_cached_1.sync)(resolvedPath)) {
             if ((0, fs_exists_cached_1.sync)("".concat(resolvedPath, "/package.json"))) {
                 var packageJSON = JSON.parse(fs_1.default.readFileSync("".concat(resolvedPath, "/package.json"), "utf-8"));
-                var name = packageJSON.name || pluginName;
+                var name_5 = packageJSON.name || pluginName;
                 // warnOnIncompatiblePeerDependency(name, packageJSON)
                 return {
                     resolve: resolvedPath,
-                    name: name,
-                    id: createPluginId(name),
+                    name: name_5,
+                    id: createPluginId(name_5),
                     options: {},
                     version: packageJSON.version || createFileContentHash(resolvedPath, "**"),
                 };
@@ -557,7 +561,7 @@ function resolvePlugin(pluginName) {
         var packageJSON = JSON.parse(fs_1.default.readFileSync("".concat(resolvedPath, "/package.json"), "utf-8"));
         // warnOnIncompatiblePeerDependency(packageJSON.name, packageJSON)
         return {
-            resolve: resolvedPath,
+            resolve: resolvedPath + (process.env.DEV_MODE ? "/src" : ""),
             id: createPluginId(packageJSON.name),
             name: packageJSON.name,
             options: {},
